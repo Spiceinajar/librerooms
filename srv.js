@@ -240,7 +240,7 @@ function process(str) {
       return {"status":"exists"};
     } else {
       if (parsed["user"].length > 2) {
-        dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.svg', 'bio':'This user has not yet created a description.', 'roles':[], 'notifs':[`Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's alpha stage, you've been given the [AlphaTester] badge. This also means many things are subject to change for the time being. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`], 'requests':[]};
+        dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.svg', 'bio':'This user has not yet created a description.', 'roles':['AlphaTester'], 'notifs':[`Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's alpha stage, you've been given the [AlphaTester] badge. This also means many things are subject to change for the time being. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`], 'requests':[]};
         dat.collections.rooms["Main room"]['members'].push(parsed.user);
         dat.collections.rooms["updates"]['members'].push(parsed.user);
         console.log(`Account '${parsed.user}' has been created.`);
