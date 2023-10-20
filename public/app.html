@@ -1,0 +1,68 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Pearl app</title>
+
+  <link rel="icon" href="./assets/icons/icon.svg">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <link rel="stylesheet" href="./css/style.css">
+
+</head>
+
+<body>
+    <div id="msgs">
+    </div>
+
+    <div id="header_bar">
+      <div class="header-btn-container">
+        <img id="settingsbtn" class="header-btn" onclick="openMenu('settings')" src="assets/icons/cog.svg" alt="settings">
+        <img id="reportbtn" class="header-btn" onclick="openMenu('report')" src="assets/icons/report.svg" alt="report">
+        <img id="leavebtn" class="header-btn" onclick="" src="" alt="leave">
+        <img id="mailbtn" class="header-btn" onclick="openMenu('notifications')" src="assets/icons/letter.svg" alt="notifications">
+      </div>
+
+      <div class="header-right-container">
+        <button id="personal-profile-btn">
+          <img src='' class="profilepic" id="personal-pfp-display">
+          <h1 id="personal-username-display"></h1>
+        </button>
+  
+        <img id="innersidebartoggler" class="header-btn" onclick="toggleSidebar()" src="assets/icons/menu.svg" alt="toggle sidebar">
+      </div>
+      
+      <h1 id="room_name_display">N/A</h1>
+    </div>
+
+    <div id="bottom_bar">
+      <textarea id="msgtxt" cols="1" rows="1"></textarea>
+      <button id="sendbtn" onclick="sendMessage()"></button>
+    </div>
+
+    <div id="sidebar">
+      <div class="sidebar-header">
+
+        <button id="sidebartoggler" onclick="toggleSidebar()">←</button>
+
+        <button id="rbtn" class="sidebar-header-button">Rooms</button>
+        <button id="fbtn" class="sidebar-header-button">Friends</button>
+      </div>
+
+      <div id="room-display">
+      </div>
+
+      <div class="sidebar-footer">
+          <button id="addbtn">+ Add room</button>
+      </div>
+    </div>
+    
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+    <script src="./js/frontend.js"></script>
+    <script src="./js/app.js"></script>
+    <script src="./js/menu.js"></script>
+</body>
+</html>
