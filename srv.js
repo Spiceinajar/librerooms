@@ -50,15 +50,13 @@ app.use(express.static('public'));
 const fs = require('fs');
 
 function saveJSON(jsonData, filePath) {
-  const jsonString = JSON.stringify(jsonData);
-
   octokit.repos.createOrUpdateFileContents({
     owner: "Spiceinajar",
     repo: "pearl",
     branch: "main",
     path: "dat.json",
     message: "Update file",
-    content: Buffer.from(encrypt(JSON.stringify(jsonString))).toString("base64"),,
+    content: Buffer.from(encrypt(JSON.stringify(jsonData))).toString("base64"),
   })
     .then(response => {
       console.log('Server backup successful');
