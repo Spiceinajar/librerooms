@@ -1,18 +1,1 @@
-{  
-  "name": "pearl-instant-messaging",
-  "version": "1.1.7",
-  "description": "",
-  "main": "srv.js",
-  "scripts": {
-    "start": "node srv.js",
-    "build": "npm install"
-  },
-
-  "dependencies": {
-    "express": "^4.18.2",
-    "fs": "^0.0.1-security",
-    "localtunnel": "^2.0.2",
-    "mysql": "^2.18.1",
-    "peer": "^1.0.1"
-  }
-}
+{"name":"pearl-instant-messaging","version":"1.1.7","description":"","main":"srv.js","scripts":{"start":"node srv.js","build":"npm install"},"dependencies":{"@octokit/rest":"^20.0.2","express":"^4.18.2","fs":"^0.0.1-security"}}
