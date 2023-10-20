@@ -1,4 +1,10 @@
-const netCfg = require('./netconfig.json')
+const netCfg = require('./netconfig.json');
+const { Octokit } = require("@octokit/rest");
+
+const octokit = new Octokit({
+  auth: process.env.gitKey,
+});
+
 
 //=================================
 
@@ -46,21 +52,28 @@ const fs = require('fs');
 function saveJSON(jsonData, filePath) {
   const jsonString = JSON.stringify(jsonData);
 
-  fs.writeFile(filePath, jsonString, (err) => {
-    if (err) {
-      console.error('Server backup failed:', err);
-    } else {
+  octokit.repos.createOrUpdateFileContents({
+    owner: "Spiceinajar",
+    repo: "pearl",
+    branch: "main",
+    path: "dat.json",
+    message: "Update file",
+    content: Buffer.from(encrypt(jsonString)).toString("base64"),
+  })
+    .then(response => {
       console.log('Server backup successful');
-    }
+  })
+    .catch(error => {
+      console.error('Server backup failed:', error);
   });
 }
 
-setInterval(function(){saveJSON(dat , 'dat.json')}, 300000); //Makes backup every hour 3600000
+setInterval(function(){saveJSON(dat , 'dat.json')}, 60000); //Makes backup every hour 3600000
 
 var dat;
 
 try {
-  dat = require('./dat.json');
+  dat = json.parse(decrypt(require('./dat.json')));
 } catch {
   dat = {
     'collections':{
