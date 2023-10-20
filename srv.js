@@ -58,7 +58,7 @@ function saveJSON(jsonData, filePath) {
     branch: "main",
     path: "dat.json",
     message: "Update file",
-    content: Buffer.from(JSON.stringify(encrypt(jsonString))).toString("base64"),,
+    content: Buffer.from(encrypt(JSON.stringify(jsonString))).toString("base64"),,
   })
     .then(response => {
       console.log('Server backup successful');
