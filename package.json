@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "express": "^4.18.2",
+    "fs": "^0.0.1-security",
+    "localtunnel": "^2.0.2",
+    "mysql": "^2.18.1",
+    "peer": "^1.0.1"
+  }
+}
