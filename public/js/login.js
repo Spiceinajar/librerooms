@@ -31,26 +31,26 @@ function setMenu(x) {
     document.getElementById('pass_input').value = getCookie('key');
   } else {
     document.getElementById('login-bg').innerHTML = `
-    <div style="padding:8vh">
-      <h1 style="font-family: Header; font-size: 4.5vh;">Sign up</h1>
+    <div style="padding:6vh; max-width:100%;">
+      <h1 style="font-family: Header; font-size: 4.5vh; width:fit-content; display:inline-block;">Sign up</h1>
+      <br>
 
-      <h1 style="height:2.5vh; font-size:3vh;">Username:</h1>
-      <textarea name="" id="user_input" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 40vh; height: 3.5vh; border-radius: 1vh; font-size: 3vh;"></textarea>
+      <h1 style="height:2.5vh; font-size:3vh; display:inline-block;">Username:</h1>
+      <br>
+      <textarea name="" id="user_input" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 40vh; max-width:100%; height: 3.5vh; border-radius: 1vh; font-size: 3vh;"></textarea>
+      <br>
 
-      <h1 style="height:2.5vh; font-size:3vh;">Password:</h1>
-      <textarea name="" id="pass_input" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 40vh; height: 3.5vh; border-radius: 1vh; font-size: 2.5vh; font-family: Block;"></textarea>
+      <h1 style="height:2.5vh; font-size:3vh; display:inline-block;">Password:</h1>
+      <br>
+      <textarea name="" id="pass_input" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 40vh; max-width:100%; height: 3.5vh; border-radius: 1vh; font-size: 2.5vh; font-family: Block;"></textarea>
 
       <br>
-      
-      <div style="height: 1vh;">
-      </div>
 
-      <button id="crbtn" style="width: 40vh; height: 10vh; font-size: 3vh; border-radius: 1vh;">Create account</button>
+      <button id="crbtn" style="width: 40vh; height: 10vh; font-size: 3vh; border-radius: 1vh; margin-top:3vh; max-width:100%;">Create account</button>
 
-      <div style="height: 1.5vh;">
-      </div>
+      <br>
 
-      <button id="backbtn" style="width: 40vh; height: 5vh; font-size: 3vh; border-radius: 1vh;">Back</button>
+      <button id="backbtn" style="width: 40vh; height: 5vh; font-size: 3vh; border-radius: 1vh; max-width:100%; margin-top:1.5vh">Back</button>
     </div>
   `
 
