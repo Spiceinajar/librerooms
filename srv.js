@@ -267,9 +267,41 @@ async function run() {
   
           //COMMANDS
           if (parsed.user === 'Spiceinajar') {
-            if (parsed['contents'] === "~BACKUP") {
+            let cmdCut = parsed['contents'].split(" ");
+            let cmd = cmdCut[0].substring(1).toUpperCase();
+            let args_raw = cmdCut.slice(1, cmdCut.length)
+            let args = {};
+
+            for (a of args_raw) {
+              let key = a.split('=')[0];
+              let arg = a.split('=')[1];
+
+              args[key] = arg
+            }
+
+            if (cmd === "BACKUP") {
               mongoOperation('setDB').catch(console.dir)
               dat.collections.rooms[parsed['room']]['messages'].push({'text':'Database backup has been made.', 'user':'System', 'dt': parsed['dt']});
+            }
+
+            if (cmd === "ADDROLE") { 
+              dat.collections.users[args.user].roles.push(args.role);
+              dat.collections.rooms[parsed['room']]['messages'].push({'text':`Added role '${args.role}' to user @${args.user}.`, 'user':'System', 'dt': parsed['dt']});
+            }
+
+            if (cmd === "CLEARROLES") { 
+              dat.collections.users[args.user].roles = [];
+              dat.collections.rooms[parsed['room']]['messages'].push({'text':`Cleared roles for user @${args.user}.`, 'user':'System', 'dt': parsed['dt']});
+            }
+
+            if (cmd === "PURGE") { 
+              dat.collections.rooms[parsed['room']]['messages'] = dat.collections.rooms[parsed['room']]['messages'].splice(-args.amount)
+              dat.collections.rooms[parsed['room']]['messages'].push({'text':`Removed last ${args.amount} messages from this room.`, 'user':'System', 'dt': parsed['dt']});
+            }
+
+            if (cmd === "CLEAR") { 
+              dat.collections.rooms[parsed['room']]['messages'] = [];
+              dat.collections.rooms[parsed['room']]['messages'].push({'text':`Cleared all messages from this room.`, 'user':'System', 'dt': parsed['dt']});
             }
           }
         }
