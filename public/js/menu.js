@@ -31,9 +31,11 @@ async function openMenu(m_id, args={}) {
   document.body.insertAdjacentHTML("beforeend", `
   
   <div id="menu" style="position:fixed; z-index: 2; width:100%; height:100%; top:0; left:0; right:0; background-color: rgba(0, 0, 0, 0.5); opacity:0;">
-    <button id="xbtn" style="position:absolute; left:calc(50% + (425px - 25px)); top:calc(50% - 250px); width:25px; height:25px; background-color: red; border-radius: 5; z-index:4">X</button>
     <div id="center_div" class="center_div" style="max-width:100%; max-height:100%;">
       <div id="menu-bg" style="border-radius: 10px; background-color: rgb(25, 25, 25); text-align: center; width:850px; height:500px; max-height: calc(100% - 20px); max-width: calc(100% - 20px); box-shadow: 0px 0px 10px black;">
+        <div style='width=100%; text-align: right; margin-bottom:-20px'>
+          <button id="xbtn" style="width:25px; height:25px; background-color: red; border-radius:5">X</button>
+        </div>
       </div>
     </div>
   </div>
@@ -71,7 +73,7 @@ async function openMenu(m_id, args={}) {
       userDisplay += `<img src="./assets/icons/roles/${role}.svg" alt="roleicon" title="${role}" style="padding-left: 1vh; height:100%;">`;
     }
 
-    document.getElementById("menu-bg").insertAdjacentHTML('afterbegin', `
+    document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
     <div id="profile_bg" style="width: 100%; height: 100%;">
 
       <div style="height:50px;"></div>
@@ -97,7 +99,6 @@ async function openMenu(m_id, args={}) {
 
       userDesc.addEventListener("blur", async function() {
         await DB({'type':'changebio', 'contents':userDesc.value, 'user':username, 'pass':userkey});
-        console.log("|"+userDesc.value)
         addNotif('Revision saved.');
       });
 
@@ -129,18 +130,18 @@ async function openMenu(m_id, args={}) {
   }
 
   if (m_id === 'settings') {
-    document.getElementById("menu-bg").insertAdjacentHTML('afterbegin', `
+    document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
     <h1 style="font-size:40px">Settings</h1>
     <hr style="width:70%;">
 
     <div style="overflow-y:scroll; height:calc(100% - 140px)">
       <h1 style="font-size:30px; ">Account</h1>
       
-      <button id="logbtn" style="width: 400px; height: 50px; font-size: 20px; border-radius: 10px; margin-top:20px;">Log Out</button>
+      <button id="logbtn" class="bar-btn">Log Out</button>
       <br>
-      <button id="delbtn" style="width: 400px; height: 50px; font-size: 20px; border-radius: 10px; margin-top:20px; background-color: rgb(255, 100, 100)">Delete Account</button>
+      <button id="delbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Delete Account</button>
       <br>
-      <button id="erbtn" style="width: 400px; height: 50px; font-size: 20px; border-radius: 10px; margin-top:20px; background-color: rgb(255, 100, 100)">Erase All Messages</button>
+      <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
     </div>
     `);
 
@@ -184,7 +185,7 @@ async function openMenu(m_id, args={}) {
     let result = await DB({'type':'findrooms', 'user':username});
     let rooms = result['list'].sort((a, b) => a.membercount - b.membercount).reverse();
 
-    document.getElementById("menu-bg").insertAdjacentHTML('afterbegin', `
+    document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
     <h1 style="font-size:20px">Room Browser</h1>
     <hr style="width:80%;">
 
@@ -240,7 +241,7 @@ async function openMenu(m_id, args={}) {
 
 
   if (m_id === "room-creator") {
-    document.getElementById("menu-bg").insertAdjacentHTML('afterbegin', `
+    document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
     <h1 style="font-size:40px">Create Room</h1>
     <hr style="width:70%;">
 
@@ -274,7 +275,7 @@ async function openMenu(m_id, args={}) {
   }
 
   if (m_id === "notifications") {
-    document.getElementById("menu-bg").insertAdjacentHTML('afterbegin', `
+    document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
     <h1>Notifications</h1>
     <div id="notif-board" style="width:100%; height:80%; position:relative; bottom:0; left:0; background-color:rgb(15, 15, 15); overflow-y:auto;">
     </div>
@@ -298,7 +299,7 @@ async function openMenu(m_id, args={}) {
   }
 
   if (m_id === "rconfig") {
-    document.getElementById("menu-bg").insertAdjacentHTML('afterbegin', `
+    document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
     <h1 style="font-size:40px">Configure Room</h1>
     <hr style="width:70%;">
 
@@ -320,7 +321,7 @@ async function openMenu(m_id, args={}) {
   }
 
   if (m_id === "report") {
-    document.getElementById("menu-bg").insertAdjacentHTML('afterbegin', `
+    document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
     <h1 style="font-size:30px">Report</h1>
     <hr style="width:70%;">
 
@@ -334,6 +335,17 @@ async function openMenu(m_id, args={}) {
     `);
 
     document.getElementById('sendreportbtn').onclick = function() {DB({'type':'sendreport', 'contents':document.getElementById('sendreportbtn').value}); closeMenu(); addNotif('Thank you for your feedback')}
+  }
+
+  if (m_id === "buttonmenu") {
+    document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
+    <button onclick="openMenu('settings')" id="logbtn" class="bar-btn">Settings</button>
+    <br>
+    <button onclick="openMenu('report')" id="logbtn" class="bar-btn">Report</button>
+    <br>
+    <button onclick="openMenu('notifications')" id="logbtn" class="bar-btn">Notifications</button>
+    <br>
+    `);
   }
 
   var m = document.getElementById('menu');

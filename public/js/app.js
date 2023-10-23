@@ -449,6 +449,11 @@ async function reportWindowSize() {
     document.getElementById('personal-pfp-display').src = './assets/icons/profile.svg';
     document.getElementById('personal-username-display').style.display = "none";
     document.getElementById('personal-profile-btn').style.backgroundColor = "rgba(0, 0, 0, 0)";
+
+    document.getElementById('buttonmenu-btn').style.display = 'inline';
+    document.getElementById('settingsbtn').style.display = 'none';
+    document.getElementById('reportbtn').style.display = 'none';
+    document.getElementById('mailbtn').style.display = 'none';
   } else {
     sidebarBool = true;
 
@@ -456,6 +461,11 @@ async function reportWindowSize() {
     document.getElementById('personal-pfp-display').src = personalpfp;
     document.getElementById('personal-username-display').style.display = "inline-block";
     document.getElementById('personal-profile-btn').style.backgroundColor = "rgb(30, 30, 30)";
+
+    document.getElementById('buttonmenu-btn').style.display = 'none';
+    document.getElementById('settingsbtn').style.display = 'inline';
+    document.getElementById('reportbtn').style.display = 'inline';
+    document.getElementById('mailbtn').style.display = 'inline';
   }
 
   toggleSidebar()
