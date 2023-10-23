@@ -294,6 +294,15 @@ animation-fill-mode: forwards;
     cursor:pointer;
 }
 
+.bar-btn {
+    width: 400px; 
+    min-width: 90%;
+    height: 50px; 
+    font-size: 20px; 
+    border-radius: 10px; 
+    margin-top:20px;
+}
+
 .header-right-container {
     position: absolute;
     white-space: nowrap;
