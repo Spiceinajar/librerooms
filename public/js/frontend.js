@@ -130,6 +130,10 @@ async function DB(data) {
         r.res = null;
       } else {
         r.res = JSON.parse(decrypt(r['res']));
+        console.log(r)
+        if (r.res.locked) {
+          location.href = `./locked.html?reason=${r.res.reason}`;
+        }
       }
 
       return r.res;

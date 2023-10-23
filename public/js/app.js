@@ -19,7 +19,7 @@ async function getPFP(us) {
   if (us in cachedPfps) {
     pic = cachedPfps[us];
   } else {
-    let result = await DB({'type':'getpfp', 'user':us});
+    let result = await DB({'type':'getpfp', 'targuser':us});
 
     pic = result['url'];
     cachedPfps[us] = pic;
@@ -35,7 +35,7 @@ async function getRoles(us) {
   if (us in userRoles) {
     r = userRoles[us];
   } else {
-    let result = await DB({'type':'getroles', 'user':us});
+    let result = await DB({'type':'getroles', 'targuser':us});
 
     r = result['list'];
     userRoles[us] = r;
@@ -93,150 +93,159 @@ async function unfriend() {
 var lastauth = null;
 var boardContentLength = -1;
 async function updateMessageBoard() {
+  let requestedRoom = active_room;
   let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'after':boardContentLength});
 
-  let messages = result['contents'];
+  if (document.getElementById('msgs').children.length < 1) {
+    document.getElementById('loading-ind').style.display = 'inline';
+  }
 
-  var pfp;
-  var roles;
-  var userDisplay;
+  if (requestedRoom === active_room) {  
+    let messages = result['contents'];
 
-  for (var msg of messages) {
-    pfp = await getPFP(msg['user']);
-    roles = await getRoles(msg['user']);
-    datetime = formatTime(msg.dt);
-    console.log(datetime);
+    var pfp;
+    var roles;
+    var userDisplay;
 
-    userDisplay = msg['user'];
-    for (var r in roles) {
-      let role = roles[r];
-      userDisplay += `<img src="./assets/icons/roles/${role}.svg" alt="roleicon" title="${role}" style="padding-left: 5px; height:15px;">`;
-    }
+    for (var msg of messages) {
+      pfp = await getPFP(msg['user']);
+      roles = await getRoles(msg['user']);
+      datetime = formatTime(msg.dt);
+      console.log(datetime);
 
-    //const now = new Date();
-    
-    if (datetime) {
-      //let TZ_offset = now.getTimezoneOffset();
+      userDisplay = msg['user'];
+      for (var r in roles) {
+        let role = roles[r];
+        userDisplay += `<img src="./assets/icons/roles/${role}.svg" alt="roleicon" title="${role}" style="padding-left: 5px; height:15px;">`;
+      }
 
-      //let hourOffset = TZ_offset/60;
-      //let minOffset = TZ_offset % TZ_offset;
-
-      userDisplay += ` • UTC ${datetime.hour}:${datetime.minute}${datetime.signature}`;
-    }
-
-    boardContentLength += 1;
-
-    contents = msg['text'].replace(/<[^>]*>/g, '<script type="text/plain">' + "$&" + '</script>');
-
-    contents = contents.replace(/(\bhttps?:\/\/\S+)/gi, (match) => {
-      var filetype = match.slice(match.lastIndexOf("."));
-
-      filetype = filetype.split("?")[0];
-
-      if (filetype === ".mp4") {
-        return `
-        <br>
-
-        <video class="msg-content" controls>
-          <source src="${match}" type="video/mp4">
-        [ Your browser does not support the video element. ]
-        </video>
-
-        `;
-
-      } else if ([".mp3"].includes(filetype)) {
-        return `
-        <br>
-        <audio controls>
-          <source src="${match}" type="audio/mpeg">
-        [ Your browser does not support the audio element. ]
-        </audio>
-        `;
-
-      } else if ([".png", ".jpg", ".webp", ".gif"].includes(filetype)) {
-        return `<br><img class="msg-content" src="${match}"></img>`;
-
-      } else if (match.startsWith('https://www.youtube.com/watch?v')) {
-        return `<br><iframe class="msg-content" width="560" height="315" src="https://www.youtube.com/embed/${match.split("watch?v=")[1]}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`
+      //const now = new Date();
       
-      } else {
-        return `<a target="_blank" rel="noopener noreferrer" href="${match}">${match}</a>`;
-      }
-    });
+      if (datetime) {
+        //let TZ_offset = now.getTimezoneOffset();
 
-    if (msg['user'] === username) {
-      if (msg['user'] === lastauth) {
-        document.getElementById('msgs').insertAdjacentHTML("beforeend", `
-        <div>
-          <div class='chat_bubble message-right' style='border-top-right-radius: 0'>
-            <span class='message-content'>${contents}</span>
-          </div>
-        </div>
-        `);
-      } else {
-        document.getElementById('msgs').insertAdjacentHTML("beforeend", `
-  
-        <div class='chat_bubble message-right' style='border-bottom-right-radius: 0;'>
-          <span class='message-content'>${contents}</span>
-        </div>
-  
-        `);
+        //let hourOffset = TZ_offset/60;
+        //let minOffset = TZ_offset % TZ_offset;
+
+        userDisplay += ` • UTC ${datetime.hour}:${datetime.minute}${datetime.signature}`;
       }
 
+      boardContentLength += 1;
 
-    } else {
-      if (msg['user'] === lastauth) {
+      contents = msg['text'].replace(/<[^>]*>/g, '<script type="text/plain">' + "$&" + '</script>');
 
-        document.getElementById('msgs').insertAdjacentHTML("beforeend", `
+      contents = contents.replace(/(\bhttps?:\/\/\S+)/gi, (match) => {
+        var filetype = match.slice(match.lastIndexOf("."));
 
-        <div>
-          <div class='chat_bubble' style='border-top-left-radius: 0; margin-left: 69px;'>
-              <span class='message-content''>${contents}</span>
-          </div>
-        </div>
+        filetype = filetype.split("?")[0];
 
-        `);
+        if (filetype === ".mp4") {
+          return `
+          <br>
+
+          <video class="msg-content" controls>
+            <source src="${match}" type="video/mp4">
+          [ Your browser does not support the video element. ]
+          </video>
+
+          `;
+
+        } else if ([".mp3"].includes(filetype)) {
+          return `
+          <br>
+          <audio controls>
+            <source src="${match}" type="audio/mpeg">
+          [ Your browser does not support the audio element. ]
+          </audio>
+          `;
+
+        } else if ([".png", ".jpg", ".webp", ".gif"].includes(filetype)) {
+          return `<br><img class="msg-content" src="${match}"></img>`;
+
+        } else if (match.startsWith('https://www.youtube.com/watch?v')) {
+          return `<br><iframe class="msg-content" width="560" height="315" src="https://www.youtube.com/embed/${match.split("watch?v=")[1]}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`
         
-      } else {
-        document.getElementById('msgs').insertAdjacentHTML("beforeend", `
+        } else {
+          return `<a target="_blank" rel="noopener noreferrer" href="${match}">${match}</a>`;
+        }
+      });
 
-        <div>
-          <div style='display:inline-block; vertical-align: bottom; margin-bottom:-10px'>
-            <img src='${pfp}' class="profilepic" onclick="openMenu('profile', {user:'${msg.user}'})">
-          </div>
-          
-          <div style='display:inline-block; width:80%'>
-            <span class='message-user'>${userDisplay}</span>
-            <div class='chat_bubble' style='border-bottom-left-radius: 0; max-width:100%;'>
+      if (msg['user'] === username) {
+        if (msg['user'] === lastauth) {
+          document.getElementById('msgs').insertAdjacentHTML("beforeend", `
+          <div>
+            <div class='chat_bubble message-right' style='border-top-right-radius: 0'>
               <span class='message-content'>${contents}</span>
             </div>
           </div>
-        </div>
+          `);
+        } else {
+          document.getElementById('msgs').insertAdjacentHTML("beforeend", `
+    
+          <div class='chat_bubble message-right' style='border-bottom-right-radius: 0;'>
+            <span class='message-content'>${contents}</span>
+          </div>
+    
+          `);
+        }
 
-        `);
-      };
+
+      } else {
+        if (msg['user'] === lastauth) {
+
+          document.getElementById('msgs').insertAdjacentHTML("beforeend", `
+
+          <div>
+            <div class='chat_bubble' style='border-top-left-radius: 0; margin-left: 69px;'>
+                <span class='message-content''>${contents}</span>
+            </div>
+          </div>
+
+          `);
+          
+        } else {
+          document.getElementById('msgs').insertAdjacentHTML("beforeend", `
+
+          <div>
+            <div style='display:inline-block; vertical-align: bottom; margin-bottom:-10px'>
+              <img src='${pfp}' class="profilepic" onclick="openMenu('profile', {user:'${msg.user}'})">
+            </div>
+            
+            <div style='display:inline-block; width:80%'>
+              <span class='message-user'>${userDisplay}</span>
+              <div class='chat_bubble' style='border-bottom-left-radius: 0; max-width:100%;'>
+                <span class='message-content'>${contents}</span>
+              </div>
+            </div>
+          </div>
+
+          `);
+        };
+      }
+
+      lastauth = msg['user'];
+    }
+  
+    let emptyIndicatior = String.raw`
+    <h1 id="empty-indicator" style="text-align: center;">
+    Looks like there's nothing here. <br>
+    ¯\_(ツ)_/¯
+    </h1>
+    `
+
+    if (document.getElementById('msgs').innerHTML === '') {
+      document.getElementById('msgs').innerHTML = emptyIndicatior;
     }
 
-    lastauth = msg['user'];
+    console.log(messages)
+    if (!(messages.length === 0)) {
+      if (document.getElementById('empty-indicator')) {
+        document.getElementById('empty-indicator').remove();
+      }
+    }
+
+    document.getElementById('loading-ind').style.display = 'none';
   };
-
-  let emptyIndicatior = String.raw`
-  <h1 id="empty-indicator" style="text-align: center;">
-  Looks like there's nothing here. <br>
-  ¯\_(ツ)_/¯
-  </h1>
-  `
-
-  if (document.getElementById('msgs').innerHTML === '') {
-    document.getElementById('msgs').innerHTML = emptyIndicatior;
-  }
-
-  console.log(messages)
-  if (!(messages.length === 0)) {
-    if (document.getElementById('empty-indicator')) {
-      document.getElementById('empty-indicator').remove();
-    }
-  }
 }
 
 
@@ -274,6 +283,7 @@ async function joinRoom(r, public) {
 }
 
 function switch_room(room, displayname, mode, created=false) {
+  document.getElementById('loading-ind').style.display = 'inline';
   active_room = room;
   document.getElementById('room_name_display').textContent = displayname;
   document.getElementById('msgs').innerHTML = ``;

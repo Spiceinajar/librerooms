@@ -59,7 +59,7 @@ async function run() {
         await client.connect();
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        console.log("Mongo connection successful...");
   
         const db = client.db('prlDB');
         const collection = db.collection("BACKUP");
@@ -125,351 +125,379 @@ async function run() {
   
       return f;
     }
+
+    function sysMessage(text, room) {
+      dat.collections.rooms[room]['messages'].push({'text':text, 'user':'System', 'dt': undefined});
+    }
   
     function process(str) {
       parsed = JSON.parse(decrypt(str));
-  
-      if (parsed.type === 'getmsg') {
-        if (parsed.room in dat.collections.rooms) {
-          if (authenticate(parsed.user, parsed.pass)) {
-            if (dat.collections.rooms[parsed['room']]['members'].includes(parsed.user)) {
-              //console.log(`Client request of "${parsed['room']}" contents`)
-              return {contents:dat.collections.rooms[parsed['room']]['messages'].slice(parsed['after'] + 1)};
-            }
-          }
-        }
-      };
-  
-  
-      if (parsed.type === 'findrooms') {
-        let r = [];
-  
-        for (var i in dat.collections.rooms) {
-          var room = dat.collections.rooms[i];
-          if (room['type'] === 'room') {
-            r.push({name:i, 
-              banner:room['banner'], 
-              membercount:room['members'].length,
-              maxmembers:room.maxmembers,
-              description:room['description'],
-              public:(room['password'] === "")});
-          }
-        }
-  
-        return {list:r};
-      };
-  
-  
-      if (parsed.type === 'getrooms') {
-        let r = [];
-  
-        for (var i in dat.collections.rooms) {
-          if (dat.collections.rooms[i]['type'] === 'room') {
-            let rval = dat.collections.rooms[i];
-            if (rval['members'].includes(parsed.user)) {
-              r.push({name:i, created:(rval.creator === parsed.user)});
-            }
-          }
-        }
-  
-        return {list:r};
-      };
-  
-  
-      if (parsed.type === 'getfriends') {
-        return {friends:getFriends(parsed.user), requests:dat.collections.users[parsed.user].requests};
-      };
-  
-  
-      if (parsed.type === 'getnotifs') {
-        console.log(`Client request of notifications "${parsed.user}"`)
-  
-        try {
-          return {'list':dat.collections.users[parsed.user].notifs};
-        } catch {
-          return {'list':[]}
-        }
-      };
-  
-  
-      if (parsed.type === 'getpfp') {
-        console.log(`Client request of profile picture "${parsed.user}"`)
-  
-        try {
-          return {'url':dat.collections.users[parsed.user].pfp};
-        } catch {
-          return {'url':'./assets/icons/missing.svg'}
-        }
-      };
-  
-      if (parsed.type === 'getdesc') {
-        console.log(`Client request of description "${parsed.user}"`)
-  
-        try {
-          return {'contents':dat.collections.users[parsed.user].bio};
-        } catch {
-          return {'contents':'Unavailable.'};
-        }
-      };
-  
-      if (parsed.type === 'getroles') {
-        console.log(`Client request of roles "${parsed.user}"`)
-  
-        try {
-          return {'list':dat.collections.users[parsed.user].roles};
-        } catch {
-          return {'list':[]};
-        }
-      };
-  
-  
-      if (parsed.type === 'changepfp') {
-        if (authenticate(parsed.user, parsed.pass)) {
-          dat.collections.users[parsed.user].pfp = parsed['link'];
-          console.log(`"${parsed.user}" changed their profile picture.`)
-        }
-      };
-  
-      if (parsed.type === 'changebio') {
-        if (authenticate(parsed.user, parsed.pass)) {
-          dat.collections.users[parsed.user].bio = parsed['contents'];
-          console.log(`"${parsed.user}" changed their user description.`)
-        }
-      };
-  
-  
-      if (parsed.type === 'chkusr') {
-        return {auth:authenticate(parsed.user, parsed.pass)};
-      };
-  
-      if (parsed.type === 'cr_user') {
-  
-  
-        if (authenticate(parsed.user, null, true)) {
-          return {"status":"exists"};
-        } else {
-          if (parsed["user"].length > 2) {
-            dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.svg', 'bio':'This user has not yet created a description.', 'roles':['AlphaTester'], 'notifs':[`Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's alpha stage, you've been given the [AlphaTester] badge. This also means many things are subject to change for the time being. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`], 'requests':[]};
-            dat.collections.rooms["Main room"]['members'].push(parsed.user);
-            dat.collections.rooms["updates"]['members'].push(parsed.user);
-            console.log(`Account '${parsed.user}' has been created.`);
-            return {"status":true};
-          } else {
-            return {"status":"shortuser"};
-          }
-        }
-      };
-  
-      if (parsed.type === 'addmsg') {
-        if (authenticate(parsed.user, parsed.pass)) {
-          dat.collections.rooms[parsed['room']]['messages'].push({'text':parsed['contents'], 'user':parsed.user, 'dt': parsed['dt']});
-          console.log(`[${parsed['room']}] ${parsed.user}: "${parsed['contents']}"`)
-  
-          //COMMANDS
-          if (parsed.user === 'Spiceinajar') {
-            let cmdCut = parsed['contents'].split(" ");
-            let cmd = cmdCut[0].substring(1).toUpperCase();
-            let args_raw = cmdCut.slice(1, cmdCut.length)
-            let args = {};
 
-            for (a of args_raw) {
-              let key = a.split('=')[0];
-              let arg = a.split('=')[1];
-
-              args[key] = arg
-            }
-
-            if (cmd === "BACKUP") {
-              mongoOperation('setDB').catch(console.dir)
-              dat.collections.rooms[parsed['room']]['messages'].push({'text':'Database backup has been made.', 'user':'System', 'dt': parsed['dt']});
-            }
-
-            if (cmd === "ADDROLE") { 
-              dat.collections.users[args.user].roles.push(args.role);
-              dat.collections.rooms[parsed['room']]['messages'].push({'text':`Added role '${args.role}' to user @${args.user}.`, 'user':'System', 'dt': parsed['dt']});
-            }
-
-            if (cmd === "CLEARROLES") { 
-              dat.collections.users[args.user].roles = [];
-              dat.collections.rooms[parsed['room']]['messages'].push({'text':`Cleared roles for user @${args.user}.`, 'user':'System', 'dt': parsed['dt']});
-            }
-
-            if (cmd === "PURGE") { 
-              dat.collections.rooms[parsed['room']]['messages'] = dat.collections.rooms[parsed['room']]['messages'].splice(-args.amount)
-              dat.collections.rooms[parsed['room']]['messages'].push({'text':`Removed last ${args.amount} messages from this room.`, 'user':'System', 'dt': parsed['dt']});
-            }
-
-            if (cmd === "CLEAR") { 
-              dat.collections.rooms[parsed['room']]['messages'] = [];
-              dat.collections.rooms[parsed['room']]['messages'].push({'text':`Cleared all messages from this room.`, 'user':'System', 'dt': parsed['dt']});
-            }
-          }
-        }
+      let l = false;
+      if (dat.collections.users[parsed.user]) {
+        l = dat.collections.users[parsed.user].locked;
       }
+
   
-      if (parsed.type === 'joinroom') {
-        if (authenticate(parsed.user, parsed.pass)) {
-          if (! dat.collections.rooms[parsed['room']]['members'].includes(parsed.user)) {
-            if (dat.collections.rooms[parsed['room']]['password'] === parsed['roomkey']) {
-              if ((dat.collections.rooms[parsed['room']].members.length < dat.collections.rooms[parsed['room']].maxmembers) | (dat.collections.rooms[parsed['room']].maxmembers === "inf")) {
-                dat.collections.rooms[parsed['room']]['members'].push(parsed.user);
-                console.log(`User ${parsed.user} joined ${parsed['room']}`);
-                return {"status":true};
-              } else {
-                return {"status":"full"};
-              }
-            } else {
-              return {"status":"noauth"};
-            }
-          } else {
-            return {"status":"alreadyin"};
-          }
-        } else {
-          return {"status":"noauth"};
-        }
-      }
-  
-      if (parsed.type === 'leaveroom') {
-        if (authenticate(parsed.user, parsed.pass)) {
-          if (parsed['room'] == "Main room") {
-            return "cannotleave"
-          } else {
-            let members = dat.collections.rooms[parsed['room']]['members'];
-            members.splice(members.indexOf(parsed.user), 1)
-            console.log(`User ${parsed.user} left ${parsed['room']}`)
-            return true
-          }
-        } else {
-          return "noauth"
-        }
-      }
-  
-      if (parsed.type === 'removefriend') {
-        if (authenticate(parsed.user, parsed.pass)) {
-          let dm = [parsed.user, parsed.targ].sort();
-          delete dat.collections.rooms[`${dm[0]}/${dm[1]}`];
-          console.log(`User ${parsed.user} unfriended ${parsed.targ}`)
-          return true
-        } else {
-          return "noauth"
-        }
-      }
-  
-      if (parsed.type === 'cr_room') {
-        if (authenticate(parsed.user, parsed.pass)) {
-          if (parsed.rname in dat.collections.rooms) {
-            return {res:"exists"}
-          } else {
-            
-            let ownedrooms = 0;
-            for (var r in dat.collections.rooms) {
-              let room = dat.collections.rooms[r];
-              if (room.creator === parsed.user) {
-                ownedrooms += 1
+      if (! l) {
+        if (parsed.type === 'getmsg') {
+          if (parsed.room in dat.collections.rooms) {
+            if (authenticate(parsed.user, parsed.pass)) {
+              if (dat.collections.rooms[parsed['room']]['members'].includes(parsed.user)) {
+                //console.log(`Client request of "${parsed['room']}" contents`)
+                return {contents:dat.collections.rooms[parsed['room']]['messages'].slice(parsed['after'] + 1)};
               }
             }
-  
-            console.log(ownedrooms);
-            if (ownedrooms < 4) {
-              dat.collections.rooms[parsed['rname']] = {"messages":[], "members":[parsed.user], "type":"room", "banner":"./assets/icons/room_default.svg", "description":"This room has no description yet.", "password":parsed['roomkey'], "creator":parsed.user, "maxmembers":1000};
-              console.log(`User ${parsed.user} created room "${parsed['rname']}"`)
-              return {res:true}
-            } else {
-              return {res:"limit"}
+          }
+        };
+    
+    
+        if (parsed.type === 'findrooms') {
+          let r = [];
+    
+          for (var i in dat.collections.rooms) {
+            var room = dat.collections.rooms[i];
+            if (room['type'] === 'room') {
+              r.push({name:i, 
+                banner:room['banner'], 
+                membercount:room['members'].length,
+                maxmembers:room.maxmembers,
+                description:room['description'],
+                public:(room['password'] === "")});
             }
           }
-        } else {
-          return {res:"noauth"}
-        }
-      }
-  
-      if (parsed.type === 'delaccount') {
-        if (authenticate(parsed.user, parsed.pass)) {
-          delete dat.collections.users[parsed.user]
-          wipeMessage(parsed.user);
-          return true;
-        } else {
-          return "noauth";
-        }
-      }
-  
-      if (parsed.type === 'delmsg') {
-        if (authenticate(parsed.user, parsed.pass)) {
-          wipeMessage(parsed.user);
-          return true;
-        } else {
-          return "noauth";
-        }
-      }
-  
-      if (parsed.type === 'friend-request') {
-        if (parsed.user === parsed.recipient) {
-          return {'res':'selfrequest'}
-        } else {
+    
+          return {list:r};
+        };
+    
+    
+        if (parsed.type === 'getrooms') {
+          let r = [];
+    
+          for (var i in dat.collections.rooms) {
+            if (dat.collections.rooms[i]['type'] === 'room') {
+              let rval = dat.collections.rooms[i];
+              if (rval['members'].includes(parsed.user)) {
+                r.push({name:i, created:(rval.creator === parsed.user)});
+              }
+            }
+          }
+    
+          return {list:r};
+        };
+    
+    
+        if (parsed.type === 'getfriends') {
+          return {friends:getFriends(parsed.user), requests:dat.collections.users[parsed.user].requests};
+        };
+    
+    
+        if (parsed.type === 'getnotifs') {
+          console.log(`Client request of notifications "${parsed.user}"`)
+    
+          try {
+            return {'list':dat.collections.users[parsed.user].notifs};
+          } catch {
+            return {'list':[]}
+          }
+        };
+    
+    
+        if (parsed.type === 'getpfp') {
+          console.log(`Client request of profile picture "${parsed.targuser}"`)
+    
+          try {
+            return {'url':dat.collections.users[parsed.targuser].pfp};
+          } catch {
+            return {'url':'./assets/icons/missing.svg'}
+          }
+        };
+    
+        if (parsed.type === 'getdesc') {
+          console.log(`Client request of description "${parsed.targuser}"`)
+    
+          try {
+            return {'contents':dat.collections.users[parsed.targuser].bio};
+          } catch {
+            return {'contents':'Unavailable.'};
+          }
+        };
+    
+        if (parsed.type === 'getroles') {
+          console.log(`Client request of roles "${parsed.targuser}"`)
+    
+          try {
+            return {'list':dat.collections.users[parsed.targuser].roles};
+          } catch {
+            return {'list':[]};
+          }
+        };
+    
+    
+        if (parsed.type === 'changepfp') {
           if (authenticate(parsed.user, parsed.pass)) {
-            if (parsed.recipient in dat.collections.users) {
-              if (getFriends(parsed.user).includes(parsed.recipient)) {
-                return {'res':"alreadyadded"}
-              } else {
-                if (dat.collections.users[parsed.recipient].requests.includes(parsed.user)) {
-                  return {'res':'exists'}
+            dat.collections.users[parsed.user].pfp = parsed['link'];
+            console.log(`"${parsed.user}" changed their profile picture.`)
+          }
+        };
+    
+        if (parsed.type === 'changebio') {
+          if (authenticate(parsed.user, parsed.pass)) {
+            dat.collections.users[parsed.user].bio = parsed['contents'];
+            console.log(`"${parsed.user}" changed their user description.`)
+          }
+        };
+    
+    
+        if (parsed.type === 'chkusr') {
+          return {auth:authenticate(parsed.user, parsed.pass)};
+        };
+
+    
+        if (parsed.type === 'cr_user') {
+    
+    
+          if (authenticate(parsed.user, null, true)) {
+            return {"status":"exists"};
+          } else {
+            if (parsed["user"].length > 2) {
+              dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.svg', 'bio':'This user has not yet created a description.', 'roles':['AlphaTester'], 'notifs':[`Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's alpha stage, you've been given the [AlphaTester] badge. This also means many things are subject to change for the time being. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`], 'requests':[], 'joindate':{}};
+              dat.collections.rooms["Main room"]['members'].push(parsed.user);
+              dat.collections.rooms["updates"]['members'].push(parsed.user);
+              console.log(`Account '${parsed.user}' has been created.`);
+              return {"status":true};
+            } else {
+              return {"status":"shortuser"};
+            }
+          }
+        };
+    
+        if (parsed.type === 'addmsg') {
+          if (authenticate(parsed.user, parsed.pass)) {
+            dat.collections.rooms[parsed['room']]['messages'].push({'text':parsed['contents'], 'user':parsed.user, 'dt': parsed['dt']});
+            console.log(`[${parsed['room']}] ${parsed.user}: "${parsed['contents']}"`)
+    
+            //COMMANDS
+            if (parsed.user === 'Spiceinajar') {
+              let cmdCut = parsed['contents'].split("/");
+              let cmd = cmdCut[0].substring(1).toUpperCase();
+              let args_raw = cmdCut.slice(1, cmdCut.length)
+              let args = {};
+  
+              for (a of args_raw) {
+                let key = a.split('=')[0];
+                let arg = a.split('=')[1];
+  
+                args[key] = arg
+              }
+  
+              if (cmd === "BACKUP") {
+                mongoOperation('setDB').catch(console.dir)
+                sysMessage('Database backup has been made.', parsed['room'])
+              }
+  
+              if (cmd === "ADDROLE") { 
+                dat.collections.users[args.user].roles.push(args.role);
+                sysMessage(`Added role '${args.role}' to user @${args.user}.`, parsed['room'])
+              }
+  
+              if (cmd === "CLEARROLES") { 
+                dat.collections.users[args.user].roles = [];
+                sysMessage(`Cleared roles for user @${args.user}.`, parsed['room'])
+              }
+  
+              if (cmd === "PURGE") { 
+                dat.collections.rooms[parsed['room']]['messages'] = dat.collections.rooms[parsed['room']]['messages'].splice(-args.amount)
+                sysMessage(`Removed last ${args.amount} messages from this room.`, parsed['room'])
+              }
+  
+              if (cmd === "CLEAR") { 
+                dat.collections.rooms[parsed['room']]['messages'] = [];
+                sysMessage(`Cleared all messages from this room.`, parsed['room'])
+              }
+  
+              if (cmd === "DELROOM") { 
+                delete dat.collections.rooms[parsed['room']];
+              }
+  
+              if (cmd === "LOCK") { 
+                dat.collections.users[args.user].locked = args.reason;
+                sysMessage(`Locked account @${args.user} for "${args.reason}".`, parsed['room'])
+              }
+
+              if (cmd === "UNLOCK") { 
+                dat.collections.users[args.user].locked = undefined;
+                sysMessage(`Unlocked account @${args.user}.`, parsed['room'])
+              }
+            }
+          }
+        }
+    
+        if (parsed.type === 'joinroom') {
+          if (authenticate(parsed.user, parsed.pass)) {
+            if (! dat.collections.rooms[parsed['room']]['members'].includes(parsed.user)) {
+              if (dat.collections.rooms[parsed['room']]['password'] === parsed['roomkey']) {
+                if ((dat.collections.rooms[parsed['room']].members.length < dat.collections.rooms[parsed['room']].maxmembers) | (dat.collections.rooms[parsed['room']].maxmembers === "inf")) {
+                  dat.collections.rooms[parsed['room']]['members'].push(parsed.user);
+                  console.log(`User ${parsed.user} joined ${parsed['room']}`);
+                  return {"status":true};
                 } else {
-                  dat.collections.users[parsed.recipient].requests.push(parsed.user)
-                  return {'res':true}
+                  return {"status":"full"};
+                }
+              } else {
+                return {"status":"noauth"};
+              }
+            } else {
+              return {"status":"alreadyin"};
+            }
+          } else {
+            return {"status":"noauth"};
+          }
+        }
+    
+        if (parsed.type === 'leaveroom') {
+          if (authenticate(parsed.user, parsed.pass)) {
+            if (parsed['room'] == "Main room") {
+              return "cannotleave"
+            } else {
+              let members = dat.collections.rooms[parsed['room']]['members'];
+              members.splice(members.indexOf(parsed.user), 1)
+              console.log(`User ${parsed.user} left ${parsed['room']}`)
+              return true
+            }
+          } else {
+            return "noauth"
+          }
+        }
+    
+        if (parsed.type === 'removefriend') {
+          if (authenticate(parsed.user, parsed.pass)) {
+            let dm = [parsed.user, parsed.targ].sort();
+            delete dat.collections.rooms[`${dm[0]}/${dm[1]}`];
+            console.log(`User ${parsed.user} unfriended ${parsed.targ}`)
+            return true
+          } else {
+            return "noauth"
+          }
+        }
+    
+        if (parsed.type === 'cr_room') {
+          if (authenticate(parsed.user, parsed.pass)) {
+            if (parsed.rname in dat.collections.rooms) {
+              return {res:"exists"}
+            } else {
+              
+              let ownedrooms = 0;
+              for (var r in dat.collections.rooms) {
+                let room = dat.collections.rooms[r];
+                if (room.creator === parsed.user) {
+                  ownedrooms += 1
                 }
               }
-            } else {
-              return {'res':'nouser'}
+
+              if (ownedrooms < 4) {
+                dat.collections.rooms[parsed['rname']] = {"messages":[], "members":[parsed.user], "type":"room", "banner":"./assets/icons/room_default.svg", "description":"This room has no description yet.", "password":parsed['roomkey'], "creator":parsed.user, "maxmembers":1000};
+                console.log(`User ${parsed.user} created room "${parsed['rname']}"`)
+                return {res:true}
+              } else {
+                return {res:"limit"}
+              }
             }
+          } else {
+            return {res:"noauth"}
+          }
+        }
+    
+        if (parsed.type === 'delaccount') {
+          if (authenticate(parsed.user, parsed.pass)) {
+            delete dat.collections.users[parsed.user]
+            wipeMessage(parsed.user);
+            return true;
+          } else {
+            return "noauth";
+          }
+        }
+    
+        if (parsed.type === 'delmsg') {
+          if (authenticate(parsed.user, parsed.pass)) {
+            wipeMessage(parsed.user);
+            return true;
+          } else {
+            return "noauth";
+          }
+        }
+    
+        if (parsed.type === 'friend-request') {
+          if (parsed.user === parsed.recipient) {
+            return {'res':'selfrequest'}
+          } else {
+            if (authenticate(parsed.user, parsed.pass)) {
+              if (parsed.recipient in dat.collections.users) {
+                if (getFriends(parsed.user).includes(parsed.recipient)) {
+                  return {'res':"alreadyadded"}
+                } else {
+                  if (dat.collections.users[parsed.recipient].requests.includes(parsed.user)) {
+                    return {'res':'exists'}
+                  } else {
+                    dat.collections.users[parsed.recipient].requests.push(parsed.user)
+                    return {'res':true}
+                  }
+                }
+              } else {
+                return {'res':'nouser'}
+              }
+            } else {
+              return {'res':'noauth'}
+            }
+          }
+        }
+    
+        
+        if (parsed.type === 'submit-report') {
+          dat.collections.reports.push(parsed['contents'])
+        }
+    
+        if (parsed.type === 'respond-request') {
+          async function removeRequest() {
+            dat.collections.users[parsed.user].requests.splice(
+              dat.collections.users[parsed.user].requests.indexOf(parsed.recipient), 1)
+          }
+    
+          if (authenticate(parsed.user, parsed.pass)) {
+            if (dat.collections.users[parsed.user].requests.includes(parsed.recipient)) {
+              if (parsed.mode === "accept") {
+                if (getFriends(parsed.user).includes(parsed.recipient)) {
+                  return {'res':'exists'}
+                } else {
+                  let dm = [parsed.user, parsed.recipient].sort();
+                  dat.collections.rooms[`${dm[0]}/${dm[1]}`] = {'messages':[], 'members':dm, 'type':'dm', 'maxmembers':2};
+                  removeRequest();
+    
+                  dat.collections.users[parsed.recipient].notifs.push(
+                    `Your friend request to @${parsed.user} was accepted.`
+                  )
+        
+                  return {'res':true}
+                }
+              } else if (parsed.mode === "deny") {
+                removeRequest();
+    
+                dat.collections.users[parsed.recipient].notifs.push(
+                  `Your friend request to @${parsed.user} was denied.`
+                )
+    
+                return {'res':true};
+              }
+            } else {
+              return {'res':'norequest'}
+            }
+    
           } else {
             return {'res':'noauth'}
           }
         }
-      }
-  
-      
-      if (parsed.type === 'submit-report') {
-        dat.collections.reports.push(parsed['contents'])
-      }
-  
-      if (parsed.type === 'respond-request') {
-        async function removeRequest() {
-          dat.collections.users[parsed.user].requests.splice(
-            dat.collections.users[parsed.user].requests.indexOf(parsed.recipient), 1)
-        }
-  
-        if (authenticate(parsed.user, parsed.pass)) {
-          if (dat.collections.users[parsed.user].requests.includes(parsed.recipient)) {
-            if (parsed.mode === "accept") {
-              if (getFriends(parsed.user).includes(parsed.recipient)) {
-                return {'res':'exists'}
-              } else {
-                let dm = [parsed.user, parsed.recipient].sort();
-                dat.collections.rooms[`${dm[0]}/${dm[1]}`] = {'messages':[], 'members':dm, 'type':'dm', 'maxmembers':2};
-                removeRequest();
-  
-                dat.collections.users[parsed.recipient].notifs.push(
-                  `Your friend request to @${parsed.user} was accepted.`
-                )
-      
-                return {'res':true}
-              }
-            } else if (parsed.mode === "deny") {
-              removeRequest();
-  
-              dat.collections.users[parsed.recipient].notifs.push(
-                `Your friend request to @${parsed.user} was denied.`
-              )
-  
-              return {'res':true};
-            }
-          } else {
-            return {'res':'norequest'}
-          }
-  
-        } else {
-          return {'res':'noauth'}
-        }
+      } else {
+        return {'locked':true, 'reason':dat.collections.users[parsed.user].locked}
       }
     }
   

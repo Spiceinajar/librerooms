@@ -3,6 +3,11 @@ html {
     user-select: none;
 }
 
+.offscreen {
+    content-visibility: auto;
+    contain-intrinsic-size: 100px 100px;
+}
+
 body {
     background-color: rgb(20, 20, 20);
 }
@@ -443,7 +448,7 @@ text-decoration: underline;
     bottom:0; 
     left:0; 
     color: blueviolet; 
-    font-size: .5cm;
+    font-size: 4mm;
 }
 
 .claim-link {

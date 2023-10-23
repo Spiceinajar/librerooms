@@ -84,7 +84,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <h1 style="font-size: 30px" id="personal-username-display">${userDisplay}</h1>
 
-      <textarea id="desc" class="userdescription" readonly>${(await DB({'type':'getdesc', 'user':args.user})).contents}</textarea>
+      <textarea id="desc" class="userdescription" readonly>${(await DB({'type':'getdesc', 'targuser':args.user})).contents}</textarea>
     </div>
     `);
 
