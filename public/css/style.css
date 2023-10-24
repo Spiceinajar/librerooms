@@ -58,12 +58,11 @@ body {
     left:0; 
     box-sizing: border-box; 
     padding:8px; 
-    display:flex; 
     min-height: 60px;
 }
 
 #msgtxt {
-    width:calc(100% - 50px); 
+    width:calc(100% - 55px); 
     font-size: 20px; 
     min-height:40px; 
     font-family: Standard; 
@@ -71,11 +70,8 @@ body {
 }
 
 #sendbtn {
-    background: url(../assets/icons/send.svg); 
-    flex-grow: 1; 
-    background-size: 100%; 
-    border-radius: 0; 
-    background-repeat: no-repeat;
+    vertical-align: bottom;
+    height: 44px;
 }
 
 #addbtn {
@@ -424,13 +420,13 @@ text-decoration: underline;
 
 #login-bg {
     border-radius: 2vh; 
-    background-color: rgb(25, 25, 25); 
-    width:50%; 
-    min-width: fit-content; 
+    background-color: rgba(25, 25, 25, 0.5); 
+    width: fit-content; 
     height: fit-content; 
     text-align: center; 
-    max-width: 80%; 
     margin:6vh;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
 }
 
 #login_anim {

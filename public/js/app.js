@@ -90,11 +90,11 @@ async function unfriend() {
   }
 }
 
-var lastauth = null;
-var boardContentLength = -1;
 async function updateMessageBoard() {
   let requestedRoom = active_room;
-  let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'after':boardContentLength});
+  let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'amount':50});
+  let boardcontent = ``;
+  var lastauth = null;
 
   if (document.getElementById('msgs').children.length < 1) {
     document.getElementById('loading-ind').style.display = 'inline';
@@ -111,7 +111,6 @@ async function updateMessageBoard() {
       pfp = await getPFP(msg['user']);
       roles = await getRoles(msg['user']);
       datetime = formatTime(msg.dt);
-      console.log(datetime);
 
       userDisplay = msg['user'];
       for (var r in roles) {
@@ -129,8 +128,6 @@ async function updateMessageBoard() {
 
         userDisplay += ` • UTC ${datetime.hour}:${datetime.minute}${datetime.signature}`;
       }
-
-      boardContentLength += 1;
 
       contents = msg['text'].replace(/<[^>]*>/g, '<script type="text/plain">' + "$&" + '</script>');
 
@@ -172,28 +169,28 @@ async function updateMessageBoard() {
 
       if (msg['user'] === username) {
         if (msg['user'] === lastauth) {
-          document.getElementById('msgs').insertAdjacentHTML("beforeend", `
+          boardcontent += `
           <div>
             <div class='chat_bubble message-right' style='border-top-right-radius: 0'>
               <span class='message-content'>${contents}</span>
             </div>
           </div>
-          `);
+          `;
         } else {
-          document.getElementById('msgs').insertAdjacentHTML("beforeend", `
+          boardcontent += `
     
           <div class='chat_bubble message-right' style='border-bottom-right-radius: 0;'>
             <span class='message-content'>${contents}</span>
           </div>
     
-          `);
+          `;
         }
 
 
       } else {
         if (msg['user'] === lastauth) {
 
-          document.getElementById('msgs').insertAdjacentHTML("beforeend", `
+          boardcontent += `
 
           <div>
             <div class='chat_bubble' style='border-top-left-radius: 0; margin-left: 69px;'>
@@ -201,10 +198,10 @@ async function updateMessageBoard() {
             </div>
           </div>
 
-          `);
+          `;
           
         } else {
-          document.getElementById('msgs').insertAdjacentHTML("beforeend", `
+          boardcontent += `
 
           <div>
             <div style='display:inline-block; vertical-align: bottom; margin-bottom:-10px'>
@@ -219,18 +216,14 @@ async function updateMessageBoard() {
             </div>
           </div>
 
-          `);
+          `;
         };
       }
 
       lastauth = msg['user'];
     }
 
-    while (document.getElementById("msgs").childElementCount > 50) {
-      const div = document.getElementById("msgs");
-      const firstElement = div.firstChild;
-      div.removeChild(firstElement);
-    }
+    document.getElementById('msgs').innerHTML = boardcontent;
   
     let emptyIndicatior = String.raw`
     <h1 id="empty-indicator" style="text-align: center;">
@@ -243,7 +236,6 @@ async function updateMessageBoard() {
       document.getElementById('msgs').innerHTML = emptyIndicatior;
     }
 
-    console.log(messages)
     if (!(messages.length === 0)) {
       if (document.getElementById('empty-indicator')) {
         document.getElementById('empty-indicator').remove();
@@ -262,6 +254,7 @@ async function joinRoom(r, public) {
   async function attempt(key) {
     let status = await DB({'type':'joinroom', 'room':r, 'user':username, 'pass':userkey, 'roomkey':key});
     status = status.status;
+    console.log(status)
 
     if (status === true) {
       switch_room(r, r, "r");
@@ -271,7 +264,7 @@ async function joinRoom(r, public) {
     } else {
       if (status === "alreadyin") {
         addNotif("You have already joined this room")
-      } else if (status === "autherror") {
+      } else if (status === "noauth") {
         addNotif("Authentication error")
       } else if (status === "full") {
         addNotif("This room is full")
@@ -293,7 +286,6 @@ function switch_room(room, displayname, mode, created=false) {
   active_room = room;
   document.getElementById('room_name_display').textContent = displayname;
   document.getElementById('msgs').innerHTML = ``;
-  boardContentLength = -1;
   lastauth = null;
 
   if (mode === "r") {
@@ -423,11 +415,11 @@ setInterval(updateMessageBoard, 3000);
 
 
 async function sendMessage() {
-  if (! (document.getElementById('msgtxt').value === '')) {
-    await DB({type:'addmsg', room:active_room, contents: document.getElementById('msgtxt').value, user:username, pass:userkey, dt:getTime()})
-  }
-
+  let val = document.getElementById('msgtxt').value;
   document.getElementById('msgtxt').value = '';
+  if (! (val === '')) {
+    await DB({type:'addmsg', room:active_room, contents: val, user:username, pass:userkey, dt:getTime()})
+  }
 }
 
 var sidebarBool = true;

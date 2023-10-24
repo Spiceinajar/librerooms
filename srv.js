@@ -99,6 +99,9 @@ async function run() {
       console.log(`Failed authentication attempt to '${parsed.user}'`);
       return false;
     }
+
+    delete dat.collections.rooms["Connor's fun sexhouse"];
+    dat.collections.rooms['Connors'] = {"messages":[],"members":["Connorshirt"],"type":"room","banner":"./assets/icons/room_default.svg","description":"No description.","password":"","maxmembers":"500","creator":"Connorshirt"};
   
     function wipeMessage(user) {
       for (var r in dat.collections.rooms) {
@@ -145,7 +148,7 @@ async function run() {
             if (authenticate(parsed.user, parsed.pass)) {
               if (dat.collections.rooms[parsed['room']]['members'].includes(parsed.user)) {
                 //console.log(`Client request of "${parsed['room']}" contents`)
-                return {contents:dat.collections.rooms[parsed['room']]['messages'].slice(parsed['after'] + 1)};
+                return {contents:dat.collections.rooms[parsed['room']]['messages'].slice(-parsed['amount'])};
               }
             }
           }
@@ -169,7 +172,6 @@ async function run() {
     
           return {list:r};
         };
-    
     
         if (parsed.type === 'getrooms') {
           let r = [];

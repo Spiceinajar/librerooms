@@ -79,6 +79,7 @@ async function login(user, key) {
     addNotif("Login failed")
   }
 }
+
 //==============================
 async function cr_account(user, key) {
   var result = await DB({type:'cr_user', user:user, pass:key})
@@ -98,3 +99,19 @@ async function cr_account(user, key) {
   }
 }
 //==============================
+
+async function reportWindowSize() {
+  if (mobileLayout) {
+    document.getElementById('login-bg').style.width = "calc(100% - 10px)";
+    document.getElementById('login-bg').style.height = "calc(100% - 10px)";
+    document.getElementById('login-bg').style.margin = "0";
+  } else {
+    document.getElementById('login-bg').style.width = "fit-content";
+    document.getElementById('login-bg').style.height = "fit-content";
+    document.getElementById('login-bg').style.margin = "6vh";
+  }
+}
+
+
+reportWindowSize();
+window.addEventListener("resize", reportWindowSize);
