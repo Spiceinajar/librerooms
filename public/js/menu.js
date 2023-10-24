@@ -66,6 +66,7 @@ async function openMenu(m_id, args={}) {
   if (m_id === 'profile') {
 
     let roles = await getRoles(args.user);
+    let joinDate = await DB({'type':'getjoindate', 'targuser':args.user});
 
     let userDisplay = args.user;
     for (var r in roles) {
@@ -85,6 +86,8 @@ async function openMenu(m_id, args={}) {
       <h1 style="font-size: 30px" id="personal-username-display">${userDisplay}</h1>
 
       <textarea id="desc" class="userdescription" readonly>${(await DB({'type':'getdesc', 'targuser':args.user})).contents}</textarea>
+
+      <h1 style="font-size: 15px; font-weight: 200">Joined ${joinDate.res.day}/${joinDate.res.month}/${joinDate.res.year}</h1>
     </div>
     `);
 
@@ -143,6 +146,8 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
     </div>
+
+    <h1 style="font-size:10px;">Version: 1.1.8 (Web Beta Release)</h1>
     `);
 
     document.getElementById('delbtn').onclick = function () {authMenu(

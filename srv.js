@@ -252,6 +252,16 @@ async function run() {
             return {'list':[]};
           }
         };
+
+        if (parsed.type === 'getjoindate') {
+          console.log(`Client request of join date "${parsed.targuser}"`)
+    
+          try {
+            return {'res':dat.collections.users[parsed.targuser].joindate};
+          } catch {
+            return {'res':{}};
+          }
+        };
     
     
         if (parsed.type === 'changepfp') {
@@ -273,13 +283,17 @@ async function run() {
           return {auth:authenticate(parsed.user, parsed.pass)};
         };
 
-    
+        function getMDY() {
+          let d = new Date();
+          return {'day':d.getDate(), 'month':d.getMonth(), 'year':d.getFullYear()}
+        }
+
         if (parsed.type === 'cr_user') {
           if (authenticate(parsed.user, null, true)) {
             return {"status":"exists"};
           } else {
             if (parsed["user"].length > 2) {
-              dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.svg', 'bio':'This user has not yet created a description.', 'roles':['AlphaTester'], 'notifs':[`Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's alpha stage, you've been given the [AlphaTester] badge. This also means many things are subject to change for the time being. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`], 'requests':[], 'joindate':{}};
+              dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.svg', 'bio':'This user has not yet created a description.', 'roles':['BetaTester'], 'notifs':[`Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's beta stage, you've been given the [BetaTester] badge. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`], 'requests':[], 'joindate':getMDY()};
               dat.collections.rooms["Main room"]['members'].push(parsed.user);
               dat.collections.rooms["updates"]['members'].push(parsed.user);
               console.log(`Account '${parsed.user}' has been created.`);
@@ -301,7 +315,10 @@ async function run() {
               if (parsed['contents'].charAt(0) === '~') {
                 const parts = parsed['contents'].split(" ");
                 const cmd = parts.shift().substring(1).toUpperCase();
-                const args = JSON.parse(parts.join(" "));
+                let args = {};
+                if (parts.length > 1) {
+                  args = JSON.parse(parts.join(" "));
+                }
     
                 //for (a of args_raw) {
                 //  let key = a.split('=')[0];
