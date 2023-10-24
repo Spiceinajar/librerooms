@@ -297,7 +297,7 @@ async function run() {
               dat.collections.rooms["Main room"]['members'].push(parsed.user);
               dat.collections.rooms["updates"]['members'].push(parsed.user);
               console.log(`Account '${parsed.user}' has been created.`);
-              sysMessage(`@${parsed.user} has joined Pearl for the first time!`)
+              sysMessage(`@${parsed.user} has joined Pearl for the first time!`, 'Main room')
               return {"status":true};
             } else {
               return {"status":"shortuser"};
@@ -420,7 +420,7 @@ async function run() {
                 if ((dat.collections.rooms[parsed['room']].members.length < dat.collections.rooms[parsed['room']].maxmembers) | (dat.collections.rooms[parsed['room']].maxmembers === "inf")) {
                   dat.collections.rooms[parsed['room']]['members'].push(parsed.user);
                   console.log(`User ${parsed.user} joined ${parsed['room']}`);
-                  sysMessage(`@${parsed.user} has joined the room`)
+                  sysMessage(`@${parsed.user} has joined the room`, parsed['room'])
                   return {"status":true};
                 } else {
                   return {"status":"full"};
@@ -444,7 +444,7 @@ async function run() {
               let members = dat.collections.rooms[parsed['room']]['members'];
               members.splice(members.indexOf(parsed.user), 1)
               console.log(`User ${parsed.user} left ${parsed['room']}`)
-              sysMessage(`@${parsed.user} has left the room`)
+              sysMessage(`@${parsed.user} has left the room`, parsed['room'])
               return true
             }
           } else {
