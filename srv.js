@@ -278,8 +278,9 @@ async function run() {
             console.log(`[${parsed['room']}] ${parsed.user}: "${parsed['contents']}"`)
     
             //COMMANDS
-            if (parsed.user === 'Spiceinajar') {
-              let cmdCut = parsed['contents'].split("/");
+            if (parsed['contents'].charAt(0) === '~') {
+
+              let cmdCut = parsed['contents'].split(" ");
               let cmd = cmdCut[0].substring(1).toUpperCase();
               let args_raw = cmdCut.slice(1, cmdCut.length)
               let args = {};
@@ -290,22 +291,56 @@ async function run() {
   
                 args[key] = arg
               }
-  
-              if (cmd === "BACKUP") {
-                mongoOperation('setDB').catch(console.dir)
-                sysMessage('Database backup has been made.', parsed['room'])
+
+              let hierarchy = [
+                'Administrator',
+                'Moderator',
+                'Developer'
+              ];
+              let permissions = {};
+
+              for (let r in hierarchy) {
+                let name = hierarchy[r];
+
+                if (dat.collections.users[parsed.user].roles.includes(name)) {
+                  permissions[name] = true;
+                } else {
+                  permissions[name] = false;
+                }
               }
+
+              if (permissions['Administrator']) {
+                if (cmd === "BACKUP") {
+                  mongoOperation('setDB').catch(console.dir)
+                  sysMessage('Database backup has been made.', parsed['room'])
+                }
+    
+                if (cmd === "ADDROLE") { 
+                  dat.collections.users[args.user].roles.push(args.role);
+                  sysMessage(`Added role '${args.role}' to user @${args.user}.`, parsed['room'])
+                }
+    
+                if (cmd === "CLEARROLES") { 
+                  dat.collections.users[args.user].roles = [];
+                  sysMessage(`Cleared roles for user @${args.user}.`, parsed['room'])
+                }
+    
+                if (cmd === "DELROOM") { 
+                  delete dat.collections.rooms[parsed['room']];
+                }
+    
+                if (cmd === "LOCK") { 
+                  dat.collections.users[args.user].locked = args.reason;
+                  sysMessage(`Locked account @${args.user} for "${args.reason}".`, parsed['room'])
+                }
   
-              if (cmd === "ADDROLE") { 
-                dat.collections.users[args.user].roles.push(args.role);
-                sysMessage(`Added role '${args.role}' to user @${args.user}.`, parsed['room'])
-              }
-  
-              if (cmd === "CLEARROLES") { 
-                dat.collections.users[args.user].roles = [];
-                sysMessage(`Cleared roles for user @${args.user}.`, parsed['room'])
-              }
-  
+                if (cmd === "UNLOCK") { 
+                  dat.collections.users[args.user].locked = undefined;
+                  sysMessage(`Unlocked account @${args.user}.`, parsed['room'])
+                }
+            }
+
+            if (permissions['Administrator'] || permissions['Moderator']) {
               if (cmd === "PURGE") { 
                 dat.collections.rooms[parsed['room']]['messages'] = dat.collections.rooms[parsed['room']]['messages'].splice(-args.amount)
                 sysMessage(`Removed last ${args.amount} messages from this room.`, parsed['room'])
@@ -315,20 +350,17 @@ async function run() {
                 dat.collections.rooms[parsed['room']]['messages'] = [];
                 sysMessage(`Cleared all messages from this room.`, parsed['room'])
               }
-  
-              if (cmd === "DELROOM") { 
-                delete dat.collections.rooms[parsed['room']];
-              }
-  
-              if (cmd === "LOCK") { 
-                dat.collections.users[args.user].locked = args.reason;
-                sysMessage(`Locked account @${args.user} for "${args.reason}".`, parsed['room'])
+
+              if (cmd === "SETBANNER") { 
+                dat.collections.rooms[parsed['room']].banner = args.link;
+                sysMessage(`Set banner for "${parsed['room']}".`, parsed['room'])
               }
 
-              if (cmd === "UNLOCK") { 
-                dat.collections.users[args.user].locked = undefined;
-                sysMessage(`Unlocked account @${args.user}.`, parsed['room'])
+              if (cmd === "SETDESCRIPTION") { 
+                dat.collections.rooms[parsed['room']].description = args.value;
+                sysMessage(`Set description for "${parsed['room']}".`, parsed['room'])
               }
+          }
             }
           }
         }

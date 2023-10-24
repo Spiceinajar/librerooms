@@ -225,6 +225,12 @@ async function updateMessageBoard() {
 
       lastauth = msg['user'];
     }
+
+    while (document.getElementById("msgs").childElementCount > 50) {
+      const div = document.getElementById("msgs");
+      const firstElement = div.firstChild;
+      div.removeChild(firstElement);
+    }
   
     let emptyIndicatior = String.raw`
     <h1 id="empty-indicator" style="text-align: center;">
@@ -301,6 +307,11 @@ function switch_room(room, displayname, mode, created=false) {
   } else {
     document.getElementById('leavebtn').onclick = unfriend;
     document.getElementById('leavebtn').src = "assets/icons/unfriend.svg";
+  }
+
+  if (mobileLayout) {
+    sidebarBool = false;
+    toggleSidebar();
   }
 }
 
@@ -455,8 +466,6 @@ async function reportWindowSize() {
   if (mobileLayout) {
     sidebarBool = false;
 
-    document.getElementById('personal-pfp-display').style.borderRadius = "0";
-    document.getElementById('personal-pfp-display').src = './assets/icons/profile.svg';
     document.getElementById('personal-username-display').style.display = "none";
     document.getElementById('personal-profile-btn').style.backgroundColor = "rgba(0, 0, 0, 0)";
 
@@ -467,8 +476,6 @@ async function reportWindowSize() {
   } else {
     sidebarBool = true;
 
-    document.getElementById('personal-pfp-display').style.borderRadius = "50%";
-    document.getElementById('personal-pfp-display').src = personalpfp;
     document.getElementById('personal-username-display').style.display = "inline-block";
     document.getElementById('personal-profile-btn').style.backgroundColor = "rgb(30, 30, 30)";
 

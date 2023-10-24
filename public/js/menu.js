@@ -221,7 +221,7 @@ async function openMenu(m_id, args={}) {
 
       document.getElementById("rcontainer").insertAdjacentHTML('beforeend', `
       <button onclick='joinRoom("${room.name}", ${room.public});' class="roombrowser-card">
-      <img src="${room.banner}" style="width:100%; border-radius:inherit; margin-top:5px;">
+      <img src="${room.banner}" style="width:100%; border-radius:inherit; margin-top:5px; aspect-ratio:1200/640">
 
       <div class="center-div" style="width:100%;">
       
