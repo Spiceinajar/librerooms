@@ -264,9 +264,8 @@ animation-fill-mode: forwards;
 
 .msg-content {
     border-radius: 10px;
-    width:4in;
     max-width: 100%;
-    max-height: 800px;
+    max-height: 300px;
 }
 
 .userdescription {
@@ -355,6 +354,7 @@ animation-fill-mode: forwards;
     left:0; 
     width:75%; 
     overflow-y: auto; 
+    overflow-x: hidden;
     max-height: calc(100% - 120px);
 }
 

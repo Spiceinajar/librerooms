@@ -270,6 +270,8 @@ async function openMenu(m_id, args={}) {
         addNotif("Room name is taken");
       } else if (res === "limit") {
         addNotif("You already have created the maximum number of rooms allowed");
+      } else if (res === "forbiddenchars") {
+        addNotif("Room name must only contain letters and numbers");
       }
     }
   }
@@ -303,20 +305,7 @@ async function openMenu(m_id, args={}) {
     <h1 style="font-size:40px">Configure Room</h1>
     <hr style="width:70%;">
 
-    <span>
-    <h1 style="font-size:2vh;">Member Limit:<h1>
-    <textarea name="" id="entry" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 30vh; height: 3.5vh; border-radius: 1vh; font-size: 2.5vh;"></textarea>
-    </span>
-
-    <span>
-    <h1 style="font-size:2vh;">Name:<h1>
-    <textarea name="" id="entry" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 30vh; height: 3.5vh; border-radius: 1vh; font-size: 2.5vh;"></textarea>
-    </span>
-
-    <span>
-    <h1 style="font-size:2vh;">Room Key:<h1>
-    <textarea name="" id="entry" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 30vh; height: 3.5vh; border-radius: 1vh; font-size: 2.5vh;"></textarea>
-    </span>
+    <h1 style="font-size:2vh; display: inline;">This feature is under development. Please get staff to help you instead.</h1>
     `);
   }
 

@@ -3,6 +3,7 @@ var userkey = '';
 var personalpfp = './assets/icons/missing.svg'
 var active_room = ''
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 try {
   let ss = JSON.parse(decrypt(sessionStorage.getItem('pearlUserLogin')));
@@ -167,57 +168,65 @@ async function updateMessageBoard() {
         }
       });
 
-      if (msg['user'] === username) {
-        if (msg['user'] === lastauth) {
-          boardcontent += `
-          <div>
-            <div class='chat_bubble message-right' style='border-top-right-radius: 0'>
-              <span class='message-content'>${contents}</span>
-            </div>
-          </div>
-          `;
-        } else {
-          boardcontent += `
-    
-          <div class='chat_bubble message-right' style='border-bottom-right-radius: 0;'>
-            <span class='message-content'>${contents}</span>
-          </div>
-    
-          `;
-        }
-
-
+      if (msg['user'] === 'System') {
+        boardcontent += `
+        <div style="background-color: rgba(100, 100, 215, 0.06); width:100%; text-align: center; color: white; font-family: Standard; padding: 5px;">
+          ${contents}
+        </div>
+        `;
       } else {
-        if (msg['user'] === lastauth) {
-
-          boardcontent += `
-
-          <div>
-            <div class='chat_bubble' style='border-top-left-radius: 0; margin-left: 69px;'>
-                <span class='message-content''>${contents}</span>
-            </div>
-          </div>
-
-          `;
-          
-        } else {
-          boardcontent += `
-
-          <div>
-            <div style='display:inline-block; vertical-align: bottom; margin-bottom:-10px'>
-              <img src='${pfp}' class="profilepic" onclick="openMenu('profile', {user:'${msg.user}'})">
-            </div>
-            
-            <div style='display:inline-block; width:80%'>
-              <span class='message-user'>${userDisplay}</span>
-              <div class='chat_bubble' style='border-bottom-left-radius: 0; max-width:100%;'>
+        if (msg['user'] === username) {
+          if (msg['user'] === lastauth) {
+            boardcontent += `
+            <div>
+              <div class='chat_bubble message-right' style='border-top-right-radius: 0'>
                 <span class='message-content'>${contents}</span>
               </div>
             </div>
-          </div>
-
-          `;
-        };
+            `;
+          } else {
+            boardcontent += `
+      
+            <div class='chat_bubble message-right' style='border-bottom-right-radius: 0;'>
+              <span class='message-content'>${contents}</span>
+            </div>
+      
+            `;
+          }
+  
+  
+        } else {
+          if (msg['user'] === lastauth) {
+  
+            boardcontent += `
+  
+            <div>
+              <div class='chat_bubble' style='border-top-left-radius: 0; margin-left: 69px;'>
+                  <span class='message-content''>${contents}</span>
+              </div>
+            </div>
+  
+            `;
+            
+          } else {
+            boardcontent += `
+  
+            <div>
+              <div style='display:inline-block; vertical-align: bottom; margin-bottom:-10px'>
+                <img src='${pfp}' class="profilepic" onclick="openMenu('profile', {user:'${msg.user}'})">
+              </div>
+              
+              <div style='display:inline-block; width:80%'>
+                <span class='message-user'>${userDisplay}</span>
+                <div class='chat_bubble' style='border-bottom-left-radius: 0; max-width:100%;'>
+                  <span class='message-content'>${contents}</span>
+                </div>
+              </div>
+            </div>
+  
+            `;
+          };
+        }
       }
 
       lastauth = msg['user'];
@@ -310,21 +319,21 @@ function switch_room(room, displayname, mode, created=false) {
 switch_room("Main room", "Main room", "r")
 
 const respondRequest = async function(mode, recipient) {
-  let cumfart = await DB({type:'respond-request', mode: mode, user:username, pass:userkey, recipient:recipient})
-  console.log(cumfart);
+  await DB({type:'respond-request', mode: mode, user:username, pass:userkey, recipient:recipient})
   await populateSidebar("f");
 }
 
 function messageInputUpdate(e) {
-  let element = document.getElementById('msgtxt');
-  element.style.height = "1px";
-  element.style.height = (element.scrollHeight)+"px";
-
   if (e.key === 'Enter') {
     if (! e.shiftKey) {
+      e.preventDefault();
       sendMessage()
     }
   }
+
+  let element = document.getElementById('msgtxt');
+  element.style.height = "1px";
+  element.style.height = (element.scrollHeight)+"px";
 }
 document.getElementById('msgtxt').addEventListener("keydown", messageInputUpdate);
 
@@ -341,7 +350,7 @@ async function populateSidebar(mode) {
       document.getElementById('room-display').innerHTML += `
       
       <div style='width:100%; height:60px; padding:5px;'>
-        <button onclick='switch_room("${rooms[room].name}", "${rooms[room].name}", "r", ${rooms[room].created});' style='width:calc(100% - 10px); height:100%; font-size: 20px;'>${rooms[room].name}</button>
+        <button id="room-button-${rooms[room].name}" onclick='switch_room("${rooms[room].name}", "${rooms[room].name}", "r", ${rooms[room].created});' style='width:calc(100% - 10px); height:100%; font-size: 20px;'>${rooms[room].name}</button>
       </div>
       
       `;
@@ -417,8 +426,17 @@ setInterval(updateMessageBoard, 3000);
 async function sendMessage() {
   let val = document.getElementById('msgtxt').value;
   document.getElementById('msgtxt').value = '';
-  if (! (val === '')) {
-    await DB({type:'addmsg', room:active_room, contents: val, user:username, pass:userkey, dt:getTime()})
+  if (val.length > 1) {
+    let res = await DB({type:'addmsg', room:active_room, contents: val, user:username, pass:userkey, dt:getTime()})
+    res = res.res;
+    console.log(res)
+
+    if (res === 'noauth') {
+      addNotif('Authentication error')
+    }
+    if (res === 'toolong') {
+      addNotif('Message exceeds 500 character limit')
+    }
   }
 }
 

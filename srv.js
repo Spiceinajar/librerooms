@@ -108,6 +108,24 @@ async function run() {
         dat.collections.rooms[r].messages = dat.collections.rooms[r].messages.filter(msg => msg.user !== user);
       }
     }
+
+    function checkChars(string) {
+      let allowed = [
+          'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 
+          'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 
+          '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+      ];
+  
+      let passes = true;
+  
+      for (i of string) {
+          if (! allowed.includes(i.toLowerCase())) {
+              passes = false
+          }
+      }
+  
+      return passes;
+    }
   
     function getFriends(user) {
       let f = [];
@@ -257,8 +275,6 @@ async function run() {
 
     
         if (parsed.type === 'cr_user') {
-    
-    
           if (authenticate(parsed.user, null, true)) {
             return {"status":"exists"};
           } else {
@@ -267,6 +283,7 @@ async function run() {
               dat.collections.rooms["Main room"]['members'].push(parsed.user);
               dat.collections.rooms["updates"]['members'].push(parsed.user);
               console.log(`Account '${parsed.user}' has been created.`);
+              sysMessage(`@${parsed.user} has joined Pearl for the first time!`)
               return {"status":true};
             } else {
               return {"status":"shortuser"};
@@ -276,94 +293,106 @@ async function run() {
     
         if (parsed.type === 'addmsg') {
           if (authenticate(parsed.user, parsed.pass)) {
-            dat.collections.rooms[parsed['room']]['messages'].push({'text':parsed['contents'], 'user':parsed.user, 'dt': parsed['dt']});
-            console.log(`[${parsed['room']}] ${parsed.user}: "${parsed['contents']}"`)
+            if (parsed.contents.length < 500) {
+              dat.collections.rooms[parsed['room']]['messages'].push({'text':parsed['contents'], 'user':parsed.user, 'dt': parsed['dt']});
+              console.log(`[${parsed['room']}] ${parsed.user}: "${parsed['contents']}"`)
+      
+              //COMMANDS
+              if (parsed['contents'].charAt(0) === '~') {
+                const parts = parsed['contents'].split(" ");
+                const cmd = parts.shift().substring(1).toUpperCase();
+                const args = JSON.parse(parts.join(" "));
     
-            //COMMANDS
-            if (parsed['contents'].charAt(0) === '~') {
+                //for (a of args_raw) {
+                //  let key = a.split('=')[0];
+                //  let arg = a.split('=')[1];
+                //
+                //  args[key] = arg
+                //}
+  
+                let hierarchy = [
+                  'Administrator',
+                  'Moderator',
+                  'Developer'
+                ];
+                let permissions = {};
+  
+                for (let r in hierarchy) {
+                  let name = hierarchy[r];
+  
+                  if (dat.collections.users[parsed.user].roles.includes(name)) {
+                    permissions[name] = true;
+                  } else {
+                    permissions[name] = false;
+                  }
+                }
+  
+                if (permissions['Administrator']) {
+                  if (cmd === "BACKUP") {
+                    mongoOperation('setDB').catch(console.dir)
+                    sysMessage('Database backup has been made.', parsed['room'])
+                  }
+      
+                  if (cmd === "ADDROLE") { 
+                    dat.collections.users[args.user].roles.push(args.role);
+                    sysMessage(`Added role '${args.role}' to user @${args.user}.`, parsed['room'])
+                  }
+      
+                  if (cmd === "CLEARROLES") { 
+                    dat.collections.users[args.user].roles = [];
+                    sysMessage(`Cleared roles for user @${args.user}.`, parsed['room'])
+                  }
+      
+                  if (cmd === "DELROOM") { 
+                    delete dat.collections.rooms[parsed['room']];
+                  }
+      
+                  if (cmd === "LOCK") { 
+                    dat.collections.users[args.user].locked = args.reason;
+                    sysMessage(`Locked account @${args.user} for "${args.reason}".`, parsed['room'])
+                  }
+    
+                  if (cmd === "UNLOCK") { 
+                    dat.collections.users[args.user].locked = undefined;
+                    sysMessage(`Unlocked account @${args.user}.`, parsed['room'])
+                  }
+                }
+    
+                if (permissions['Administrator'] || permissions['Moderator']) {
+                  if (cmd === "PURGE") { 
+                    dat.collections.rooms[parsed['room']]['messages'] = dat.collections.rooms[parsed['room']]['messages'].splice(-args.amount)
+                    sysMessage(`Removed last ${args.amount} messages from this room.`, parsed['room'])
+                  }
+      
+                  if (cmd === "CLEAR") { 
+                    dat.collections.rooms[parsed['room']]['messages'] = [];
+                    sysMessage(`Cleared all messages from this room.`, parsed['room'])
+                  }
+    
+                  if (cmd === "SETBANNER") { 
+                    dat.collections.rooms[parsed['room']].banner = args.link;
+                    sysMessage(`Set banner for "${parsed['room']}".`, parsed['room'])
+                  }
+    
+                  if (cmd === "SETDESCRIPTION") { 
+                    dat.collections.rooms[parsed['room']].description = args.value;
+                    sysMessage(`Set description for "${parsed['room']}".`, parsed['room'])
+                  }
 
-              let cmdCut = parsed['contents'].split(" ");
-              let cmd = cmdCut[0].substring(1).toUpperCase();
-              let args_raw = cmdCut.slice(1, cmdCut.length)
-              let args = {};
-  
-              for (a of args_raw) {
-                let key = a.split('=')[0];
-                let arg = a.split('=')[1];
-  
-                args[key] = arg
+                  if (cmd === "SETLIMIT") { 
+                    dat.collections.rooms[parsed['room']].maxmembers = Integer.parseInt(args.value);
+                    sysMessage(`Set user limit for "${parsed['room']}" to ${args.value}.`, parsed['room'])
+                  }
+                }
+
               }
 
-              let hierarchy = [
-                'Administrator',
-                'Moderator',
-                'Developer'
-              ];
-              let permissions = {};
-
-              for (let r in hierarchy) {
-                let name = hierarchy[r];
-
-                if (dat.collections.users[parsed.user].roles.includes(name)) {
-                  permissions[name] = true;
-                } else {
-                  permissions[name] = false;
-                }
-              }
-
-              if (permissions['Administrator']) {
-                if (cmd === "BACKUP") {
-                  mongoOperation('setDB').catch(console.dir)
-                  sysMessage('Database backup has been made.', parsed['room'])
-                }
-    
-                if (cmd === "ADDROLE") { 
-                  dat.collections.users[args.user].roles.push(args.role);
-                  sysMessage(`Added role '${args.role}' to user @${args.user}.`, parsed['room'])
-                }
-    
-                if (cmd === "CLEARROLES") { 
-                  dat.collections.users[args.user].roles = [];
-                  sysMessage(`Cleared roles for user @${args.user}.`, parsed['room'])
-                }
-    
-                if (cmd === "DELROOM") { 
-                  delete dat.collections.rooms[parsed['room']];
-                }
-    
-                if (cmd === "LOCK") { 
-                  dat.collections.users[args.user].locked = args.reason;
-                  sysMessage(`Locked account @${args.user} for "${args.reason}".`, parsed['room'])
-                }
-  
-                if (cmd === "UNLOCK") { 
-                  dat.collections.users[args.user].locked = undefined;
-                  sysMessage(`Unlocked account @${args.user}.`, parsed['room'])
-                }
+              return {'res':true}
+            } else {
+              return {'res':'toolong'}
             }
-
-            if (permissions['Administrator'] || permissions['Moderator']) {
-              if (cmd === "PURGE") { 
-                dat.collections.rooms[parsed['room']]['messages'] = dat.collections.rooms[parsed['room']]['messages'].splice(-args.amount)
-                sysMessage(`Removed last ${args.amount} messages from this room.`, parsed['room'])
-              }
-  
-              if (cmd === "CLEAR") { 
-                dat.collections.rooms[parsed['room']]['messages'] = [];
-                sysMessage(`Cleared all messages from this room.`, parsed['room'])
-              }
-
-              if (cmd === "SETBANNER") { 
-                dat.collections.rooms[parsed['room']].banner = args.link;
-                sysMessage(`Set banner for "${parsed['room']}".`, parsed['room'])
-              }
-
-              if (cmd === "SETDESCRIPTION") { 
-                dat.collections.rooms[parsed['room']].description = args.value;
-                sysMessage(`Set description for "${parsed['room']}".`, parsed['room'])
-              }
-          }
-            }
+          } else {
+            return {'res':'noauth'}
           }
         }
     
@@ -374,6 +403,7 @@ async function run() {
                 if ((dat.collections.rooms[parsed['room']].members.length < dat.collections.rooms[parsed['room']].maxmembers) | (dat.collections.rooms[parsed['room']].maxmembers === "inf")) {
                   dat.collections.rooms[parsed['room']]['members'].push(parsed.user);
                   console.log(`User ${parsed.user} joined ${parsed['room']}`);
+                  sysMessage(`@${parsed.user} has joined the room`)
                   return {"status":true};
                 } else {
                   return {"status":"full"};
@@ -397,6 +427,7 @@ async function run() {
               let members = dat.collections.rooms[parsed['room']]['members'];
               members.splice(members.indexOf(parsed.user), 1)
               console.log(`User ${parsed.user} left ${parsed['room']}`)
+              sysMessage(`@${parsed.user} has left the room`)
               return true
             }
           } else {
@@ -417,25 +448,29 @@ async function run() {
     
         if (parsed.type === 'cr_room') {
           if (authenticate(parsed.user, parsed.pass)) {
-            if (parsed.rname in dat.collections.rooms) {
-              return {res:"exists"}
-            } else {
-              
-              let ownedrooms = 0;
-              for (var r in dat.collections.rooms) {
-                let room = dat.collections.rooms[r];
-                if (room.creator === parsed.user) {
-                  ownedrooms += 1
+            if (checkChars(parsed['rname'])) {
+              if (parsed.rname in dat.collections.rooms) {
+                return {res:"exists"}
+              } else {
+                
+                let ownedrooms = 0;
+                for (var r in dat.collections.rooms) {
+                  let room = dat.collections.rooms[r];
+                  if (room.creator === parsed.user) {
+                    ownedrooms += 1
+                  }
+                }
+  
+                if (ownedrooms < 4) {
+                  dat.collections.rooms[parsed['rname']] = {"messages":[], "members":[parsed.user], "type":"room", "banner":"./assets/icons/room_default.svg", "description":"This room has no description yet.", "password":parsed['roomkey'], "creator":parsed.user, "maxmembers":1000};
+                  console.log(`User ${parsed.user} created room "${parsed['rname']}"`)
+                  return {res:true}
+                } else {
+                  return {res:"limit"}
                 }
               }
-
-              if (ownedrooms < 4) {
-                dat.collections.rooms[parsed['rname']] = {"messages":[], "members":[parsed.user], "type":"room", "banner":"./assets/icons/room_default.svg", "description":"This room has no description yet.", "password":parsed['roomkey'], "creator":parsed.user, "maxmembers":1000};
-                console.log(`User ${parsed.user} created room "${parsed['rname']}"`)
-                return {res:true}
-              } else {
-                return {res:"limit"}
-              }
+            } else {
+              return {res:"forbiddenchars"}
             }
           } else {
             return {res:"noauth"}
