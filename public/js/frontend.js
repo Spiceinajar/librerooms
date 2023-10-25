@@ -1,5 +1,7 @@
 const apiUrl = `${window.location.origin}:${window.location.port}/server`;
 
+var Settings = {fancyGFX:true};
+
 //=====================================================
 
 var chars = [' ', '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', "á", "é", "í", "ó", "ú", "ü", "ñ", "•"]
@@ -59,20 +61,23 @@ function formatTime(time) {
     let year = time.year;
     let hour = time.hour;
     let minute = time.minute;
+
+    let date = Date.UTC(year, month, day, hour, minute, 0, );
+    let localDate = new Date(date).toLocaleString();
   
     let twelveHourClock = true;
   
-    let signature = "";
-    if (twelveHourClock) {
-      if (hour > 12) {
-        hour -= 12;
-        signature = " PM "
-      } else {
-        signature = " AM "
-      }
-    }
+    //let signature = "";
+    //if (twelveHourClock) {
+    //  if (hour > 12) {
+    //    hour -= 12;
+    //    signature = " PM "
+    //  } else {
+    //    signature = " AM "
+    //  }
+    //}
   
-    return {day: day, month: month, year: year, hour: hour, minute: minute, signature: signature}
+    return ' • ' + localDate//` • ${day}/${month}/${year} ${hour}:${minute} ${signature} UTC`
   }
 }
 

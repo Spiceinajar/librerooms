@@ -1,4 +1,4 @@
-async function closeMenu(anim=true) {
+async function closeMenu() {
   async function fadeout() {
     var m = document.getElementById('menu');
     var i = 10;
@@ -13,7 +13,7 @@ async function closeMenu(anim=true) {
     }, 10);
   }
 
-  if (anim) {
+  if (Settings.fancyGFX) {
     await fadeout();
   } else {
     document.getElementById("menu").remove();
@@ -32,7 +32,7 @@ async function openMenu(m_id, args={}) {
   
   <div id="menu" style="position:fixed; z-index: 2; width:100%; height:100%; top:0; left:0; right:0; background-color: rgba(0, 0, 0, 0.5); opacity:0;">
     <div id="center_div" class="center_div" style="max-width:100%; max-height:100%;">
-      <div id="menu-bg" style="border-radius: 10px; background-color: rgb(25, 25, 25); text-align: center; width:850px; height:500px; max-height: calc(100% - 20px); max-width: calc(100% - 20px); box-shadow: 0px 0px 10px black;">
+      <div id="menu-bg" style="border-radius: 10px; background-color: rgb(25, 25, 25); text-align: center; width:850px; height:500px; max-height: calc(100% - 20px); max-width: calc(100% - 20px);">
         <div style='width=100%; text-align: right; margin-bottom:-20px'>
           <button id="xbtn" style="width:25px; height:25px; background-color: red; border-radius:5">X</button>
         </div>
@@ -41,6 +41,10 @@ async function openMenu(m_id, args={}) {
   </div>
   
   `);
+
+  if (Settings.fancyGFX) {
+    document.getElementById('menu-bg').style['box-shadow'] = '0px 0px 10px black';
+  }
 
   function updLayout() {
     if (mobileLayout) {
@@ -145,9 +149,9 @@ async function openMenu(m_id, args={}) {
       <button id="delbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Delete Account</button>
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
-    </div>
 
-    <h1 style="font-size:10px;">Version: 1.1.8 (Web Beta Release)</h1>
+      <h1 style="font-size:10px;">Version: 1.1.8.1 [Beta]</h1>
+    </div>
     `);
 
     document.getElementById('delbtn').onclick = function () {authMenu(
@@ -356,7 +360,7 @@ async function openMenu(m_id, args={}) {
     }, 10);
   }
 
-  if (switched) {
+  if (switched || (! Settings.fancyGFX)) {
     m.style.opacity = 1
   } else {
     await fadeIn()

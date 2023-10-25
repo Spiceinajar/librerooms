@@ -166,7 +166,7 @@ async function run() {
             if (authenticate(parsed.user, parsed.pass)) {
               if (dat.collections.rooms[parsed['room']]['members'].includes(parsed.user)) {
                 //console.log(`Client request of "${parsed['room']}" contents`)
-                return {contents:dat.collections.rooms[parsed['room']]['messages'].slice(-parsed['amount'])};
+                return {contents:dat.collections.rooms[parsed['room']]['messages'].slice(parsed['beg']), range:dat.collections.rooms[parsed['room']]['messages'].length};
               }
             }
           }
@@ -283,9 +283,16 @@ async function run() {
           return {auth:authenticate(parsed.user, parsed.pass)};
         };
 
-        function getMDY() {
+        function getMDY(includetime=true) {
           let d = new Date();
-          return {'day':d.getDate(), 'month':d.getMonth(), 'year':d.getFullYear()}
+          let result = {day:d.getUTCDate(), month:d.getUTCMonth(), year:d.getUTCFullYear()};
+          
+          if (includetime) {
+            result.hour = d.getUTCHours();
+            result.minute = d.getUTCMinutes();
+          }
+
+          return result;
         }
 
         if (parsed.type === 'cr_user') {
@@ -293,7 +300,7 @@ async function run() {
             return {"status":"exists"};
           } else {
             if (parsed["user"].length > 2) {
-              dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.svg', 'bio':'This user has not yet created a description.', 'roles':['BetaTester'], 'notifs':[`Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's beta stage, you've been given the [BetaTester] badge. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`], 'requests':[], 'joindate':getMDY()};
+              dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.svg', 'bio':'This user has not yet created a description.', 'roles':['BetaTester'], 'notifs':[`Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's beta stage, you've been given the [BetaTester] badge. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`], 'requests':[], 'joindate':getMDY(false)};
               dat.collections.rooms["Main room"]['members'].push(parsed.user);
               dat.collections.rooms["updates"]['members'].push(parsed.user);
               console.log(`Account '${parsed.user}' has been created.`);
@@ -306,110 +313,112 @@ async function run() {
         };
     
         if (parsed.type === 'addmsg') {
-          if (authenticate(parsed.user, parsed.pass)) {
-            if (parsed.contents.length < 500) {
-              dat.collections.rooms[parsed['room']]['messages'].push({'text':parsed['contents'], 'user':parsed.user, 'dt': parsed['dt']});
-              console.log(`[${parsed['room']}] ${parsed.user}: "${parsed['contents']}"`)
+          if (parsed['contents'] != dat.collections.rooms[parsed['room']]['messages'][dat.collections.rooms[parsed['room']]['messages'].length-1].text) {
+            if (authenticate(parsed.user, parsed.pass)) {
+              if (parsed.contents.length < 500) {
+                dat.collections.rooms[parsed['room']]['messages'].push({'text':parsed['contents'], 'user':parsed.user, 'dt': getMDY()});
+                console.log(`[${parsed['room']}] ${parsed.user}: "${parsed['contents']}"`)
+        
+                //COMMANDS
+                if (parsed['contents'].charAt(0) === '~') {
+                  const parts = parsed['contents'].split(" ");
+                  const cmd = parts.shift().substring(1).toUpperCase();
+                  let args = {};
+                  if (parts.length > 1) {
+                    args = JSON.parse(parts.join(" "));
+                  }
       
-              //COMMANDS
-              if (parsed['contents'].charAt(0) === '~') {
-                const parts = parsed['contents'].split(" ");
-                const cmd = parts.shift().substring(1).toUpperCase();
-                let args = {};
-                if (parts.length > 1) {
-                  args = JSON.parse(parts.join(" "));
-                }
+                  //for (a of args_raw) {
+                  //  let key = a.split('=')[0];
+                  //  let arg = a.split('=')[1];
+                  //
+                  //  args[key] = arg
+                  //}
     
-                //for (a of args_raw) {
-                //  let key = a.split('=')[0];
-                //  let arg = a.split('=')[1];
-                //
-                //  args[key] = arg
-                //}
+                  let hierarchy = [
+                    'Administrator',
+                    'Moderator',
+                    'Developer'
+                  ];
+                  let permissions = {};
+    
+                  for (let r in hierarchy) {
+                    let name = hierarchy[r];
+    
+                    if (dat.collections.users[parsed.user].roles.includes(name)) {
+                      permissions[name] = true;
+                    } else {
+                      permissions[name] = false;
+                    }
+                  }
+    
+                  if (permissions['Administrator']) {
+                    if (cmd === "BACKUP") {
+                      mongoOperation('setDB').catch(console.dir)
+                      sysMessage('Database backup has been made.', parsed['room'])
+                    }
+        
+                    if (cmd === "ADDROLE") { 
+                      dat.collections.users[args.user].roles.push(args.role);
+                      sysMessage(`Added role '${args.role}' to user @${args.user}.`, parsed['room'])
+                    }
+        
+                    if (cmd === "CLEARROLES") { 
+                      dat.collections.users[args.user].roles = [];
+                      sysMessage(`Cleared roles for user @${args.user}.`, parsed['room'])
+                    }
+        
+                    if (cmd === "DELROOM") { 
+                      delete dat.collections.rooms[parsed['room']];
+                    }
+        
+                    if (cmd === "LOCK") { 
+                      dat.collections.users[args.user].locked = args.reason;
+                      sysMessage(`Locked account @${args.user} for "${args.reason}".`, parsed['room'])
+                    }
+      
+                    if (cmd === "UNLOCK") { 
+                      dat.collections.users[args.user].locked = undefined;
+                      sysMessage(`Unlocked account @${args.user}.`, parsed['room'])
+                    }
+                  }
+      
+                  if (permissions['Administrator'] || permissions['Moderator']) {
+                    if (cmd === "PURGE") { 
+                      dat.collections.rooms[parsed['room']]['messages'] = dat.collections.rooms[parsed['room']]['messages'].splice(-args.amount)
+                      sysMessage(`Removed last ${args.amount} messages from this room.`, parsed['room'])
+                    }
+        
+                    if (cmd === "CLEAR") { 
+                      dat.collections.rooms[parsed['room']]['messages'] = [];
+                      sysMessage(`Cleared all messages from this room.`, parsed['room'])
+                    }
+      
+                    if (cmd === "SETBANNER") { 
+                      dat.collections.rooms[parsed['room']].banner = args.link;
+                      sysMessage(`Set banner for "${parsed['room']}".`, parsed['room'])
+                    }
+      
+                    if (cmd === "SETDESCRIPTION") { 
+                      dat.collections.rooms[parsed['room']].description = args.value;
+                      sysMessage(`Set description for "${parsed['room']}".`, parsed['room'])
+                    }
   
-                let hierarchy = [
-                  'Administrator',
-                  'Moderator',
-                  'Developer'
-                ];
-                let permissions = {};
-  
-                for (let r in hierarchy) {
-                  let name = hierarchy[r];
-  
-                  if (dat.collections.users[parsed.user].roles.includes(name)) {
-                    permissions[name] = true;
-                  } else {
-                    permissions[name] = false;
+                    if (cmd === "SETLIMIT") { 
+                      dat.collections.rooms[parsed['room']].maxmembers = Integer.parseInt(args.value);
+                      sysMessage(`Set user limit for "${parsed['room']}" to ${args.value}.`, parsed['room'])
+                    }
                   }
+  
                 }
   
-                if (permissions['Administrator']) {
-                  if (cmd === "BACKUP") {
-                    mongoOperation('setDB').catch(console.dir)
-                    sysMessage('Database backup has been made.', parsed['room'])
-                  }
-      
-                  if (cmd === "ADDROLE") { 
-                    dat.collections.users[args.user].roles.push(args.role);
-                    sysMessage(`Added role '${args.role}' to user @${args.user}.`, parsed['room'])
-                  }
-      
-                  if (cmd === "CLEARROLES") { 
-                    dat.collections.users[args.user].roles = [];
-                    sysMessage(`Cleared roles for user @${args.user}.`, parsed['room'])
-                  }
-      
-                  if (cmd === "DELROOM") { 
-                    delete dat.collections.rooms[parsed['room']];
-                  }
-      
-                  if (cmd === "LOCK") { 
-                    dat.collections.users[args.user].locked = args.reason;
-                    sysMessage(`Locked account @${args.user} for "${args.reason}".`, parsed['room'])
-                  }
-    
-                  if (cmd === "UNLOCK") { 
-                    dat.collections.users[args.user].locked = undefined;
-                    sysMessage(`Unlocked account @${args.user}.`, parsed['room'])
-                  }
-                }
-    
-                if (permissions['Administrator'] || permissions['Moderator']) {
-                  if (cmd === "PURGE") { 
-                    dat.collections.rooms[parsed['room']]['messages'] = dat.collections.rooms[parsed['room']]['messages'].splice(-args.amount)
-                    sysMessage(`Removed last ${args.amount} messages from this room.`, parsed['room'])
-                  }
-      
-                  if (cmd === "CLEAR") { 
-                    dat.collections.rooms[parsed['room']]['messages'] = [];
-                    sysMessage(`Cleared all messages from this room.`, parsed['room'])
-                  }
-    
-                  if (cmd === "SETBANNER") { 
-                    dat.collections.rooms[parsed['room']].banner = args.link;
-                    sysMessage(`Set banner for "${parsed['room']}".`, parsed['room'])
-                  }
-    
-                  if (cmd === "SETDESCRIPTION") { 
-                    dat.collections.rooms[parsed['room']].description = args.value;
-                    sysMessage(`Set description for "${parsed['room']}".`, parsed['room'])
-                  }
-
-                  if (cmd === "SETLIMIT") { 
-                    dat.collections.rooms[parsed['room']].maxmembers = Integer.parseInt(args.value);
-                    sysMessage(`Set user limit for "${parsed['room']}" to ${args.value}.`, parsed['room'])
-                  }
-                }
-
+                return {'res':true}
+              } else {
+                return {'res':'toolong'}
               }
-
-              return {'res':true}
             } else {
-              return {'res':'toolong'}
+              return {'res':'noauth'}
             }
-          } else {
-            return {'res':'noauth'}
           }
         }
     

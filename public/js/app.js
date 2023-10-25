@@ -91,10 +91,19 @@ async function unfriend() {
   }
 }
 
+if (Settings.fancyGFX) {
+  document.body.insertAdjacentHTML('afterbegin', '<img id="loading-ind" style="position: absolute; bottom: 80px; left: 20px; z-index: 5; height: 150px; max-width: 50%;" src="./assets/icons/loading.gif" alt="loading">')
+} else {
+  document.body.insertAdjacentHTML('afterbegin', '<h1 id="loading-ind" style="position: absolute; bottom: 80px; left: 20px; z-index: 5; font-size: 30px;">Loading...</h1>')
+}
+
+let latestRange = -50;
 async function updateMessageBoard() {
   if (document.hasFocus()) {
     let requestedRoom = active_room;
-    let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'amount':50});
+    let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'beg':latestRange});
+    latestRange = result.range;
+
     let boardcontent = ``;
     var lastauth = null;
   
@@ -113,6 +122,12 @@ async function updateMessageBoard() {
         pfp = await getPFP(msg['user']);
         roles = await getRoles(msg['user']);
         datetime = formatTime(msg.dt);
+
+        let div = document.getElementById("msgs")
+        while (div.childElementCount > 50) {
+          let firstElement = div.firstChild;
+          div.removeChild(firstElement);
+        }
   
         userDisplay = msg['user'];
         for (var r in roles) {
@@ -128,7 +143,7 @@ async function updateMessageBoard() {
           //let hourOffset = TZ_offset/60;
           //let minOffset = TZ_offset % TZ_offset;
   
-          userDisplay += ` • UTC ${datetime.hour}:${datetime.minute}${datetime.signature}`;
+          userDisplay += datetime;
         }
   
         contents = msg['text'].replace(/<[^>]*>/g, '<script type="text/plain">' + "$&" + '</script>');
@@ -144,7 +159,7 @@ async function updateMessageBoard() {
   
             <video class="msg-content" controls>
               <source src="${match}" type="video/mp4">
-            [ Your browser does not support the video element. ]
+              [ Your browser does not support the video element. ]
             </video>
   
             `;
@@ -233,7 +248,7 @@ async function updateMessageBoard() {
         lastauth = msg['user'];
       }
   
-      document.getElementById('msgs').innerHTML = boardcontent;
+      document.getElementById('msgs').insertAdjacentHTML('beforeend', boardcontent);
     
       let emptyIndicatior = String.raw`
       <h1 id="empty-indicator" style="text-align: center;">
@@ -298,6 +313,7 @@ function switch_room(room, displayname, mode, created=false) {
   document.getElementById('room_name_display').textContent = displayname;
   document.getElementById('msgs').innerHTML = ``;
   lastauth = null;
+  latestRange = -50;
 
   if (mode === "r") {
     if (created === true) {
@@ -429,7 +445,7 @@ async function sendMessage() {
   let val = document.getElementById('msgtxt').value;
   document.getElementById('msgtxt').value = '';
   if (val.length > 1) {
-    let res = await DB({type:'addmsg', room:active_room, contents: val, user:username, pass:userkey, dt:getTime()})
+    let res = await DB({type:'addmsg', room:active_room, contents: val, user:username, pass:userkey})
     res = res.res;
     console.log(res)
 
@@ -510,7 +526,7 @@ window.addEventListener("resize", reportWindowSize);
 var element = document.getElementById("msgs");
 var prevheight = element.scrollHeight;
 async function updScroll() {
-  if (element.scrollHeight != prevheight) {
+  if (element.scrollHeight !== prevheight) {
     board.scrollBy(0, element.scrollHeight + prevheight);
   }
 
