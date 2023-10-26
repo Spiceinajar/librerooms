@@ -1,3 +1,17 @@
+function getCookie(name) {
+  var cookies = document.cookie.split('; ');
+  console.log(cookies);
+  for (var c in cookies) {
+    let cookie = cookies[c];
+
+    console.log(cookie);
+    if (cookie.split('=')[0] === name) {
+      return cookie.split('=')[1];
+    }
+  }
+  return '';
+}
+
 const apiUrl = `${window.location.origin}:${window.location.port}/server`;
 
 var Settings = {fancyGFX:true};
@@ -35,20 +49,6 @@ function decrypt(string) {
     return decrypted_str
 }
 
-function getCookie(name) {
-  var cookies = document.cookie.split('; ');
-  console.log(cookies);
-  for (var c in cookies) {
-    let cookie = cookies[c];
-
-    console.log(cookie);
-    if (cookie.split('=')[0] === name) {
-      return cookie.split('=')[1];
-    }
-  }
-  return '';
-}
-
 function getTime() {
   const dt = new Date();
   return {day: dt.getUTCDay(), month: dt.getUTCMonth(), year: dt.getUTCFullYear(), hour: dt.getUTCHours(), minute: dt.getUTCMinutes()};
@@ -62,11 +62,12 @@ function formatTime(time) {
     let hour = time.hour;
     let minute = time.minute;
 
-    let date = Date.UTC(year, month, day, hour, minute, 0, );
-    let localDate = new Date(date).toLocaleString();
+    let date = Date.UTC(year, month, day, hour, minute, 0);
+    let localDate = new Date(date).toLocaleDateString("en-us", {day: '2-digit', month:'2-digit', year:'2-digit'});
+    let localTime = new Date(date).toLocaleTimeString("en-us", {hour: '2-digit', minute:'2-digit'});
   
-    let twelveHourClock = true;
-  
+    //let twelveHourClock = true;
+    //
     //let signature = "";
     //if (twelveHourClock) {
     //  if (hour > 12) {
@@ -77,7 +78,7 @@ function formatTime(time) {
     //  }
     //}
   
-    return ' • ' + localDate//` • ${day}/${month}/${year} ${hour}:${minute} ${signature} UTC`
+    return {"date":localDate, "time":localTime}//` • ${day}/${month}/${year} ${hour}:${minute} ${signature} UTC`
   }
 }
 

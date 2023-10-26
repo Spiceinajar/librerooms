@@ -99,12 +99,15 @@ async function run() {
       console.log(`Failed authentication attempt to '${parsed.user}'`);
       return false;
     }
-
-    delete dat.collections.rooms["Connor's fun sexhouse"];
-    dat.collections.rooms['Connors'] = {"messages":[],"members":["Connorshirt"],"type":"room","banner":"./assets/icons/room_default.svg","description":"No description.","password":"","maxmembers":"500","creator":"Connorshirt"};
   
     function wipeMessage(user) {
       for (var r in dat.collections.rooms) {
+        for (var m in dat.collections.rooms[r].messages) {
+          if (dat.collections.rooms[r].messages[m].user === user) {
+            dat.collections.rooms[r].messages[m].user = '[deleted]';
+            dat.collections.rooms[r].messages[m].text = '[deleted]';
+          }
+        }
         dat.collections.rooms[r].messages = dat.collections.rooms[r].messages.filter(msg => msg.user !== user);
       }
     }
@@ -313,7 +316,18 @@ async function run() {
         };
     
         if (parsed.type === 'addmsg') {
-          if (parsed['contents'] != dat.collections.rooms[parsed['room']]['messages'][dat.collections.rooms[parsed['room']]['messages'].length-1].text) {
+          let spam = false;
+
+          if (dat.collections.rooms[parsed['room']]['messages'].length > 0) {
+            let last = dat.collections.rooms[parsed['room']]['messages'][dat.collections.rooms[parsed['room']]['messages'].length-1]
+            if (last.user === parsed.user) {
+              if (parsed.contents === last.text) {
+                spam = true
+              }
+            }
+          }
+          
+          if (! spam) {
             if (authenticate(parsed.user, parsed.pass)) {
               if (parsed.contents.length < 500) {
                 dat.collections.rooms[parsed['room']]['messages'].push({'text':parsed['contents'], 'user':parsed.user, 'dt': getMDY()});
@@ -353,11 +367,6 @@ async function run() {
                   }
     
                   if (permissions['Administrator']) {
-                    if (cmd === "BACKUP") {
-                      mongoOperation('setDB').catch(console.dir)
-                      sysMessage('Database backup has been made.', parsed['room'])
-                    }
-        
                     if (cmd === "ADDROLE") { 
                       dat.collections.users[args.user].roles.push(args.role);
                       sysMessage(`Added role '${args.role}' to user @${args.user}.`, parsed['room'])
@@ -407,6 +416,13 @@ async function run() {
                     if (cmd === "SETLIMIT") { 
                       dat.collections.rooms[parsed['room']].maxmembers = Integer.parseInt(args.value);
                       sysMessage(`Set user limit for "${parsed['room']}" to ${args.value}.`, parsed['room'])
+                    }
+                  }
+
+                  if (permissions['Developer'] || permissions['Administrator']) {
+                    if (cmd === "BACKUP") {
+                      mongoOperation('setDB').catch(console.dir)
+                      sysMessage('Database backup has been made.', parsed['room'])
                     }
                   }
   
@@ -505,8 +521,8 @@ async function run() {
     
         if (parsed.type === 'delaccount') {
           if (authenticate(parsed.user, parsed.pass)) {
-            delete dat.collections.users[parsed.user]
             wipeMessage(parsed.user);
+            delete dat.collections.users[parsed.user];
             return true;
           } else {
             return "noauth";

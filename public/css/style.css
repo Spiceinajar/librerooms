@@ -452,6 +452,14 @@ text-decoration: underline;
 
 
 
+#consent-btn {
+    padding: 10px;
+    font-size: 20px;
+    background-color: rgb(100, 100, 215);
+}
+
+
+
 ::-webkit-scrollbar {
     width: 10px;
   }

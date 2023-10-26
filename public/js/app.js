@@ -98,6 +98,8 @@ if (Settings.fancyGFX) {
 }
 
 let latestRange = -50;
+var lastauth = null;
+var lastdt = null;
 async function updateMessageBoard() {
   if (document.hasFocus()) {
     let requestedRoom = active_room;
@@ -105,7 +107,6 @@ async function updateMessageBoard() {
     latestRange = result.range;
 
     let boardcontent = ``;
-    var lastauth = null;
   
     if (document.getElementById('msgs').children.length < 1) {
       document.getElementById('loading-ind').style.display = 'inline';
@@ -134,16 +135,23 @@ async function updateMessageBoard() {
           let role = roles[r];
           userDisplay += `<img src="./assets/icons/roles/${role}.svg" alt="roleicon" title="${role}" style="padding-left: 5px; height:15px;">`;
         }
-  
-        //const now = new Date();
         
         if (datetime) {
-          //let TZ_offset = now.getTimezoneOffset();
-  
-          //let hourOffset = TZ_offset/60;
-          //let minOffset = TZ_offset % TZ_offset;
-  
-          userDisplay += datetime;
+          userDisplay += ` • ${datetime.time}`;
+        }
+
+        if (lastdt && msg.dt) {
+          if (lastdt.day < msg.dt.day) {
+            boardcontent += `
+            <div style="padding-top:10px; padding-bottom:10px">
+              <div style="width: 100%; height: 9px; border-bottom: 1px solid white; text-align: center">
+                <h1 style="font-size: 14px; background-color: rgb(20, 20, 20); padding: 0 10px; display:inline">
+                  ${datetime.date}
+                </h1>
+              </div>
+            </div>
+            `
+          }
         }
   
         contents = msg['text'].replace(/<[^>]*>/g, '<script type="text/plain">' + "$&" + '</script>');
@@ -246,6 +254,7 @@ async function updateMessageBoard() {
         }
   
         lastauth = msg['user'];
+        lastdt = msg.dt;
       }
   
       document.getElementById('msgs').insertAdjacentHTML('beforeend', boardcontent);
@@ -313,6 +322,7 @@ function switch_room(room, displayname, mode, created=false) {
   document.getElementById('room_name_display').textContent = displayname;
   document.getElementById('msgs').innerHTML = ``;
   lastauth = null;
+  lastdt = null;
   latestRange = -50;
 
   if (mode === "r") {
