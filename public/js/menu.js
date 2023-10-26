@@ -22,7 +22,7 @@ async function closeMenu() {
 
 async function openMenu(m_id, args={}) {
   if (document.getElementById("menu")) {
-    closeMenu(false)
+    document.getElementById("menu").remove();
     switched = true;
   } else {
     switched = false;
@@ -91,7 +91,7 @@ async function openMenu(m_id, args={}) {
 
       <textarea id="desc" class="userdescription" readonly>${(await DB({'type':'getdesc', 'targuser':args.user})).contents}</textarea>
 
-      <h1 style="font-size: 15px; font-weight: 200">Joined ${joinDate.res.day}/${joinDate.res.month}/${joinDate.res.year}</h1>
+      <h1 style="font-size: 15px; font-weight: 200">Joined ${joinDate.res.day}/${joinDate.res.month+1}/${joinDate.res.year}</h1>
     </div>
     `);
 
@@ -150,7 +150,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.1.8.2 [Beta]</h1>
+      <h1 style="font-size:10px;">Version: 1.1.8.3 [Beta]</h1>
     </div>
     `);
 
