@@ -294,6 +294,15 @@ animation-fill-mode: forwards;
     cursor:pointer;
 }
 
+.mention {
+    color: gold;
+    background-color: rgba(255, 255, 255, .2);
+    border-radius: 5px;
+    display: inline;
+    font-size: 18px;
+    padding: 2px;
+}
+
 .bar-btn {
     width: 90%; 
     height: 50px; 

@@ -100,11 +100,27 @@ if (Settings.fancyGFX) {
 let latestRange = -50;
 var lastauth = null;
 var lastdt = null;
+let lastUnread = 0;
 async function updateMessageBoard() {
   if (document.hasFocus()) {
     let requestedRoom = active_room;
     let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'beg':latestRange});
     latestRange = result.range;
+
+    //notif
+    if (lastUnread < result.unread) {
+      lastUnread = result.unread;
+
+      var audio = new Audio('assets/audio/pop-notification.mp3');
+      audio.play();
+    }
+
+    if (result.unread > 0) {
+      document.getElementById('mailbtn').src = 'assets/icons/letter-notif.svg'
+    } else {
+      document.getElementById('mailbtn').src = 'assets/icons/letter.svg'
+    }
+    //notif
 
     let boardcontent = ``;
   
@@ -190,6 +206,10 @@ async function updateMessageBoard() {
           } else {
             return `<a target="_blank" rel="noopener noreferrer" href="${match}">${match}</a>`;
           }
+        });
+
+        contents = contents.replace(/\B@\w+\b/g, (match) => {
+          return `<div class='mention'>${match}</div>`
         });
   
         if (msg['user'] === 'System') {
@@ -279,6 +299,8 @@ async function updateMessageBoard() {
       document.getElementById('loading-ind').style.display = 'none';
     };
   }
+
+  setTimeout(updateMessageBoard, 3000)
 }
 
 
@@ -448,7 +470,8 @@ populateSidebar('r')
 document.getElementById('rbtn').onclick = function () { populateSidebar('r'); closeFriendMenu()};
 document.getElementById('fbtn').onclick = function () { populateSidebar('f'); closeFriendMenu()};
 
-setInterval(updateMessageBoard, 3000);
+//setInterval(updateMessageBoard, 3000);
+updateMessageBoard();
 
 
 async function sendMessage() {

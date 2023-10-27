@@ -153,6 +153,14 @@ async function run() {
     function sysMessage(text, room) {
       dat.collections.rooms[room]['messages'].push({'text':text, 'user':'System', 'dt': undefined});
     }
+
+    function notify(user, contents) {
+      dat.collections.users[user].notifs.push(
+        contents
+      )
+
+      dat.collections.users[user].unread += 1
+    }
   
     function process(str) {
       parsed = JSON.parse(decrypt(str));
@@ -169,7 +177,7 @@ async function run() {
             if (authenticate(parsed.user, parsed.pass)) {
               if (dat.collections.rooms[parsed['room']]['members'].includes(parsed.user)) {
                 //console.log(`Client request of "${parsed['room']}" contents`)
-                return {contents:dat.collections.rooms[parsed['room']]['messages'].slice(parsed['beg']), range:dat.collections.rooms[parsed['room']]['messages'].length};
+                return {contents:dat.collections.rooms[parsed['room']]['messages'].slice(parsed['beg']), range:dat.collections.rooms[parsed['room']]['messages'].length, unread:dat.collections.users[parsed.user].unread};
               }
             }
           }
@@ -216,7 +224,8 @@ async function run() {
     
     
         if (parsed.type === 'getnotifs') {
-          console.log(`Client request of notifications "${parsed.user}"`)
+          console.log(`Client request of notifications "${parsed.user}"`);
+          dat.collections.users[parsed.user].unread = 0;
     
           try {
             return {'list':dat.collections.users[parsed.user].notifs};
@@ -303,7 +312,8 @@ async function run() {
             return {"status":"exists"};
           } else {
             if (parsed["user"].length > 2) {
-              dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.svg', 'bio':'This user has not yet created a description.', 'roles':['BetaTester'], 'notifs':[`Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's beta stage, you've been given the [BetaTester] badge. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`], 'requests':[], 'joindate':getMDY(false)};
+              dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.svg', 'bio':'This user has not yet created a description.', 'roles':['BetaTester'], 'notifs':[], 'unread':0, 'requests':[], 'joindate':getMDY(false), 'blocked':[]};
+              notify(parsed.user, `Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's beta stage, you've been given the [BetaTester] badge. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`);
               dat.collections.rooms["Main room"]['members'].push(parsed.user);
               dat.collections.rooms["updates"]['members'].push(parsed.user);
               console.log(`Account '${parsed.user}' has been created.`);
@@ -332,6 +342,18 @@ async function run() {
               if (parsed.contents.length < 500) {
                 dat.collections.rooms[parsed['room']]['messages'].push({'text':parsed['contents'], 'user':parsed.user, 'dt': getMDY()});
                 console.log(`[${parsed['room']}] ${parsed.user}: "${parsed['contents']}"`)
+
+
+                //PINGS
+                if (parsed['contents'].includes('@')) {
+                  for (i of parsed['contents'].split(' ')) {
+                    let us = i.substring(1);
+                    console.log(us);
+                    if (dat.collections.rooms[parsed.room].members.includes(us)) {
+                      notify(us, `@${parsed.user} mentioned you in ${parsed.room}: "${parsed.contents}"`)
+                    }
+                  }
+                }
         
                 //COMMANDS
                 if (parsed['contents'].charAt(0) === '~') {
@@ -584,18 +606,14 @@ async function run() {
                   dat.collections.rooms[`${dm[0]}/${dm[1]}`] = {'messages':[], 'members':dm, 'type':'dm', 'maxmembers':2};
                   removeRequest();
     
-                  dat.collections.users[parsed.recipient].notifs.push(
-                    `Your friend request to @${parsed.user} was accepted.`
-                  )
+                  notify(parsed.recipient, `Your friend request to @${parsed.user} was accepted.`);
         
                   return {'res':true}
                 }
               } else if (parsed.mode === "deny") {
                 removeRequest();
     
-                dat.collections.users[parsed.recipient].notifs.push(
-                  `Your friend request to @${parsed.user} was denied.`
-                )
+                notify(parsed.recipient, `Your friend request to @${parsed.user} was denied.`);
     
                 return {'res':true};
               }

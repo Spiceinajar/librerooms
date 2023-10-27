@@ -150,7 +150,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.1.8.3 [Beta]</h1>
+      <h1 style="font-size:10px;">Version: 1.1.8.4 [Beta]</h1>
     </div>
     `);
 
@@ -307,6 +307,8 @@ async function openMenu(m_id, args={}) {
       <hr style="border-color: rgb(20, 20, 20); width:90%">
       `);
     }
+
+    lastUnread = 0;
   }
 
   if (m_id === "rconfig") {
