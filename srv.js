@@ -155,11 +155,13 @@ async function run() {
     }
 
     function notify(user, contents) {
-      dat.collections.users[user].notifs.push(
-        contents
-      )
-
-      dat.collections.users[user].unread += 1
+      if (user in dat.collections.users) {
+        dat.collections.users[user].notifs.push(
+          contents
+        )
+  
+        dat.collections.users[user].unread += 1
+      }
     }
   
     function process(str) {
@@ -441,6 +443,11 @@ async function run() {
                     if (cmd === "SETLIMIT") { 
                       dat.collections.rooms[parsed['room']].maxmembers = Integer.parseInt(args.value);
                       sysMessage(`Set user limit for "${parsed['room']}" to ${args.value}.`, parsed['room'])
+                    }
+
+                    if (cmd === "KICK") { 
+                      //dat.collections.rooms[parsed['room']]
+                      //sysMessage(`Kicked @${args.user} from "${parsed['room']}".`, parsed['room'])
                     }
                   }
 

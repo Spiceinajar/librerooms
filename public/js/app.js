@@ -384,8 +384,14 @@ function messageInputUpdate(e) {
   let element = document.getElementById('msgtxt');
   element.style.height = "1px";
   element.style.height = (element.scrollHeight)+"px";
+
+  document.getElementById('msgs').style.maxHeight = `calc(100% - (60px + ${document.getElementById('bottom_bar').clientHeight}px))`;
+  document.getElementById('msgs').style.bottom = document.getElementById('bottom_bar').clientHeight + 'px';
+  document.getElementById('msgs').scrollTo(0, document.getElementById('msgs').scrollHeight);
 }
-document.getElementById('msgtxt').addEventListener("keydown", messageInputUpdate);
+
+//messageInputUpdate();
+document.getElementById('msgtxt').addEventListener("keyup", messageInputUpdate);
 
 async function populateSidebar(mode) {
 

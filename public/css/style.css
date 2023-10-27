@@ -364,6 +364,7 @@ animation-fill-mode: forwards;
     overflow-y: auto; 
     overflow-x: hidden;
     max-height: calc(100% - 120px);
+    scroll-behavior: smooth;
 }
 
 #msgtxt {
