@@ -311,14 +311,18 @@ async function run() {
           if (authenticate(parsed.user, null, true)) {
             return {"status":"exists"};
           } else {
-            if (parsed["user"].length > 2) {
-              dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.svg', 'bio':'This user has not yet created a description.', 'roles':['BetaTester'], 'notifs':[], 'unread':0, 'requests':[], 'joindate':getMDY(false), 'blocked':[]};
-              notify(parsed.user, `Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's beta stage, you've been given the [BetaTester] badge. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`);
-              dat.collections.rooms["Main room"]['members'].push(parsed.user);
-              dat.collections.rooms["updates"]['members'].push(parsed.user);
-              console.log(`Account '${parsed.user}' has been created.`);
-              sysMessage(`@${parsed.user} has joined Pearl for the first time!`, 'Main room')
-              return {"status":true};
+            if (checkChars(parsed.user)) {
+              if (parsed["user"].length > 2) {
+                dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.svg', 'bio':'This user has not yet created a description.', 'roles':['BetaTester'], 'notifs':[], 'unread':0, 'requests':[], 'joindate':getMDY(false), 'blocked':[]};
+                notify(parsed.user, `Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's beta stage, you've been given the [BetaTester] badge. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`);
+                dat.collections.rooms["Main room"]['members'].push(parsed.user);
+                dat.collections.rooms["updates"]['members'].push(parsed.user);
+                console.log(`Account '${parsed.user}' has been created.`);
+                sysMessage(`@${parsed.user} has joined Pearl for the first time!`, 'Main room')
+                return {"status":true};
+              } else {
+                return {"status":"badchars"};
+              }
             } else {
               return {"status":"shortuser"};
             }
@@ -346,9 +350,8 @@ async function run() {
 
                 //PINGS
                 if (parsed['contents'].includes('@')) {
-                  for (i of parsed['contents'].split(' ')) {
+                  for (i of parsed['contents'].replace(/\B@\w+\b/g, (match) => {return ` ${match} `}).split(" ")) {
                     let us = i.substring(1);
-                    console.log(us);
                     if (dat.collections.rooms[parsed.room].members.includes(us)) {
                       notify(us, `@${parsed.user} mentioned you in ${parsed.room}: "${parsed.contents}"`)
                     }
