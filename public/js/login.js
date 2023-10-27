@@ -94,6 +94,10 @@ async function cr_account(user, key) {
     } else {
       if (result === "exists") {
         addNotif('Username is taken')
+      } else {
+        if (result === "badchars") {
+          addNotif('Usernames can only contain letters and numbers')
+        }
       }
     }
   }
