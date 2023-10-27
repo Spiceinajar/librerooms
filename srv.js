@@ -697,3 +697,5 @@ async function run() {
     await mongoOperation('setDB').catch(console.dir)
   }
 }
+
+run()
