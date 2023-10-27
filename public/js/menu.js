@@ -150,7 +150,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.1.8.5 [Beta]</h1>
+      <h1 style="font-size:10px;">Version: 1.1.8.6 [Beta]</h1>
     </div>
     `);
 
@@ -281,6 +281,10 @@ async function openMenu(m_id, args={}) {
         addNotif("You already have created the maximum number of rooms allowed");
       } else if (res === "forbiddenchars") {
         addNotif("Room name must only contain letters and numbers");
+      } else if (res === "tooshort") {
+        addNotif("Room name must be at least 4 characters long");
+      } else if (res === "toolong") {
+        addNotif("Room name cannot exceed 10 characters");
       }
     }
   }

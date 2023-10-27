@@ -44,6 +44,8 @@ function setMenu(x) {
       <br>
       <textarea name="" id="pass_input" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 40vh; max-width:100%; height: 3.5vh; border-radius: 1vh; font-size: 2.5vh; font-family: Block;"></textarea>
 
+      <h1 style="display:inline-block;" class="copyright-claim">By proceeding, you agree to our <a href="./policies/terms.html" class="claim-link">Terms of Service</a>, <a href="./policies/cookies.html" class="claim-link">Cookie Policy</a> and <a href="./policies/privacy.html" class="claim-link">Privacy Policy</a>.</h1>
+ 
       <br>
 
       <button id="crbtn" style="width: 40vh; height: 10vh; font-size: 3vh; border-radius: 1vh; margin-top:3vh; max-width:100%;">Create account</button>

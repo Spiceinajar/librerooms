@@ -209,7 +209,7 @@ async function updateMessageBoard() {
         });
 
         contents = contents.replace(/\B@\w+\b/g, (match) => {
-          return `<div class='mention'>${match}</div>`
+          return `<div onclick="openMenu('profile', {user:'${match.substring(1)}'})" class='mention'>${match}</div>`
         });
   
         if (msg['user'] === 'System') {
