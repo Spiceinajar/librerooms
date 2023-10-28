@@ -99,10 +99,6 @@ async function run() {
       console.log(`Failed authentication attempt to '${parsed.user}'`);
       return false;
     }
-
-    for (i in dat.collections.users) {
-      dat.collections.users[i].pfp = './assets/icons/default.png'
-    }
   
     function wipeMessage(user) {
       for (var r in dat.collections.rooms) {
