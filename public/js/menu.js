@@ -96,42 +96,13 @@ async function openMenu(m_id, args={}) {
     `);
 
     if (args.user === username) {
-      document.getElementById('profile_bg').insertAdjacentHTML('beforeend', `
-      <input type="file" id="fileInput" style="display: none">
-      `)
-
       let userDesc = document.getElementById('desc');
-      document.getElementById('pfp-button').onclick = function() {document.getElementById('fileInput').click()};
+      document.getElementById('pfp-button').onclick = function() {openMenu('pixeditor')};
       userDesc.readOnly = false;
 
       userDesc.addEventListener("blur", async function() {
         await DB({'type':'changebio', 'contents':userDesc.value, 'user':username, 'pass':userkey});
         addNotif('Revision saved.');
-      });
-
-
-
-      const fileInput = document.getElementById('fileInput');
-    
-      fileInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-
-        if (file.size < 500000) {
-          const reader = new FileReader();
-          reader.onload = async function () {
-            const base64Data = reader.result;
-      
-            await DB({'type':'changepfp', 'link':base64Data, 'user':username, 'pass':userkey});
-            addNotif('Profile picture updated');
-            document.getElementById('profile_pic').src = base64Data;
-            document.getElementById('personal-pfp-display').src = base64Data;
-            cachedPfps[username] = base64Data;
-          };
-      
-          reader.readAsDataURL(file);
-        } else {
-          addNotif('File size must be under 5 kilobytes');
-        }
       });
     }
   }
@@ -150,7 +121,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.1.8.6 [Beta]</h1>
+      <h1 style="font-size:10px;">Version: 1.1.8.7 [Beta]</h1>
     </div>
     `);
 
@@ -350,6 +321,59 @@ async function openMenu(m_id, args={}) {
     <button onclick="openMenu('notifications')" id="logbtn" class="bar-btn">Notifications</button>
     <br>
     `);
+  }
+
+  if (m_id === "pixeditor") {
+    document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
+      <h1 style="font-size:20px">Profile Image Editor</h1>
+      <canvas id="pixeditor" width="16" height="16" style="width: 400px; height: 400px; image-rendering: pixelated; image-rendering: crisp-edges; border-top-left-radius: 10px; border-top-right-radius: 10px; margin-bottom: -2px"></canvas>
+      <br>
+      <textarea class="pixeditor-btn" name="color_r" id="color_r_entry" cols="3" rows="1" style="background-color: red; border-bottom-left-radius: 10px;">255</textarea>
+      <textarea class="pixeditor-btn" name="color_g" id="color_g_entry" cols="3" rows="1" style="background-color: green">255</textarea>
+      <textarea class="pixeditor-btn" name="color_b" id="color_b_entry" cols="3" rows="1" style="background-color: blue">255</textarea>
+      <button class="pixeditor-btn" id="savepfpbtn" style="background-color: rgb(100, 100, 215); border-bottom-right-radius: 10px;">Save</button>
+    `);
+
+    var c = document.getElementById("pixeditor");
+    var ctx = c.getContext("2d", {alpha: false});
+
+    let pf = await getPFP(username)
+    var image = new Image();
+    image.onload = function() {
+      ctx.drawImage(image, 0, 0);
+    };
+    image.src = pf;
+    
+    var id = ctx.createImageData(1, 1);
+    var d = id.data;
+    let mPressed = false;
+
+    c.addEventListener('mousemove', function(e) {
+      if (mPressed) {
+        var rect = e.target.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+  
+        d[0] = document.getElementById("color_r_entry").value;
+        d[1] = document.getElementById("color_g_entry").value;
+        d[2] = document.getElementById("color_b_entry").value;
+        d[3] = 255;
+        ctx.putImageData(id, (Math.round(x)/c.clientWidth)*16, (Math.round(y)/c.clientHeight)*16);
+      }
+    });
+
+    c.addEventListener("mousedown", function(e) {
+      mPressed = true;
+    });
+
+    c.addEventListener("mouseup", function(e) {
+      mPressed = false;
+    });
+
+    document.getElementById('savepfpbtn').onclick = async function() {
+      await DB({'type':'changepfp', 'link':c.toDataURL('image/jpeg', 1.0), 'user':username, 'pass':userkey});
+      addNotif('Profile picture updated');
+    }
   }
 
   var m = document.getElementById('menu');
