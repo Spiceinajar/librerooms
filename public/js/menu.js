@@ -83,8 +83,8 @@ async function openMenu(m_id, args={}) {
 
       <div style="height:50px;"></div>
 
-      <button id="pfp-button" for="fileInput" style="height:100px; aspect-ratio:1/1; background-color:rgba(0, 0, 0, 0); padding-top:0;" id="personal-pfp-display">
-        <img class="profilepic" style="height:100%; width:calc(100% + 12px); padding:0;" id="profile_pic" src="${await getPFP(args.user)}" alt="user-profile-image">
+      <button id="pfp-button" for="fileInput" style="height:100px; aspect-ratio:1/1; background-color:rgba(0, 0, 0, 0); padding-top:0;">
+        <img class="profilepic" style="height:100%; width:calc(100% + 12px); padding:0;" src="${await loadAvatar(await getAvatar(args.user))}" alt="user-profile-image">
       </button>
       <br>
       <h1 style="font-size: 30px" id="personal-username-display">${userDisplay}</h1>
@@ -97,7 +97,7 @@ async function openMenu(m_id, args={}) {
 
     if (args.user === username) {
       let userDesc = document.getElementById('desc');
-      document.getElementById('pfp-button').onclick = function() {openMenu('pixeditor')};
+      document.getElementById('pfp-button').onclick = function() {openMenu('avatar-editor')};
       userDesc.readOnly = false;
 
       userDesc.addEventListener("blur", async function() {
@@ -109,11 +109,11 @@ async function openMenu(m_id, args={}) {
 
   if (m_id === 'settings') {
     document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
-    <h1 style="font-size:40px">Settings</h1>
+    <h1 class='settings-header'>Settings</h1>
     <hr style="width:70%;">
 
     <div style="overflow-y:scroll; height:calc(100% - 140px)">
-      <h1 style="font-size:30px; ">Account</h1>
+      <h1 class="settings-section-header">Account</h1>
       
       <button id="logbtn" class="bar-btn">Log Out</button>
       <br>
@@ -121,7 +121,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.1.8.7 [Beta]</h1>
+      <h1 style="font-size:10px;">Version: 1.1.8.8 [Beta]</h1>
     </div>
     `);
 
@@ -197,8 +197,6 @@ async function openMenu(m_id, args={}) {
         rbadge = "lock";
       }
 
-      console.log(room.public)
-
       document.getElementById("rcontainer").insertAdjacentHTML('beforeend', `
       <button onclick='joinRoom("${room.name}", ${room.public});' class="roombrowser-card">
       <img src="${room.banner}" style="width:100%; border-radius:inherit; margin-top:5px; aspect-ratio:1200/640">
@@ -270,8 +268,6 @@ async function openMenu(m_id, args={}) {
     let result = await DB({'type':'getnotifs', 'user':username})
     result = result.list;
 
-    console.log(result);
-
     for (var n in result) {
       let notif = result[n];
 
@@ -309,7 +305,7 @@ async function openMenu(m_id, args={}) {
     <button id="sendreportbtn" style="width:200px; height:50px; background-color: rgb(100, 100, 215); margin:10px">Send</button>
     `);
 
-    document.getElementById('sendreportbtn').onclick = function() {DB({'type':'sendreport', 'contents':document.getElementById('sendreportbtn').value}); closeMenu(); addNotif('Thank you for your feedback')}
+    document.getElementById('sendreportbtn').onclick = function() {DB({'type':'submit-report', 'contents':document.getElementById('sendreportbtn').value}); closeMenu(); addNotif('Thank you for your feedback')}
   }
 
   if (m_id === "buttonmenu") {
@@ -323,56 +319,130 @@ async function openMenu(m_id, args={}) {
     `);
   }
 
-  if (m_id === "pixeditor") {
+  if (m_id === "avatar-editor") {
     document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
-      <h1 style="font-size:20px">Profile Image Editor</h1>
-      <canvas id="pixeditor" width="16" height="16" style="width: 400px; height: 400px; image-rendering: pixelated; image-rendering: crisp-edges; border-top-left-radius: 10px; border-top-right-radius: 10px; margin-bottom: -2px"></canvas>
-      <br>
-      <textarea class="pixeditor-btn" name="color_r" id="color_r_entry" cols="3" rows="1" style="background-color: red; border-bottom-left-radius: 10px;">255</textarea>
-      <textarea class="pixeditor-btn" name="color_g" id="color_g_entry" cols="3" rows="1" style="background-color: green">255</textarea>
-      <textarea class="pixeditor-btn" name="color_b" id="color_b_entry" cols="3" rows="1" style="background-color: blue">255</textarea>
-      <button class="pixeditor-btn" id="savepfpbtn" style="background-color: rgb(100, 100, 215); border-bottom-right-radius: 10px;">Save</button>
+      <h1 style="font-size:20px">Avatar Editor</h1>
+
+      <div class="catalog-container">
+        <img class="profilepic" id="avatar-editor-display" style="height:200px; width:200px" alt="user-profile-image">
+
+        <div class="catalog-splitter">
+          Skin tone
+        </div>
+        <span id="catalog-0" class="catalog-row">
+        </span>
+
+        <div class="catalog-splitter">
+          Hair color
+        </div>
+        <span id="catalog-1" class="catalog-row">
+        </span>
+
+        <div class="catalog-splitter">
+          Background
+        </div>
+        <span id="catalog-2" class="catalog-row">
+        </span>
+
+        <div class="catalog-splitter">
+          Shirt
+        </div>
+        <span id="catalog-3" class="catalog-row">
+        </span>
+
+        <div class="catalog-splitter">
+          Eyes
+        </div>
+        <span id="catalog-4" class="catalog-row">
+        </span>
+
+        <div class="catalog-splitter">
+          Mouths
+        </div>
+        <span id="catalog-6" class="catalog-row">
+        </span>
+
+        <div class="catalog-splitter">
+          Hair
+        </div>
+        <span id="catalog-5" class="catalog-row">
+        </span>
+
+        <button id="save-avatar-btn" style="width:200px; height:50px; background-color: rgb(100, 100, 215); margin:10px">Save</button>
+      </div>
     `);
 
-    var c = document.getElementById("pixeditor");
-    var ctx = c.getContext("2d", {alpha: false});
+    let avObj = await getAvatar(username);
 
-    let pf = await getPFP(username)
-    var image = new Image();
-    image.onload = function() {
-      ctx.drawImage(image, 0, 0);
-    };
-    image.src = pf;
-    
-    var id = ctx.createImageData(1, 1);
-    var d = id.data;
-    let mPressed = false;
+    async function updateDisplay() {
+      document.getElementById("avatar-editor-display").src = await loadAvatar(avObj)
+    }
 
-    c.addEventListener('mousemove', function(e) {
-      if (mPressed) {
-        var rect = e.target.getBoundingClientRect();
-        var x = e.clientX - rect.left;
-        var y = e.clientY - rect.top;
+    updateDisplay();
+
+    let categories = ["skintones", "haircolors", "backgrounds", "shirts", "eyes", "hair", "mouths"];
+    for (c in categories) {
+      let catId = c;
+      let catName = categories[catId];
+
+      if (['3', '4', '5'].includes(c)) { //makes hair and eyes removable (don't ask me why I'm making eyes removable) =============
+        document.getElementById(`catalog-${c}`).insertAdjacentHTML('afterbegin', `
+        <div class="catalog-item" id="catalog-selector">
+          <img class="catalog-item-img"  src="./assets/icons/remove.png" alt="remove">
+        <div>
+        `);
+
+        document.getElementById(`catalog-selector`).onclick = function() {
+          let category = this.id.split('-')[1];
+          avObj[category] = null;
+          updateDisplay()
+        }
   
-        d[0] = document.getElementById("color_r_entry").value;
-        d[1] = document.getElementById("color_g_entry").value;
-        d[2] = document.getElementById("color_b_entry").value;
-        d[3] = 255;
-        ctx.putImageData(id, (Math.round(x)/c.clientWidth)*16, (Math.round(y)/c.clientHeight)*16);
+        document.getElementById(`catalog-selector`).id = `remove-${catId}`;
       }
-    });
 
-    c.addEventListener("mousedown", function(e) {
-      mPressed = true;
-    });
+      //======================
 
-    c.addEventListener("mouseup", function(e) {
-      mPressed = false;
-    });
+      for (item in catalog[catName]) {
+        if (catId > 1) {
+          document.getElementById(`catalog-${catId}`).insertAdjacentHTML('beforeend', `
+          <div class="catalog-item" id="catalog-selector">
+            <img class="catalog-item-img"  src="./assets/avatar/${catName}/${catalog[catName][item]}.png" alt="item">
+          <div>
+          `);
+        } else {
+          document.getElementById(`catalog-${catId}`).insertAdjacentHTML('beforeend', `
+          <div class="catalog-item" id="catalog-selector" width: 70px; height: 70px">
+          <div>
+          `);
 
-    document.getElementById('savepfpbtn').onclick = async function() {
-      await DB({'type':'changepfp', 'link':c.toDataURL('image/jpeg', 1.0), 'user':username, 'pass':userkey});
-      addNotif('Profile picture updated');
+          let col;
+          if (catId === '1') {
+            let st = catalog.haircolors[item];
+            document.getElementById(`catalog-selector`).style.backgroundColor = 'red';
+            document.getElementById(`catalog-selector`).style.filter = `hue-rotate(${st[0]}deg) saturate(${st[1]}%) brightness(${st[2]}%)`;
+          } else {
+            let st = catalog.skintones[item];
+            col = `rgb(${st[0]}, ${st[1]}, ${st[2]})`;
+            document.getElementById(`catalog-selector`).style.backgroundColor = col;
+          }
+        }
+  
+        document.getElementById(`catalog-selector`).onclick = function() {
+          let category = this.id.split('-')[0];
+          let itemid = this.id.split('-')[1];
+          avObj[category] = itemid;
+          updateDisplay()
+        }
+
+        document.getElementById(`catalog-selector`).id = `${catId}-${item}`;
+      }
+    }
+
+    document.getElementById('save-avatar-btn').onclick = async function() {
+      await DB({'type':'updateavatar', 'obj':avObj, 'user':username, 'pass':userkey});
+      //delete cachedAvs[username];
+      addNotif("Avatar updated."); 
     }
   }
 

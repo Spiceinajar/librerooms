@@ -1,10 +1,8 @@
 function getCookie(name) {
   var cookies = document.cookie.split('; ');
-  console.log(cookies);
   for (var c in cookies) {
     let cookie = cookies[c];
 
-    console.log(cookie);
     if (cookie.split('=')[0] === name) {
       return cookie.split('=')[1];
     }
@@ -136,7 +134,6 @@ async function DB(data) {
         r.res = null;
       } else {
         r.res = JSON.parse(decrypt(r['res']));
-        console.log(r)
         if (r.res.locked) {
           location.href = `./locked.html?reason=${r.res.reason}`;
         }

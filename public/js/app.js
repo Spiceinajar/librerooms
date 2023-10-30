@@ -1,6 +1,6 @@
 var username = '';
 var userkey = '';
-var personalpfp = './assets/icons/missing.svg'
+var personalpfp = './assets/icons/missing.png'
 var active_room = ''
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
@@ -13,17 +13,152 @@ try {
   location.href = './login.html';
 }
 
-cachedPfps = {};
-async function getPFP(us) {
+
+
+let catalog = {
+  "skintones":[
+    [248, 232, 212],
+    [241, 209, 181],
+    [233, 185, 151],
+    [223, 165, 122],
+    [200, 137, 94],
+    [176, 109, 66],
+    [146, 81, 43],
+    [120, 60, 28],
+    [94, 41, 17],
+    [150, 150, 150],
+  ],
+
+  "haircolors":[
+    [25, 100, 15],
+    [70, 35, 300],
+    [0, 0, 300],
+    [0, 0, 10],
+  ],
+
+  "backgrounds":[
+      "default",
+      "void",
+      "tunnel",
+  ],
+
+  "shirts":[
+      "black suit",
+      "white suit",
+      "blue suit",
+      "red suit",
+      "purple suit",
+      "black tee",
+      "white tee",
+      "yellow tee",
+      "pink tee",
+      "red tee",
+      "magenta tee",
+      "purple tee",
+      "blue tee",
+      "green tee",
+  ],
+
+  "eyes":[
+      "happy",
+      "soulless",
+      "closed",
+      "eyebrows",
+      "wide",
+      "wide 2",
+      "small",
+      "shades",
+  ],
+
+  "hair":[
+      "buzz cut",
+      "long",
+      "short fluffy",
+      "afro",
+      "squared afro",
+  ],
+
+  "mouths":[
+      "expressionless",
+      "smile",
+      "frown",
+      "lips",
+      "open smile",
+      "open",
+      "shock",
+      "smirk",
+      "toothy",
+  ],
+}
+
+async function loadAvatar(arr) {
+
+  // [skin color rgb [r, g, b], hair color hsv [h, s, v], background id, shirt id, eye id, hair id, mouth id]
+
+  var assembler = document.getElementById('avatarassembler');
+  var ctx = assembler.getContext("2d", {alpha: false});
+  ctx.filter = 'none';
+
+  //assembler.style.backgroundColor = `rgb(${arr[0][0]}, ${arr[0][1]}, ${arr[0][2]})`;
+
+  if (! (arr[0] === null)) {
+    let st = catalog.skintones[arr[0]]
+    ctx.fillStyle = `rgb(${st[0]}, ${st[1]}, ${st[2]})`;
+    ctx.fillRect(0, 0, 16, 16);
+  }
+
+  function pasteImage(src, loc) {
+    const img = new Image();
+    const imgPromise = new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+
+    img.src = src;
+
+    imgPromise.then(() => {
+      ctx.drawImage(img, loc.x, loc.y)
+    })
+
+    return imgPromise;
+  }
+
+  await pasteImage(`./assets/avatar/backgrounds/${catalog.backgrounds[arr[2]]}.png`, {x:0, y:0})
+
+  if (! (arr[3] === null)) {
+    await pasteImage(`./assets/avatar/shirts/${catalog.shirts[arr[3]]}.png`, {x:0, y:12})
+  }
+
+  if (! (arr[4] === null)) {
+    await pasteImage(`./assets/avatar/eyes/${catalog.eyes[arr[4]]}.png`, {x:3, y:6})
+  }
+
+  if (! (arr[5] === null)) {
+    let st = catalog.haircolors[arr[1]]
+    ctx.filter = `hue-rotate(${st[0]}deg) saturate(${st[1]}%) brightness(${st[2]}%)`;
+    await pasteImage(`./assets/avatar/hair/${catalog.hair[arr[5]]}.png`, {x:0, y:0})
+    ctx.filter = 'none';
+  }
+
+  if (! (arr[6] === null)) {
+    await pasteImage(`./assets/avatar/mouths/${catalog.mouths[arr[6]]}.png`, {x:5, y:9})
+      //html += `\n<img src="./assets/avatar/mouths/${catalog.mouths[arr[6]]}.png" id="mouth" class="avatar-layer avatar-mouth">`
+  }
+
+  return assembler.toDataURL('image/png');
+}
+
+cachedAvs = {};
+async function getAvatar(us) {
   var pic;
 
-  if (us in cachedPfps) {
-    pic = cachedPfps[us];
+  if (us in cachedAvs) {
+    pic = cachedAvs[us];
   } else {
-    let result = await DB({'type':'getpfp', 'targuser':us});
+    let result = await DB({'type':'getavatar', 'targuser':us});
 
-    pic = result['url'];
-    cachedPfps[us] = pic;
+    pic = result['obj'];
+    cachedAvs[us] = pic;
   }
 
   return pic;
@@ -46,7 +181,8 @@ async function getRoles(us) {
 }
 
 (async () => {
-  personalpfp = await getPFP(username);
+  await loadAvatar(await getAvatar(username)); //I'm doing this twice because for some reason the system doesnt function correctly the first time, I have no idea why
+  personalpfp = await loadAvatar(await getAvatar(username));
   document.getElementById('personal-pfp-display').src = personalpfp;
 })();
 
@@ -136,7 +272,9 @@ async function updateMessageBoard() {
       var userDisplay;
   
       for (var msg of messages) {
-        pfp = await getPFP(msg['user']);
+        pfp = await getAvatar(msg['user']);
+        pfp = await loadAvatar(pfp);
+
         roles = await getRoles(msg['user']);
         datetime = formatTime(msg.dt);
 
@@ -311,7 +449,6 @@ async function joinRoom(r, public) {
   async function attempt(key) {
     let status = await DB({'type':'joinroom', 'room':r, 'user':username, 'pass':userkey, 'roomkey':key});
     status = status.status;
-    console.log(status)
 
     if (status === true) {
       switch_room(r, r, "r");
@@ -375,8 +512,8 @@ const respondRequest = async function(mode, recipient) {
 
 function messageInputUpdate(e) {
   if (e.key === 'Enter') {
+    e.preventDefault();
     if (! e.shiftKey) {
-      e.preventDefault();
       sendMessage()
     }
   }
@@ -426,8 +563,6 @@ async function populateSidebar(mode) {
 
     let friends = result.friends;
     let requests = result.requests;
-
-    console.log(requests);
 
     for (var friend in friends) {
       c = [friends[friend], username].sort();
@@ -486,7 +621,6 @@ async function sendMessage() {
   if (val.length > 1) {
     let res = await DB({type:'addmsg', room:active_room, contents: val, user:username, pass:userkey})
     res = res.res;
-    console.log(res)
 
     if (res === 'noauth') {
       addNotif('Authentication error')

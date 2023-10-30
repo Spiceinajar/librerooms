@@ -34,6 +34,11 @@ async function run() {
   
         return decrypted_str
     }
+
+    //function profanityFilter(string) {
+    //  let profanities = require('./profanities.json');
+    //  return string.replace(new RegExp(profanities.list.join("|"), "gi"), match => "_".repeat(match.length));
+    //}
   
     //=================================
   
@@ -151,7 +156,12 @@ async function run() {
     }
 
     function sysMessage(text, room) {
-      dat.collections.rooms[room]['messages'].push({'text':text, 'user':'System', 'dt': undefined});
+      dat.collections.rooms[room].messages.push({'text':text, 'user':'System', 'dt': undefined});
+    }
+
+    for (i in dat.collections.users) {
+      delete dat.collections.users[i].pfp;
+      dat.collections.users[i].avatar = [9, null, 0, null, null, null, 8];
     }
 
     function notify(user, contents) {
@@ -177,11 +187,11 @@ async function run() {
         if (parsed.type === 'getmsg') {
           if (parsed.room in dat.collections.rooms) {
             if (authenticate(parsed.user, parsed.pass)) {
-              if (dat.collections.rooms[parsed['room']]['members'].includes(parsed.user)) {
-                //console.log(`Client request of "${parsed['room']}" contents`)
+              if (dat.collections.rooms[parsed.room].members.includes(parsed.user)) {
+                //console.log(`Client request of "${parsed.room}" contents`)
                 return {
-                  contents:(dat.collections.rooms[parsed['room']]['messages'].slice(parsed['beg'])).filter(obj => ! dat.collections.users[parsed.user].blocked.includes(obj.user)), 
-                  range:dat.collections.rooms[parsed['room']]['messages'].length, unread:dat.collections.users[parsed.user].unread
+                  contents:(dat.collections.rooms[parsed.room].messages.slice(parsed['beg'])).filter(obj => ! dat.collections.users[parsed.user].blocked.includes(obj.user)), 
+                  range:dat.collections.rooms[parsed.room].messages.length, unread:dat.collections.users[parsed.user].unread
                 };
               }
             }
@@ -197,7 +207,7 @@ async function run() {
             if (room['type'] === 'room') {
               r.push({name:i, 
                 banner:room['banner'], 
-                membercount:room['members'].length,
+                membercount:room.members.length,
                 maxmembers:room.maxmembers,
                 description:room['description'],
                 public:(room['password'] === "")});
@@ -213,7 +223,7 @@ async function run() {
           for (var i in dat.collections.rooms) {
             if (dat.collections.rooms[i]['type'] === 'room') {
               let rval = dat.collections.rooms[i];
-              if (rval['members'].includes(parsed.user)) {
+              if (rval.members.includes(parsed.user)) {
                 r.push({name:i, created:(rval.creator === parsed.user)});
               }
             }
@@ -240,13 +250,13 @@ async function run() {
         };
     
     
-        if (parsed.type === 'getpfp') {
-          console.log(`Client request of profile picture "${parsed.targuser}"`)
+        if (parsed.type === 'getavatar') {
+          console.log(`Client request of avatar "${parsed.targuser}"`)
     
           try {
-            return {'url':dat.collections.users[parsed.targuser].pfp};
+            return {'obj':dat.collections.users[parsed.targuser].avatar};
           } catch {
-            return {'url':'./assets/icons/missing.svg'}
+            return {'obj':[9, null, 0, null, null, null, 8]}
           }
         };
     
@@ -281,16 +291,16 @@ async function run() {
         };
     
     
-        if (parsed.type === 'changepfp') {
+        if (parsed.type === 'updateavatar') {
           if (authenticate(parsed.user, parsed.pass)) {
-            dat.collections.users[parsed.user].pfp = parsed['link'];
-            console.log(`"${parsed.user}" changed their profile picture.`)
+            dat.collections.users[parsed.user].avatar = parsed['obj'];
+            console.log(`"${parsed.user}" updated their avatar.`)
           }
         };
     
         if (parsed.type === 'changebio') {
           if (authenticate(parsed.user, parsed.pass)) {
-            dat.collections.users[parsed.user].bio = parsed['contents'];
+            dat.collections.users[parsed.user].bio = parsed.contents;
             console.log(`"${parsed.user}" changed their user description.`)
           }
         };
@@ -317,11 +327,11 @@ async function run() {
             return {"status":"exists"};
           } else {
             if (checkChars(parsed.user)) {
-              if (parsed["user"].length > 2) {
+              if (parsed.user.length > 2) {
                 dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.png', 'bio':'This user has not yet created a description.', 'roles':['BetaTester'], 'notifs':[], 'unread':0, 'requests':[], 'joindate':getMDY(false), 'blocked':[]};
                 notify(parsed.user, `Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's beta stage, you've been given the [BetaTester] badge. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`);
-                dat.collections.rooms["Main room"]['members'].push(parsed.user);
-                dat.collections.rooms["updates"]['members'].push(parsed.user);
+                dat.collections.rooms["Main room"].members.push(parsed.user);
+                dat.collections.rooms["updates"].members.push(parsed.user);
                 console.log(`Account '${parsed.user}' has been created.`);
                 sysMessage(`@${parsed.user} has joined Pearl for the first time!`, 'Main room')
                 return {"status":true};
@@ -335,10 +345,12 @@ async function run() {
         };
     
         if (parsed.type === 'addmsg') {
+          parsed.contents = parsed.contents.replace(/</g, '').replace(/>/g, ''); //makes sure people dont send html that embeds
+
           let spam = false;
 
-          if (dat.collections.rooms[parsed['room']]['messages'].length > 0) {
-            let last = dat.collections.rooms[parsed['room']]['messages'][dat.collections.rooms[parsed['room']]['messages'].length-1]
+          if (dat.collections.rooms[parsed.room].messages.length > 0) {
+            let last = dat.collections.rooms[parsed.room].messages[dat.collections.rooms[parsed.room].messages.length-1]
             if (last.user === parsed.user) {
               if (parsed.contents === last.text) {
                 spam = true
@@ -349,13 +361,13 @@ async function run() {
           if (! spam) {
             if (authenticate(parsed.user, parsed.pass)) {
               if (parsed.contents.length < 500) {
-                dat.collections.rooms[parsed['room']]['messages'].push({'text':parsed['contents'], 'user':parsed.user, 'dt': getMDY()});
-                console.log(`[${parsed['room']}] ${parsed.user}: "${parsed['contents']}"`)
+                dat.collections.rooms[parsed.room].messages.push({'text':parsed.contents, 'user':parsed.user, 'dt': getMDY()});
+                console.log(`[${parsed.room}] ${parsed.user}: "${parsed.contents}"`)
 
 
                 //PINGS
-                if (parsed['contents'].includes('@')) {
-                  for (i of parsed['contents'].replace(/\B@\w+\b/g, (match) => {return ` ${match} `}).split(" ")) {
+                if (parsed.contents.includes('@')) {
+                  for (i of parsed.contents.replace(/\B@\w+\b/g, (match) => {return ` ${match} `}).split(" ")) {
                     let us = i.substring(1);
                     if (dat.collections.rooms[parsed.room].members.includes(us)) {
                       if (! dat.collections.users[us].blocked.includes(parsed.user)) {
@@ -366,8 +378,8 @@ async function run() {
                 }
         
                 //COMMANDS
-                if (parsed['contents'].charAt(0) === '~') {
-                  const parts = parsed['contents'].split(" ");
+                if (parsed.contents.charAt(0) === '~') {
+                  const parts = parsed.contents.split(" ");
                   const cmd = parts.shift().substring(1).toUpperCase();
                   let args = {};
                   if (parts.length > 1) {
@@ -402,81 +414,89 @@ async function run() {
                     if (permissions['Administrator']) {
                       if (cmd === "ADDROLE") { 
                         dat.collections.users[args.user].roles.push(args.role);
-                        sysMessage(`Added role '${args.role}' to user @${args.user}.`, parsed['room'])
+                        sysMessage(`Added role '${args.role}' to user @${args.user}.`, parsed.room)
                       }
           
                       if (cmd === "CLEARROLES") { 
                         dat.collections.users[args.user].roles = [];
-                        sysMessage(`Cleared roles for user @${args.user}.`, parsed['room'])
+                        sysMessage(`Cleared roles for user @${args.user}.`, parsed.room)
                       }
           
                       if (cmd === "DELROOM") { 
-                        delete dat.collections.rooms[parsed['room']];
+                        delete dat.collections.rooms[parsed.room];
                       }
           
                       if (cmd === "LOCK") { 
                         dat.collections.users[args.user].locked = args.reason;
-                        sysMessage(`Locked account @${args.user} for "${args.reason}".`, parsed['room'])
+                        sysMessage(`Locked account @${args.user} for "${args.reason}".`, parsed.room)
                       }
         
                       if (cmd === "UNLOCK") { 
                         dat.collections.users[args.user].locked = undefined;
-                        sysMessage(`Unlocked account @${args.user}.`, parsed['room'])
+                        sysMessage(`Unlocked account @${args.user}.`, parsed.room)
+                      }
+
+                      if (cmd === "READREPORTS") { 
+                        sysMessage(dat.collections.reports.toString(), parsed.room)
                       }
                     }
         
                     if (permissions['Administrator'] || permissions['Moderator']) {
                       if (cmd === "PURGE") { 
-                        dat.collections.rooms[parsed['room']]['messages'] = dat.collections.rooms[parsed['room']]['messages'].splice(-args.amount)
-                        sysMessage(`Removed last ${args.amount} messages from this room.`, parsed['room'])
+                        dat.collections.rooms[parsed.room].messages = dat.collections.rooms[parsed.room].messages.splice(-args.amount)
+                        sysMessage(`Removed last ${args.amount} messages from this room.`, parsed.room)
                       }
           
                       if (cmd === "CLEAR") { 
-                        dat.collections.rooms[parsed['room']]['messages'] = [];
-                        sysMessage(`Cleared all messages from this room.`, parsed['room'])
+                        dat.collections.rooms[parsed.room].messages = [];
+                        sysMessage(`Cleared all messages from this room.`, parsed.room)
                       }
         
                       if (cmd === "SETBANNER") { 
-                        dat.collections.rooms[parsed['room']].banner = args.link;
-                        sysMessage(`Set banner for "${parsed['room']}".`, parsed['room'])
+                        dat.collections.rooms[parsed.room].banner = args.link;
+                        sysMessage(`Set banner for "${parsed.room}".`, parsed.room)
                       }
         
                       if (cmd === "SETDESCRIPTION") { 
-                        dat.collections.rooms[parsed['room']].description = args.value;
-                        sysMessage(`Set description for "${parsed['room']}".`, parsed['room'])
+                        dat.collections.rooms[parsed.room].description = args.value;
+                        sysMessage(`Set description for "${parsed.room}".`, parsed.room)
                       }
     
                       if (cmd === "SETLIMIT") { 
-                        dat.collections.rooms[parsed['room']].maxmembers = Integer.parseInt(args.value);
-                        sysMessage(`Set user limit for "${parsed['room']}" to ${args.value}.`, parsed['room'])
+                        dat.collections.rooms[parsed.room].maxmembers = Integer.parseInt(args.value);
+                        sysMessage(`Set user limit for "${parsed.room}" to ${args.value}.`, parsed.room)
                       }
   
                       if (cmd === "KICK") { 
-                        //dat.collections.rooms[parsed['room']]
-                        //sysMessage(`Kicked @${args.user} from "${parsed['room']}".`, parsed['room'])
+                        //dat.collections.rooms[parsed.room]
+                        //sysMessage(`Kicked @${args.user} from "${parsed.room}".`, parsed.room)
                       }
   
                       if (cmd === "JOIN") { 
-                        dat.collections.rooms[parsed['room']].members.push(args.user)
-                        sysMessage(`Joined @${args.user} to "${parsed['room']}".`, parsed['room'])
+                        dat.collections.rooms[parsed.room].members.push(args.user)
+                        sysMessage(`Joined @${args.user} to "${parsed.room}".`, parsed.room)
                       }
                     }
   
                     if (permissions['Developer'] || permissions['Administrator']) {
                       if (cmd === "BACKUP") {
                         mongoOperation('setDB').catch(console.dir)
-                        sysMessage('Database backup has been made.', parsed['room'])
+                        sysMessage('Database backup has been made.', parsed.room)
                       }
                     }
   
                     if (cmd === "BLOCK") { 
                       dat.collections.users[args.user].blocked.push(args.user);
-                      console.log(args)
-                      sysMessage(`Blocked @${args.user}.`, parsed['room'])
+                      sysMessage(`Blocked @${args.user}.`, parsed.room)
+                    }
+
+                    if (cmd === "UNBLOCK") { 
+                      dat.collections.users[args.user].blocked.filter(e => e !== args.user);
+                      sysMessage(`Unblocked @${args.user}.`, parsed.room)
                     }
     
                   }  catch(err) {
-                    sysMessage(`Command failed: ${err}.`, parsed['room'])
+                    sysMessage(`Command failed: ${err}.`, parsed.room)
                   }
                 }
   
@@ -492,12 +512,12 @@ async function run() {
     
         if (parsed.type === 'joinroom') {
           if (authenticate(parsed.user, parsed.pass)) {
-            if (! dat.collections.rooms[parsed['room']]['members'].includes(parsed.user)) {
-              if (dat.collections.rooms[parsed['room']]['password'] === parsed['roomkey']) {
-                if ((dat.collections.rooms[parsed['room']].members.length < dat.collections.rooms[parsed['room']].maxmembers) | (dat.collections.rooms[parsed['room']].maxmembers === "inf")) {
-                  dat.collections.rooms[parsed['room']]['members'].push(parsed.user);
-                  console.log(`User ${parsed.user} joined ${parsed['room']}`);
-                  sysMessage(`@${parsed.user} has joined the room`, parsed['room'])
+            if (! dat.collections.rooms[parsed.room].members.includes(parsed.user)) {
+              if (dat.collections.rooms[parsed.room]['password'] === parsed['roomkey']) {
+                if ((dat.collections.rooms[parsed.room].members.length < dat.collections.rooms[parsed.room].maxmembers) | (dat.collections.rooms[parsed.room].maxmembers === "inf")) {
+                  dat.collections.rooms[parsed.room].members.push(parsed.user);
+                  console.log(`User ${parsed.user} joined ${parsed.room}`);
+                  sysMessage(`@${parsed.user} has joined the room`, parsed.room)
                   return {"status":true};
                 } else {
                   return {"status":"full"};
@@ -515,13 +535,13 @@ async function run() {
     
         if (parsed.type === 'leaveroom') {
           if (authenticate(parsed.user, parsed.pass)) {
-            if (parsed['room'] == "Main room") {
+            if (parsed.room == "Main room") {
               return "cannotleave"
             } else {
-              let members = dat.collections.rooms[parsed['room']]['members'];
+              let members = dat.collections.rooms[parsed.room].members;
               members.splice(members.indexOf(parsed.user), 1)
-              console.log(`User ${parsed.user} left ${parsed['room']}`)
-              sysMessage(`@${parsed.user} has left the room`, parsed['room'])
+              console.log(`User ${parsed.user} left ${parsed.room}`)
+              sysMessage(`@${parsed.user} has left the room`, parsed.room)
               return true
             }
           } else {
@@ -625,7 +645,7 @@ async function run() {
     
         
         if (parsed.type === 'submit-report') {
-          dat.collections.reports.push(parsed['contents'])
+          dat.collections.reports.push(parsed.contents)
         }
     
         if (parsed.type === 'respond-request') {

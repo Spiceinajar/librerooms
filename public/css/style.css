@@ -338,30 +338,6 @@ animation-fill-mode: forwards;
     vertical-align: top;
 }
 
-.profilepic {
-    border-radius: 25%; 
-    width:50px; 
-    height:50px; 
-    display:inline-block; 
-    padding: 5px;
-    cursor: pointer;
-
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-user-drag: none;
-    -webkit-touch-callout: none;
-
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    background-size: cover;
-
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-}
-
 
 #msgs {
     position: fixed; 
@@ -469,7 +445,7 @@ text-decoration: underline;
 
 
 .pixeditor-btn {
-    width: 100px;
+    width: 80px;
     height: 30px;
     border-radius: 0;
     display: inline;
@@ -486,12 +462,103 @@ text-decoration: underline;
 
 
 
+
+
+
+.switch {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    width: 52px;
+    height: 26px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+  
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: rgb(100, 100, 215);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px rgb(100, 100, 215);
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 10px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+
+
+.settings-option-container {
+    margin: 10px;
+    text-align: left;
+}
+
+.settings-option-text {
+    font-size:20px; 
+    display: inline; 
+    vertical-align: middle; 
+    font-weight: 100
+}
+
+.settings-section-header {
+    font-size: 25px;
+    font-weight: 5000;
+    margin-top: 50px;
+}
+
+.settings-header {
+    font-size: 40px;
+    font-family: 'Header';
+}
+
+
+
+
 ::-webkit-scrollbar {
     width: 10px;
-  }
+}
 
 ::-webkit-scrollbar-track {
-background: rgba(25, 25, 25);
+background: rgb(41, 41, 41);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -500,4 +567,122 @@ background: #888;
 
 ::-webkit-scrollbar-thumb:hover {
 background: #555;
+}
+
+
+
+
+
+
+
+.avatar-layer {
+    position: absolute; 
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    image-rendering: pixelated; 
+    image-rendering: -moz-crisp-edges;
+
+    cursor: pointer;
+}
+
+.avatar-eyes {
+    width: 62.5%;
+    height: 12.5%;
+    top: 37.5%; 
+    left: 18.75%;
+}
+
+.avatar-mouth {
+    width: 37.5%;
+    height: 12.5%;
+    top: 56.25%; 
+    left: 31.25%;
+}
+
+.avatar-shirt {
+    height: 25%;
+    top: 75%;
+}
+
+.avatar-hat {
+    width: 62.5%;
+    height: 25%;
+    top: 12.5%; 
+    left: 18.75%;
+}
+
+
+.profilepic {
+    border-radius: 25%; 
+    width:50px; 
+    height:50px; 
+    display:inline-block; 
+    padding: 5px;
+    cursor: pointer;
+
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+}
+
+
+.catalog-container {
+    border-radius: 20px;
+    overflow: hidden;
+    width: 90%;
+    height: 80%;
+    display: inline-block;
+    overflow-y: scroll;
+    background-color: rgb(22, 22, 22);
+}
+
+.catalog-splitter {
+    height: 20px;
+    width: 100%;
+    background-color: rgb(40, 40, 40);
+    color: white;
+    font-family: Standard;
+}
+
+.catalog-row {
+    width: 100%;
+    background-color: rgb(22, 22, 22);
+    display: inline-block;
+    padding: 5px;
+}
+
+.catalog-item {
+    height: 70px;
+    width: 70px;
+    padding: 5px;
+    display: inline;
+    background-color: rgb(25, 25, 25);
+    border-radius: 5px;
+    display: inline-block;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    cursor: pointer;
+    vertical-align: top;
+}
+
+.catalog-item:hover {
+    background-color: rgb(30, 30, 30);
+}
+
+.catalog-item-img {
+    width: 100%;
+    border-radius: 5px;
 }
