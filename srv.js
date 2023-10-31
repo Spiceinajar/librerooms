@@ -159,10 +159,10 @@ async function run() {
       dat.collections.rooms[room].messages.push({'text':text, 'user':'System', 'dt': undefined});
     }
 
-    for (i in dat.collections.users) {
-      delete dat.collections.users[i].pfp;
-      dat.collections.users[i].avatar = [9, 0, 0, null, null, null, 8, []];
-    }
+    //for (i in dat.collections.users) {
+    //  delete dat.collections.users[i].pfp;
+    //  dat.collections.users[i].avatar = [9, 0, 0, null, null, null, 8, []];
+    //}
 
     function notify(user, contents) {
       if (user in dat.collections.users) {
