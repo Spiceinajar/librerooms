@@ -161,7 +161,7 @@ async function run() {
 
     for (i in dat.collections.users) {
       delete dat.collections.users[i].pfp;
-      dat.collections.users[i].avatar = [9, null, 0, null, null, null, 8];
+      dat.collections.users[i].avatar = [9, 0, 0, null, null, null, 8, []];
     }
 
     function notify(user, contents) {
