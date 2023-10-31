@@ -1,45 +1,30 @@
 let canvas = document.getElementById('login_anim');
 let ctx = canvas.getContext('2d');
 
-
-function project(x, y, z) {
-  // Define the isometric projection factors
-  const factorX = Math.cos(Math.PI / 6);
-  const factorY = Math.sin(Math.PI / 6);
-  
-  // Perform the isometric projection
-  const projectedX = (x - y) * factorX;
-  const projectedY = (x + y) * factorY - z;
-  
-  // Return the projected coordinates in a list
-  return [projectedX, projectedY];
-}
+function drawCircle(ctx, x, y, radius, fill, stroke, strokeWidth) {
+    ctx.beginPath()
+    ctx.arc(x, y, radius, 0, 2 * Math.PI, false)
+    if (fill) {
+      ctx.fillStyle = fill
+      ctx.fill()
+    }
+    if (stroke) {
+      ctx.lineWidth = strokeWidth
+      ctx.strokeStyle = stroke
+      ctx.stroke()
+    }
+};
 
 var spots;
 
 function regen() {
+  let loopTime = canvas.clientWidth / 10;
   canvas.width = canvas.clientWidth;
-  canvas.height = canvas.clientHeight;
-
-  let size;
-
-  size = canvas.width+canvas.height;
+  canvas.height = document.body.scrollHeight;
 
   spots = [];
-  let density = 100;
-  for (var x = 0; x < (size / density); x++) {
-    var column = [];
-    for (var y = 0; y < (size / density); y++) {
-      let proj = project((x*1.1) * density, (y*1.1) * density, 0);
-
-      let yval = proj[1] - (canvas.height / 2);
-      let xval = proj[0] + (canvas.width / 2);
-      yval -= 80;
-
-      column.push({x:xval, y:yval, depth:(Math.random() - .5)*3, direction:'up', anchor:yval+((Math.random() - .5)*20)});
-    };
-
-    spots.push(column);
+  for (let i = 0; i < loopTime; i++) {
+    spots.push({x:Math.random() * canvas.width, y:Math.random() * canvas.height, rad:Math.floor(Math.random() * (10 - 5 + 1) + 5), depth:Math.random() * 5, velocity:{x:Math.random() - .5, y:Math.random() - .5}});
   };
 }
 regen()
@@ -50,39 +35,59 @@ function updateAnim() {
 
     var x;
     var y;
+    var x2;
+    var y2;
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
+    for (var s in spots) {
+        let spot = spots[s];
 
-    var index_y = 0;
-    for (var c in spots) {
-      let col = spots[c];
-      var index_x = 0;
-      for (var s in col) {
-        let spot = col[s];
+        spots[s].x += spot.velocity.x;
+        spots[s].y += spot.velocity.y;
 
-        spots[index_y][index_x].depth += (spot.y - spot.anchor)/80
+        if (spot.x < -100) {
+          spots[s].velocity.x = -spots[s].velocity.x;
+        }
+        if (spot.y < -100) {
+          spots[s].velocity.y = -spots[s].velocity.y;
+        }
+        if (spot.x > canvas.width + 100) {
+          spots[s].velocity.x = -spots[s].velocity.x;
+        }
+        if (spot.y > canvas.height + 100) {
+          spots[s].velocity.y = -spots[s].velocity.y;
+        }
 
-        spots[index_y][index_x].y -= spots[index_y][index_x].depth;
+        x = spot.x
+        y = spot.y
 
-        x = spot.x;
-        y = spot.y;
+        drawCircle(ctx, x, y, spot.rad, `rgb(100, 100, 215)`, `rgb(100, 100, 215)`, 1);
 
-        try {
-          ctx.beginPath();
-          ctx.strokeStyle = `rgb(60, 60, 100)`;
-          ctx.moveTo(x, y);
-          ctx.lineTo(spots[index_y][index_x + 1]['x'], spots[index_y][index_x + 1]['y']);
-          ctx.lineTo(spots[index_y + 1][index_x + 1]['x'], spots[index_y + 1][index_x + 1]['y']);
-          ctx.stroke();
-        } catch {}
+        let closest = {x:0, y:0, dist:9000000};
 
-        index_x += 1;
-      };
+        for (var s in spots) {
+          let spot = spots[s];
 
-      index_y += 1;
+          x2 = spot.x
+          y2 = spot.y
+
+          let dist2 = (Math.sqrt((Math.pow(x-x2,2))+(Math.pow(y-y2,2))));
+          if (dist2 < closest.dist) {
+            if (! (x2 === x && y2 === y)) {
+              closest.x = x2,
+              closest.y = y2;
+              closest.dist = dist2;
+            }
+          }
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(closest.x, closest.y);
+        ctx.stroke();
     };
 };
 
-setInterval(updateAnim, 60);
+setInterval(updateAnim, 16);
 
-window.addEventListener("resize", regen);
+//window.onresize = regen;

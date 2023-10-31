@@ -6,7 +6,7 @@ var active_room = ''
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 try {
-  let ss = JSON.parse(decrypt(sessionStorage.getItem('pearlUserLogin')));
+  let ss = JSON.parse(decrypt(sessionStorage.getItem('LRUserLogin')));
   username = ss['user']
   userkey = ss['key']
 } catch {
@@ -352,7 +352,7 @@ async function updateMessageBoard() {
             </audio>
             `;
   
-          } else if ([".png", ".jpg", ".webp", ".gif"].includes(filetype)) {
+          } else if ([".png", ".jpg", ".webp", ".gif", "svg"].includes(filetype)) {
             return `<br><img class="msg-content" src="${match}"></img>`;
   
           } else if (match.startsWith('https://www.youtube.com/watch?v')) {

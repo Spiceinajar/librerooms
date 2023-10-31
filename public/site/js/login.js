@@ -72,7 +72,7 @@ async function login(user, key) {
     const expirationDate = new Date();
     expirationDate.setMonth(expirationDate.getMonth() + 1);
     
-    sessionStorage.setItem('pearlUserLogin', encrypt(`{"user":"${user}", "key":"${key}"}`), sameSite='lax');
+    sessionStorage.setItem('LRUserLogin', encrypt(`{"user":"${user}", "key":"${key}"}`), sameSite='lax');
     document.cookie = `user=${user}; samesite=strict; expires=${expirationDate.toUTCString()}; Secure`;
     document.cookie = `key=${key}; samesite=strict; expires=${expirationDate.toUTCString()}; Secure`;
 
@@ -98,7 +98,11 @@ async function cr_account(user, key) {
         addNotif('Username is taken')
       } else {
         if (result === "badchars") {
-          addNotif('Usernames can only contain letters and numbers')
+          addNotif('Username can only contain letters and numbers')
+        } else {
+          if (result === "longuser") {
+            addNotif('Username must be shorter than 16 characters')
+          }
         }
       }
     }
