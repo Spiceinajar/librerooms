@@ -10,7 +10,7 @@ try {
   username = ss['user']
   userkey = ss['key']
 } catch {
-  location.href = './login.html';
+  location.href = '../login';
 }
 
 
