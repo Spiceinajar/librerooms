@@ -1,0 +1,34 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+
+  <title>Your account is locked</title>
+  <meta name="description" content="Our goal is to provide a free, community-centered and privacy-focused instant messaging app to the public.">
+
+  <link rel="icon" href="./site/assets/icons/icon.svg">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <link rel="stylesheet" href="./site/css/style.css">
+</head>
+
+<body style="overflow: hidden; white-space: pre;">
+    <div style="position: absolute; left: 50%; top: 50%; transform: translateX(-50%) translateY(-50%); background-color: rgb(30, 30, 30); max-width: 90%; width: 500px; text-align: center; color: white; border-radius: 10px">
+        <h1 style="display: inline; font-size: 30px;">ACCOUNT LOCKED</h1>
+
+        <h1 style="display: inline">
+        Reason:
+        </h1>
+        <span id="reason" style="border-radius: 2px; background-color: rgb(82, 82, 82); width: 200px; max-width: 90%; display: inline; padding: 10px; overflow-y: auto; height: 300px; word-wrap: break-word; font-family: Standard;">
+        </span>
+
+        <script>
+            const urlParams = new URLSearchParams(window.location.search);
+
+            document.getElementById('reason').textContent = urlParams.get('reason');
+        </script>
+    </div>
+</body>
+</html>

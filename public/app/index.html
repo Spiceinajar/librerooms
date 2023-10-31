@@ -1,0 +1,69 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+
+  <title>Pearl app</title>
+
+  <link rel="icon" href="../site/assets/icons/icon.svg">
+
+  <link rel="stylesheet" href="../site/css/style.css">
+
+</head>
+
+<body>
+    <div id="msgs">
+    </div>
+
+    <canvas style="display: none;" width="16" height="16" id="avatarassembler"></canvas>
+
+    <div id="header_bar">
+      <div class="header-btn-container">
+        <img id="buttonmenu-btn" class="header-btn" onclick="openMenu('buttonmenu')" src="../site/assets/icons/bt-menu.svg" alt="buttonmenu">
+        <img id="settingsbtn" class="header-btn" onclick="openMenu('settings')" src="../site/assets/icons/cog.svg" alt="settings">
+        <img id="reportbtn" class="header-btn" onclick="openMenu('report')" src="../site/assets/icons/report.svg" alt="report">
+        <img id="leavebtn" class="header-btn" onclick="" src="" alt="leave">
+        <img id="mailbtn" class="header-btn" onclick="openMenu('notifications')" src="../site/assets/icons/letter.svg" alt="notifications">
+      </div>
+
+      <div class="header-right-container">
+        <button id="personal-profile-btn">
+          <img src='' class="profilepic" id="personal-pfp-display">
+          <h1 id="personal-username-display"></h1>
+        </button>
+  
+        <img id="innersidebartoggler" class="header-btn" onclick="toggleSidebar()" src="../site/assets/icons/menu.svg" alt="toggle sidebar">
+      </div>
+      
+      <h1 id="room_name_display">N/A</h1>
+    </div>
+
+    <span id="bottom_bar">
+      <textarea id="msgtxt" cols="1" rows="1"></textarea>
+      <img id="sendbtn" onclick="sendMessage()" alt="send" src="../site/assets/icons/send.svg">
+    </span>
+
+    <div id="sidebar">
+      <div class="sidebar-header">
+
+        <button id="sidebartoggler" onclick="toggleSidebar()">←</button>
+
+        <button id="rbtn" class="sidebar-header-button">Rooms</button>
+        <button id="fbtn" class="sidebar-header-button">Friends</button>
+      </div>
+
+      <div id="room-display">
+      </div>
+
+      <div class="sidebar-footer">
+          <button id="addbtn">+ Add room</button>
+      </div>
+    </div>
+    
+    <script src="../site/js/frontend.js"></script>
+    <script src="../site/js/app.js"></script>
+    <script src="../site/js/menu.js"></script>
+</body>
+</html>
