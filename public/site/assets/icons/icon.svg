@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="50" height="50" viewBox="0 0 50 50" xml:space="preserve">
+<desc>Created with Fabric.js 5.3.0</desc>
+<defs>
+</defs>
+<g transform="matrix(0.2032895008 0 0 0.2032895008 25 25)" id="5UBnYGCb0AdxnzWFKwxkr"  >
+<radialGradient id="SVGID_11" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 1 -121.75 -121.75)"  cx="41.86266489416093" cy="35.47141834543409" r="252.61420678193448" fx="41.86266489416093" fy="35.47141834543409">
+<stop offset="0%" style="stop-color:rgb(54,41,255);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(180,44,255);stop-opacity: 1"/>
+</radialGradient>
+<path style="stroke: rgb(227,179,111); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_11); fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke"  transform=" translate(0, 0)" d="M 0 -121.75325 C 67.20779 -121.75325 121.75325 -67.20779999999999 121.75325 0 C 121.75325 67.20779 67.20779999999999 121.75325 0 121.75325 C -67.20779 121.75325 -121.75325 67.20779999999999 -121.75325 0 C -121.75325 -67.20779 -67.20779999999999 -121.75325 0 -121.75325 z" stroke-linecap="round" />
+</g>
+</svg>
