@@ -57,6 +57,7 @@ let catalog = {
       "purple tee",
       "blue tee",
       "green tee",
+      "space suit",
   ],
 
   "eyes":[
@@ -67,7 +68,6 @@ let catalog = {
       "wide",
       "wide 2",
       "small",
-      "shades",
   ],
 
   "hair":[
@@ -89,10 +89,19 @@ let catalog = {
       "smirk",
       "toothy",
   ],
+
+  "accessories":[
+    "shades",
+    "headphones",
+    "ski goggles",
+    "glasses 1",
+    "glasses 2",
+    "mask 1",
+    "space helmet",
+],
 }
 
 async function loadAvatar(arr) {
-
   // [skin color rgb [r, g, b], hair color hsv [h, s, v], background id, shirt id, eye id, hair id, mouth id]
 
   var assembler = document.getElementById('avatarassembler');
@@ -142,7 +151,12 @@ async function loadAvatar(arr) {
 
   if (! (arr[6] === null)) {
     await pasteImage(`./assets/avatar/mouths/${catalog.mouths[arr[6]]}.png`, {x:5, y:9})
-      //html += `\n<img src="./assets/avatar/mouths/${catalog.mouths[arr[6]]}.png" id="mouth" class="avatar-layer avatar-mouth">`
+  }
+
+  if (arr[7].length > 0) {
+    for (a of arr[7]) {
+      await pasteImage(`./assets/avatar/accessories/${catalog.accessories[a]}.png`, {x:0, y:0})
+    }
   }
 
   return assembler.toDataURL('image/png');

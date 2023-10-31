@@ -121,7 +121,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.1.8.8 [Beta]</h1>
+      <h1 style="font-size:10px;">Version: 1.1.8.9 [Beta]</h1>
     </div>
     `);
 
@@ -323,9 +323,9 @@ async function openMenu(m_id, args={}) {
     document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
       <h1 style="font-size:20px">Avatar Editor</h1>
 
-      <div class="catalog-container">
-        <img class="profilepic" id="avatar-editor-display" style="height:200px; width:200px" alt="user-profile-image">
+      <img class="profilepic" id="avatar-editor-display" style="height:100px; width:100px" alt="user-profile-image">
 
+      <div class="catalog-container">
         <div class="catalog-splitter">
           Skin tone
         </div>
@@ -368,6 +368,12 @@ async function openMenu(m_id, args={}) {
         <span id="catalog-5" class="catalog-row">
         </span>
 
+        <div class="catalog-splitter">
+          Accessories
+        </div>
+        <span id="catalog-7" class="catalog-row">
+        </span>
+
         <button id="save-avatar-btn" style="width:200px; height:50px; background-color: rgb(100, 100, 215); margin:10px">Save</button>
       </div>
     `);
@@ -380,12 +386,12 @@ async function openMenu(m_id, args={}) {
 
     updateDisplay();
 
-    let categories = ["skintones", "haircolors", "backgrounds", "shirts", "eyes", "hair", "mouths"];
+    let categories = ["skintones", "haircolors", "backgrounds", "shirts", "eyes", "hair", "mouths", "accessories"];
     for (c in categories) {
       let catId = c;
       let catName = categories[catId];
 
-      if (['3', '4', '5'].includes(c)) { //makes hair and eyes removable (don't ask me why I'm making eyes removable) =============
+      if (['3', '4', '5', '7'].includes(c)) { //makes hair, shirts and eyes removable (don't ask me why I'm making eyes removable) =============
         document.getElementById(`catalog-${c}`).insertAdjacentHTML('afterbegin', `
         <div class="catalog-item" id="catalog-selector">
           <img class="catalog-item-img"  src="./assets/icons/remove.png" alt="remove">
@@ -394,7 +400,13 @@ async function openMenu(m_id, args={}) {
 
         document.getElementById(`catalog-selector`).onclick = function() {
           let category = this.id.split('-')[1];
-          avObj[category] = null;
+
+          if (category === '7') {
+            avObj[category] = [];
+          } else {
+            avObj[category] = null;
+          }
+          
           updateDisplay()
         }
   
@@ -431,7 +443,17 @@ async function openMenu(m_id, args={}) {
         document.getElementById(`catalog-selector`).onclick = function() {
           let category = this.id.split('-')[0];
           let itemid = this.id.split('-')[1];
-          avObj[category] = itemid;
+
+          if (category === '7') {
+            if (avObj[category].includes(itemid)) {
+              avObj[category] = avObj[category].filter(item => item !== itemid);;
+            } else {
+              avObj[category].push(itemid);
+            }
+          } else {
+            avObj[category] = itemid;
+          }
+          
           updateDisplay()
         }
 
