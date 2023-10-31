@@ -328,7 +328,7 @@ async function run() {
           } else {
             if (checkChars(parsed.user)) {
               if (parsed.user.length > 2) {
-                dat.collections.users[parsed.user] = {'key':parsed.pass, 'pfp':'./assets/icons/default.png', 'bio':'This user has not yet created a description.', 'roles':['BetaTester'], 'notifs':[], 'unread':0, 'requests':[], 'joindate':getMDY(false), 'blocked':[]};
+                dat.collections.users[parsed.user] = {'key':parsed.pass, 'avatar':[9, 0, 0, null, null, null, 8, []], 'bio':'This user has not yet created a description.', 'roles':['BetaTester'], 'notifs':[], 'unread':0, 'requests':[], 'joindate':getMDY(false), 'blocked':[]};
                 notify(parsed.user, `Welcome to Pearl, ${parsed.user}! If you need help, you can see our guide at https://pearlapp.org/guide.html. Because you joined during Pearl's beta stage, you've been given the [BetaTester] badge. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`);
                 dat.collections.rooms["Main room"].members.push(parsed.user);
                 dat.collections.rooms["updates"].members.push(parsed.user);
@@ -578,7 +578,7 @@ async function run() {
                     }
       
                     if (ownedrooms < 4) {
-                      dat.collections.rooms[parsed['rname']] = {"messages":[], "members":[parsed.user], "type":"room", "banner":"./assets/icons/room_default.svg", "description":"This room has no description yet.", "password":parsed['roomkey'], "creator":parsed.user, "maxmembers":1000};
+                      dat.collections.rooms[parsed['rname']] = {"messages":[], "members":[parsed.user], "type":"room", "banner":"./site/assets/icons/room_default.svg", "description":"This room has no description yet.", "password":parsed['roomkey'], "creator":parsed.user, "maxmembers":1000};
                       console.log(`User ${parsed.user} created room "${parsed['rname']}"`)
                       return {res:true}
                     } else {
