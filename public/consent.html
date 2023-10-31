@@ -1,0 +1,45 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+
+  <title>Consent</title>
+  <meta name="description" content="Our goal is to provide a free, community-centered and privacy-focused instant messaging app to the public.">
+
+  <link rel="icon" href="./assets/icons/icon.svg">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+    <div style="position: absolute; left: 50%; top: 50%; transform: translateX(-50%) translateY(-50%); background-color: rgb(30, 30, 30); max-width: 80%; width: 500px; text-align: center; color: white; border-radius: 10px; padding: 50px;">
+        <h1 style="display: inline; font-size: 30px;">CONSENT</h1>
+
+        <br>
+
+        <div style="margin: 30px;">
+            <h1 style="display: inline; font-size: 20px; word-wrap: break-word;">
+                Before using this app, you must agree
+                to it's <a href="./policies/terms.html" class="claim-link">Terms of Service</a>, <a href="./policies/privacy.html" class="claim-link">Privacy Policy</a> and 
+                <a href="./policies/cookies.html" class="claim-link">Cookie Policy</a>. Make sure you have JavaScript
+                and cookies enabled on your browser as
+                they are required for this app to function.
+            </h1>
+        </div>
+
+        <br>
+
+        <button id="consent-btn">I consent</button>
+
+        <script>
+            document.getElementById('consent-btn').onclick = function() {
+                document.cookie = `consent=true; path=/; domain=.pearlapp.org"`;
+                location.href = './login.html';
+            }
+        </script>
+    </div>
+</body>
+</html>
