@@ -45,8 +45,6 @@ async function run() {
     const express = require('express');
     const app = express();
     app.use(express.static('public'));
-
-    console.log(process.env + "test");
   
     var dat;
     const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -459,7 +457,7 @@ async function run() {
         
                     if (permissions['Administrator'] || permissions['Moderator']) {
                       if (cmd === "PURGE") { 
-                        dat.collections.rooms[parsed.room].messages = dat.collections.rooms[parsed.room].messages.slice(0, -args.amount)
+                        dat.collections.rooms[parsed.room].messages = dat.collections.rooms[parsed.room].messages.pop(args.amount)
                         //sysMessage(`Removed last ${args.amount} messages from this room.`, parsed.room)
                       }
           
