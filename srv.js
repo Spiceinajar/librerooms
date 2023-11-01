@@ -45,6 +45,8 @@ async function run() {
     const express = require('express');
     const app = express();
     app.use(express.static('public'));
+
+    console.log(process.env + "test");
   
     var dat;
     const { MongoClient, ServerApiVersion } = require('mongodb');
