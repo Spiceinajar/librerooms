@@ -457,7 +457,7 @@ async function run() {
         
                     if (permissions['Administrator'] || permissions['Moderator']) {
                       if (cmd === "PURGE") { 
-                        dat.collections.rooms[parsed.room].messages = dat.collections.rooms[parsed.room].messages.pop(args.amount)
+                        dat.collections.rooms[parsed.room].messages = dat.collections.rooms[parsed.room].messages.slice(0, -args.amount)
                         //sysMessage(`Removed last ${args.amount} messages from this room.`, parsed.room)
                       }
           
