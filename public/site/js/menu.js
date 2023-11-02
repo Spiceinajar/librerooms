@@ -94,7 +94,7 @@ async function openMenu(m_id, args={}) {
       userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" alt="roleicon" title="${role}" style="padding-left: 1vh; height:100%;">`;
     }
 
-    document.getElementById('profile-avatar-display').src = await loadAvatar(await getAvatar(args.user));
+    document.getElementById('profile-avatar-display').src = await getAvatar(args.user);
     document.getElementById('profile-desc').textContent = (await DB({'type':'getdesc', 'targuser':args.user})).contents;
     document.getElementById('profile-username-display').innerHTML = userDisplay;
     document.getElementById('profile-joindate').textContent = `Joined ${joinDate.res.day}/${joinDate.res.month+1}/${joinDate.res.year}`;
@@ -125,7 +125,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.1.8.9</h1>
+      <h1 style="font-size:10px;">Version: 1.1.8.9 [Beta]</h1>
     </div>
     `);
 
@@ -563,7 +563,8 @@ async function addFriendMenu() {
     res = res.res;
 
     if (res === true) {
-      addNotif("Request sent")
+      addNotif("Request sent");
+      closeFriendMenu();
     } else {
       if (res === "nouser") {
         addNotif("That user does not exist")

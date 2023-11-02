@@ -106,11 +106,16 @@ let catalog = {
 ],
 }
 
+let canvasID = 0;
 async function loadAvatar(arr) {
   try {
     // [skin color rgb [r, g, b], hair color hsv [h, s, v], background id, shirt id, eye id, hair id, mouth id]
 
-    var assembler = document.getElementById('avatarassembler');
+    let id = `avatarassembler-${canvasID}`
+    canvasID += 1;
+    document.body.insertAdjacentHTML('beforebegin', `<canvas style="display: none;" width="16" height="16" id="${id}"></canvas>`)
+
+    var assembler = document.getElementById(id);
     var ctx = assembler.getContext("2d", {alpha: false});
     ctx.filter = 'none';
 
@@ -165,13 +170,18 @@ async function loadAvatar(arr) {
       }
     }
 
-    return assembler.toDataURL('image/png');
+    let bs4 = assembler.toDataURL('image/png');
+    assembler.parentNode.removeChild(assembler);
+    console.log(bs4)
+
+    return bs4;
   } catch {
     return "../site/assets/icons/missing.png"
   }
 }
 
 cachedAvs = {};
+let avatarQueue = [];
 async function getAvatar(us) {
   var pic;
 
@@ -184,7 +194,7 @@ async function getAvatar(us) {
     cachedAvs[us] = pic;
   }
 
-  return pic;
+  return loadAvatar(pic);
 }
 
 userRoles = {};
@@ -204,8 +214,7 @@ async function getRoles(us) {
 }
 
 (async () => {
-  await loadAvatar(await getAvatar(username)); //I'm doing this twice because for some reason the system doesnt function correctly the first time, I have no idea why
-  personalpfp = await loadAvatar(await getAvatar(username));
+  personalpfp = await getAvatar(username);
   document.getElementById('personal-pfp-display').src = personalpfp;
 })();
 
@@ -300,7 +309,6 @@ async function updateMessageBoard() {
   
       for (var msg of messages) {
         pfp = await getAvatar(msg['user']);
-        pfp = await loadAvatar(pfp);
 
         roles = await getRoles(msg['user']);
         datetime = formatTime(msg.dt);
