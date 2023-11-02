@@ -17,14 +17,14 @@ function drawCircle(ctx, x, y, radius, fill, stroke, strokeWidth) {
 
 var spots;
 
+const loopTime = 100;
 function regen() {
-  let loopTime = canvas.clientWidth / 10;
   canvas.width = canvas.clientWidth;
-  canvas.height = document.body.scrollHeight;
+  canvas.height = canvas.clientHeight;
 
   spots = [];
   for (let i = 0; i < loopTime; i++) {
-    spots.push({x:Math.random() * canvas.width, y:Math.random() * canvas.height, rad:Math.floor(Math.random() * (10 - 5 + 1) + 5), depth:Math.random() * 5, velocity:{x:Math.random() - .5, y:Math.random() - .5}});
+    spots.push({x:Math.random() * canvas.width, y:Math.random() * canvas.height, rad:Math.random() * 10});
   };
 }
 regen()
@@ -33,61 +33,21 @@ function updateAnim() {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
 
-    var x;
-    var y;
-    var x2;
-    var y2;
-
     ctx.clearRect(0,0,canvas.width,canvas.height);
     for (var s in spots) {
         let spot = spots[s];
 
-        spots[s].x += spot.velocity.x;
-        spots[s].y += spot.velocity.y;
+        spot.y += .1*spot.rad;
 
-        if (spot.x < -100) {
-          spots[s].velocity.x = -spots[s].velocity.x;
-        }
-        if (spot.y < -100) {
-          spots[s].velocity.y = -spots[s].velocity.y;
-        }
-        if (spot.x > canvas.width + 100) {
-          spots[s].velocity.x = -spots[s].velocity.x;
-        }
-        if (spot.y > canvas.height + 100) {
-          spots[s].velocity.y = -spots[s].velocity.y;
+        if (spot.y > (canvas.height + 10)) {
+          spot.y = -10;
+          spot.x = Math.random() * canvas.width;
+          spot.rad = Math.random() * 10;
         }
 
-        x = spot.x
-        y = spot.y
-
-        drawCircle(ctx, x, y, spot.rad, `rgb(100, 100, 215)`, `rgb(100, 100, 215)`, 1);
-
-        let closest = {x:0, y:0, dist:9000000};
-
-        for (var s in spots) {
-          let spot = spots[s];
-
-          x2 = spot.x
-          y2 = spot.y
-
-          let dist2 = (Math.sqrt((Math.pow(x-x2,2))+(Math.pow(y-y2,2))));
-          if (dist2 < closest.dist) {
-            if (! (x2 === x && y2 === y)) {
-              closest.x = x2,
-              closest.y = y2;
-              closest.dist = dist2;
-            }
-          }
-        }
-
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(closest.x, closest.y);
-        ctx.stroke();
+        drawCircle(ctx, spot.x, spot.y, spot.rad, `rgb(100, 100, ${100 + (spot.rad*10)})`, `rgb(100, 100, ${100 + (spot.rad*10)})`, 1);
     };
 };
 
-setInterval(updateAnim, 16);
-
-//window.onresize = regen;
+window.onresize = regen;
+window.setInterval(updateAnim, 16);
