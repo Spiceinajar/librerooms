@@ -48,7 +48,7 @@ async function run() {
   
     var dat;
     const { MongoClient, ServerApiVersion } = require('mongodb');
-    console.log(process.env.MONGO_KEY);
+    console.log(process.env.MONGO_KEY + "test");
     const uri = `mongodb+srv://admin:${process.env.MONGO_KEY}@cluster0.jgmyraj.mongodb.net/?retryWrites=true&w=majority`;
   
     const client = new MongoClient(uri, {
