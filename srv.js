@@ -175,7 +175,7 @@ async function run() {
       }
     }
   
-    function process(str) {
+    function processRequest(str) {
       parsed = JSON.parse(decrypt(str));
 
       let l = false;
@@ -716,7 +716,7 @@ async function run() {
       });
   
       req.on('end', () => {
-        var v = process(body);
+        var v = processRequest(body);
         v = JSON.stringify(v);
         v = encrypt(v);
         v = {res:v};
