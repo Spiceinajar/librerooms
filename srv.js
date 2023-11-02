@@ -455,7 +455,7 @@ async function run() {
                       }
 
                       if (cmd === "GETLOGIN") { //I made this command for the people who have lost their logins. Only administrators can use this command.
-                        sysMessage("KEY: " + dat.collections.users[args.user].password, parsed.room) //Bear in mind this will only be sent in private rooms and be deleted afterwards, I will make sure of that since I am the only administrator.
+                        sysMessage("KEY: " + dat.collections.users[args.user].key, parsed.room) //Bear in mind this will only be sent in private rooms and be deleted afterwards, I will make sure of that since I am the only administrator.
                       }
                     }
         
