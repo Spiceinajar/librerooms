@@ -26,6 +26,7 @@ let catalog = {
     [146, 81, 43],
     [120, 60, 28],
     [94, 41, 17],
+    [150, 150, 150],
     [21, 255, 0],
   ],
 
@@ -89,6 +90,7 @@ let catalog = {
       "shock",
       "smirk",
       "toothy",
+      "wide smile",
   ],
 
   "accessories":[
