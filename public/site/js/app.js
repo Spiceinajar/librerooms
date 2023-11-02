@@ -26,7 +26,7 @@ let catalog = {
     [146, 81, 43],
     [120, 60, 28],
     [94, 41, 17],
-    [150, 150, 150],
+    [21, 255, 0],
   ],
 
   "haircolors":[
@@ -68,6 +68,7 @@ let catalog = {
       "wide",
       "wide 2",
       "small",
+      "vertical",
   ],
 
   "hair":[
@@ -99,6 +100,7 @@ let catalog = {
     "glasses 2",
     "mask 1",
     "space helmet",
+    "monitor head",
 ],
 }
 
