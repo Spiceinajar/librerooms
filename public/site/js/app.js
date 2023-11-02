@@ -33,6 +33,7 @@ let catalog = {
   "haircolors":[
     [25, 100, 15],
     [70, 35, 300],
+    [25, 80, 300],
     [0, 0, 300],
     [0, 0, 10],
   ],
@@ -41,6 +42,9 @@ let catalog = {
       "default",
       "void",
       "tunnel",
+      "white stripes",
+      "bricks 01",
+      "bricks 02",
   ],
 
   "shirts":[
@@ -78,6 +82,15 @@ let catalog = {
       "short fluffy",
       "afro",
       "squared afro",
+      "mohawk",
+      "receding",
+  ],
+
+  "facialhair":[
+      "short beard",
+      "long beard",
+      "mustache",
+      "horseshoe mustache",
   ],
 
   "mouths":[
@@ -103,6 +116,7 @@ let catalog = {
     "mask 1",
     "space helmet",
     "monitor head",
+    "beanie",
 ],
 }
 
@@ -164,6 +178,13 @@ async function loadAvatar(arr) {
       await pasteImage(`../site/assets/avatar/mouths/${catalog.mouths[arr[6]]}.png`, {x:5, y:9})
     }
 
+    if (! (arr[8] === null)) {
+      let st = catalog.haircolors[arr[1]]
+      ctx.filter = `hue-rotate(${st[0]}deg) saturate(${st[1]}%) brightness(${st[2]}%)`;
+      await pasteImage(`../site/assets/avatar/facialhair/${catalog.facialhair[arr[8]]}.png`, {x:3, y:6})
+      ctx.filter = 'none';
+    }
+
     if (arr[7].length > 0) {
       for (a of arr[7]) {
         await pasteImage(`../site/assets/avatar/accessories/${catalog.accessories[a]}.png`, {x:0, y:0})
@@ -172,17 +193,17 @@ async function loadAvatar(arr) {
 
     let bs4 = assembler.toDataURL('image/png');
     assembler.parentNode.removeChild(assembler);
-    console.log(bs4)
 
     return bs4;
-  } catch {
+  } catch(err) {
+    console.log(err, arr)
     return "../site/assets/icons/missing.png"
   }
 }
 
 cachedAvs = {};
 let avatarQueue = [];
-async function getAvatar(us) {
+async function getAvatar(us, preParse=true) {
   var pic;
 
   if (us in cachedAvs) {
@@ -194,7 +215,11 @@ async function getAvatar(us) {
     cachedAvs[us] = pic;
   }
 
-  return loadAvatar(pic);
+  if (preParse) {
+    return loadAvatar(pic);
+  } else {
+    return pic;
+  }
 }
 
 userRoles = {};
@@ -376,7 +401,7 @@ async function updateMessageBoard() {
         });
 
         contents = contents.replace(/\B@\w+\b/g, (match) => {
-          return `<div onclick="openMenu('profile', {user:'${match.substring(1)}'})" class='mention'>${match}</div>`
+          return `<div onclick="openMenu('profile', {user:'${match.substring(1)}'})" class='mention' title="User Mention">${match}</div>`
         });
   
         if (msg['user'] === 'System') {
@@ -424,7 +449,7 @@ async function updateMessageBoard() {
     
               <div style="margin-bottom: 5px;">
                 <div style='display:inline-block; vertical-align: bottom;'>
-                  <img src='${pfp}' class="profilepic" onclick="openMenu('profile', {user:'${msg.user}'})">
+                  <img src='${pfp}' title="Open Profile" class="profilepic" onclick="openMenu('profile', {user:'${msg.user}'})">
                 </div>
                 
                 <div style='display:inline-block; width:80%'>
@@ -537,13 +562,16 @@ function switch_room(room, displayname, mode, created=false) {
     if (created === true) {
       document.getElementById('leavebtn').onclick = function() {openMenu("rconfig")};
       document.getElementById('leavebtn').src = "../site/assets/icons/wrench.svg";
+      document.getElementById('leavebtn').title = "Configure Room";
     } else {
       document.getElementById('leavebtn').onclick = leaveroom;
       document.getElementById('leavebtn').src = "../site/assets/icons/door.svg";
+      document.getElementById('leavebtn').title = "Leave Room";
     }
   } else {
     document.getElementById('leavebtn').onclick = unfriend;
     document.getElementById('leavebtn').src = "../site/assets/icons/unfriend.svg";
+    document.getElementById('leavebtn').title = "Remove Friend";
   }
 
   if (mobileLayout) {

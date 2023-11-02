@@ -34,7 +34,7 @@ async function openMenu(m_id, args={}) {
     <div id="center_div" class="center_div" style="max-width:100%; max-height:100%;">
       <div id="menu-bg" style="border-radius: 10px; background-color: rgb(25, 25, 25); text-align: center; width:850px; height:500px; max-height: calc(100% - 20px); max-width: calc(100% - 20px);">
         <div style='width=100%; text-align: right; margin-bottom:-20px'>
-          <button id="xbtn" style="width:25px; height:25px; background-color: red; border-radius:5">X</button>
+          <button id="xbtn" title="Close" style="width:25px; height:25px; background-color: red; border-radius:5">X</button>
         </div>
       </div>
     </div>
@@ -206,9 +206,9 @@ async function openMenu(m_id, args={}) {
       <div class="center-div" style="width:100%;">
       
       <div style="width:100%">
-        <img style="height:30px; display: inline-block; float:left; padding-top:20px; padding-left:20px;" src="../site/assets/icons/${rbadge}.svg">
+        <img style="height:30px; display: inline-block; float:left; padding-top:20px; padding-left:20px;" src="../site/assets/icons/${rbadge}.svg" title="${rbadge}">
         <h1 style="font-size: 25px; display: inline-block;">${room.name}</h1>
-        <h1 style="font-size: 20px; font-weight: 100; display: inline-block; float:right; padding-top:10px; padding-right:20px;"><img style="height:20px;" src="../site/assets/icons/members.svg"> ${room.membercount}/${room.maxmembers}</h1>
+        <h1 style="font-size: 20px; font-weight: 100; display: inline-block; float:right; padding-top:10px; padding-right:20px;"><img style="height:20px;" src="../site/assets/icons/members.svg" title="Member Count"> ${room.membercount}/${room.maxmembers}</h1>
       </div>
 
       <h1 style="font-weight: 100;">${room.description}</h1>
@@ -379,6 +379,12 @@ async function openMenu(m_id, args={}) {
         </span>
 
         <div class="catalog-splitter">
+          Facial Hair
+        </div>
+        <span id="catalog-8" class="catalog-row">
+        </span>
+
+        <div class="catalog-splitter">
           Accessories
         </div>
         <span id="catalog-7" class="catalog-row">
@@ -388,7 +394,7 @@ async function openMenu(m_id, args={}) {
       </div>
     `);
 
-    let avObj = await getAvatar(username);
+    let avObj = await getAvatar(username, false);
 
     async function updateDisplay() {
       document.getElementById("avatar-editor-display").src = await loadAvatar(avObj)
@@ -396,14 +402,14 @@ async function openMenu(m_id, args={}) {
 
     updateDisplay();
 
-    let categories = ["skintones", "haircolors", "backgrounds", "shirts", "eyes", "hair", "mouths", "accessories"];
+    let categories = ["skintones", "haircolors", "backgrounds", "shirts", "eyes", "hair", "mouths", "accessories", "facialhair"];
     for (c in categories) {
       let catId = c;
       let catName = categories[catId];
 
-      if (['3', '4', '5', '7'].includes(c)) { //makes hair, shirts and eyes removable (don't ask me why I'm making eyes removable) =============
+      if (['3', '4', '5', '7', '8'].includes(c)) { //makes hair, shirts and eyes removable (don't ask me why I'm making eyes removable) =============
         document.getElementById(`catalog-${c}`).insertAdjacentHTML('afterbegin', `
-        <div class="catalog-item" id="catalog-selector">
+        <div class="catalog-item" id="catalog-selector" title="remove">
           <img class="catalog-item-img"  src="../site/assets/icons/remove.png" alt="remove">
         <div>
         `);
@@ -428,13 +434,13 @@ async function openMenu(m_id, args={}) {
       for (item in catalog[catName]) {
         if (catId > 1) {
           document.getElementById(`catalog-${catId}`).insertAdjacentHTML('beforeend', `
-          <div class="catalog-item" id="catalog-selector">
+          <div class="catalog-item" id="catalog-selector" title="${catalog[catName][item]}">
             <img class="catalog-item-img"  src="../site/assets/avatar/${catName}/${catalog[catName][item]}.png" alt="item">
           <div>
           `);
         } else {
           document.getElementById(`catalog-${catId}`).insertAdjacentHTML('beforeend', `
-          <div class="catalog-item" id="catalog-selector" width: 70px; height: 70px">
+          <div class="catalog-item" id="catalog-selector" width: 70px; height: 70px" title="color">
           <div>
           `);
 
