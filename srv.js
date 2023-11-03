@@ -48,6 +48,7 @@ async function run() {
   
     var dat;
     const { MongoClient, ServerApiVersion } = require('mongodb');
+    //================================
     const uri = `mongodb+srv://admin:${process.env.MONGO_KEY}@cluster0.jgmyraj.mongodb.net/?retryWrites=true&w=majority`;
   
     const client = new MongoClient(uri, {
@@ -89,7 +90,7 @@ async function run() {
     
     //await mongoOperation('setDB');
     dat = await mongoOperation('getDB').catch(console.dir);
-    setInterval(function(){mongoOperation('setDB').catch(console.dir)}, 3600000); //Makes backup every hour 3600000
+    setInterval(function(){mongoOperation('setDB').catch(console.dir)}, 3600000); //Makes backup every hour (3600000 ms)
   
     function authenticate(usern, key, keyless=false) {
       if (usern in dat.collections.users) {
@@ -160,8 +161,7 @@ async function run() {
     }
 
     //for (i in dat.collections.users) {
-    //  delete dat.collections.users[i].pfp;
-    //  dat.collections.users[i].avatar = [9, 0, 0, null, null, null, 8, []];
+    //  dat.collections.users[i].avatar.push(null);
     //}
 
     function notify(user, contents) {
@@ -454,8 +454,17 @@ async function run() {
                         sysMessage(dat.collections.reports.toString(), parsed.room)
                       }
 
-                      if (cmd === "GETLOGIN") { //I made this command for the people who have lost their logins. Only administrators can use this command.
+                      if (cmd === "GETLOGIN") { // I made this command for the people who have lost their logins. Only administrators can use this command.
                         sysMessage("KEY: " + dat.collections.users[args.user].key, parsed.room) //Bear in mind this will only be sent in private rooms and be deleted afterwards, I will make sure of that since I am the only administrator.
+                      }
+
+                      if (cmd === "REVERT") { // Reverts to backup
+                        sysMessage('Reverting database to backup...', parsed.room)
+
+                        (async () => {
+                          dat = await mongoOperation('getDB').catch(console.dir);
+                          sysMessage('Database reverted.', parsed.room)
+                        })();
                       }
                     }
         
@@ -513,7 +522,7 @@ async function run() {
                       sysMessage(`Unblocked @${args.user}.`, parsed.room)
                     }
     
-                  }  catch(err) {
+                  } catch(err) {
                     sysMessage(`Command failed: ${err}.`, parsed.room)
                   }
                 }
