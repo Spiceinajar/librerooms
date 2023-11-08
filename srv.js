@@ -20,7 +20,6 @@ async function run() {
       return plaintext;
     }
 
-
     function getMDY(includetime=true) {
       let d = new Date();
       let result = {day:d.getUTCDate(), month:d.getUTCMonth(), year:d.getUTCFullYear()};
@@ -90,7 +89,9 @@ async function run() {
                 update: {$set:{content: encrypt(JSON.stringify(dat))}}, // New content to update
               },
             },
-         ] )
+         ] );
+
+         console.log("Database operation finished");
         }
       } finally {
         await client.close();
