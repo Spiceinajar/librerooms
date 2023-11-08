@@ -2,7 +2,7 @@ async function run() {
   try {
     const netCfg = require('./netconfig.json');
 
-    const POLICY_VERSIONS = [2, 1, 1];
+    const POLICY_VERSIONS = [1, 1, 1];
 
     //=================================
 
@@ -43,16 +43,16 @@ async function run() {
     const app = express();
     app.use(express.static('public'));
 
-    const EXRL = require('express-rate-limit');
-
-    const limiter = EXRL({
-      windowMs: 60000, //1 min
-      limit: 50, //requests per minute
-      standardHeaders: 'draft-7',
-      legacyHeaders: false,
-    })
-    
-    app.use(limiter);
+    //const EXRL = require('express-rate-limit');
+    //
+    //const limiter = EXRL({
+    //  windowMs: 60000, //1 min
+    //  limit: 50, //requests per minute
+    //  standardHeaders: 'draft-7',
+    //  legacyHeaders: false,
+    //})
+    //
+    //app.use(limiter);
   
     var dat;
     const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -331,7 +331,10 @@ async function run() {
         if (parsed.type === 'updateavatar') {
           if (authenticate(parsed.user, parsed.pass)) {
             dat.collections.users[parsed.user].avatar = parsed['obj'];
-            console.log(`"${parsed.user}" updated their avatar.`)
+            console.log(`"${parsed.user}" updated their avatar.`);
+            return {'status':true}
+          } else {
+            return {'status':'noauth'}
           }
         };
     
