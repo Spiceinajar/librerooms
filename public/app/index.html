@@ -19,20 +19,20 @@
 
     <div id="header_bar">
       <div class="header-btn-container">
-        <img id="buttonmenu-btn" class="header-btn" onclick="openMenu('buttonmenu')" src="../site/assets/icons/bt-menu.svg" alt="buttonmenu">
-        <img id="settingsbtn" class="header-btn" onclick="openMenu('settings')" src="../site/assets/icons/cog.svg" alt="settings">
-        <img id="reportbtn" class="header-btn" onclick="openMenu('report')" src="../site/assets/icons/report.svg" alt="report">
+        <img id="buttonmenu-btn" class="header-btn" onclick="openMenu('buttonmenu')" src="../site/assets/icons/bt-menu.svg" alt="buttonmenu" title="Menu">
+        <img id="settingsbtn" class="header-btn" onclick="openMenu('settings')" src="../site/assets/icons/cog.svg" alt="settings" title="Settings">
+        <img id="reportbtn" class="header-btn" onclick="openMenu('report')" src="../site/assets/icons/report.svg" alt="report" title="Report">
         <img id="leavebtn" class="header-btn" onclick="" src="" alt="leave">
-        <img id="mailbtn" class="header-btn" onclick="openMenu('notifications')" src="../site/assets/icons/letter.svg" alt="notifications">
+        <img id="mailbtn" class="header-btn" onclick="openMenu('notifications')" src="../site/assets/icons/letter.svg" alt="notifications" title="Notifications">
       </div>
 
       <div class="header-right-container">
-        <button id="personal-profile-btn">
+        <button id="personal-profile-btn" title="Personal Profile">
           <img src='' class="profilepic" id="personal-pfp-display">
           <h1 id="personal-username-display"></h1>
         </button>
   
-        <img id="innersidebartoggler" class="header-btn" onclick="toggleSidebar()" src="../site/assets/icons/menu.svg" alt="toggle sidebar">
+        <img id="innersidebartoggler" title="Toggle Sidebar" class="header-btn" onclick="toggleSidebar()" src="../site/assets/icons/menu.svg" alt="toggle sidebar">
       </div>
       
       <h1 id="room_name_display">N/A</h1>
@@ -40,13 +40,14 @@
 
     <span id="bottom_bar">
       <textarea id="msgtxt" cols="1" rows="1"></textarea>
-      <img id="sendbtn" onclick="sendMessage()" alt="send" src="../site/assets/icons/send.svg">
+      <img id="sendbtn" onclick="sendMessage()" alt="send" src="../site/assets/icons/send.svg" title="Send">
+      <br>
     </span>
 
     <div id="sidebar">
       <div class="sidebar-header">
 
-        <button id="sidebartoggler" onclick="toggleSidebar()">←</button>
+        <button title="Toggle Sidebar" id="sidebartoggler" onclick="toggleSidebar()">←</button>
 
         <button id="rbtn" class="sidebar-header-button">Rooms</button>
         <button id="fbtn" class="sidebar-header-button">Friends</button>
@@ -60,8 +61,9 @@
       </div>
     </div>
     
+    <script src="../site/js/menu.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="../site/js/frontend.js"></script>
     <script src="../site/js/app.js"></script>
-    <script src="../site/js/menu.js"></script>
 </body>
 </html>
