@@ -27,8 +27,8 @@ function setMenu(x) {
     document.getElementById('logbtn').onclick = function () { login(document.getElementById('user_input').value, document.getElementById('pass_input').value); };
     document.getElementById('cr').onclick = function () { setMenu('signup') };
 
-    document.getElementById('user_input').value = getCookie('user');
-    document.getElementById('pass_input').value = getCookie('key');
+    document.getElementById('user_input').value = decrypt(getCookie('user'));
+    document.getElementById('pass_input').value = decrypt(getCookie('key'));
   } else {
     document.getElementById('login-bg').innerHTML = `
     <div style="padding:6vh; max-width:100%;">
@@ -44,7 +44,7 @@ function setMenu(x) {
       <br>
       <textarea name="" id="pass_input" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 40vh; max-width:100%; height: 3.5vh; border-radius: 1vh; font-size: 2.5vh; font-family: Block;"></textarea>
 
-      <h1 style="display:inline-block;" class="copyright-claim">By proceeding, you agree to our <a href="../policies/terms.html" class="claim-link">Terms of Service</a>, <a href="../policies/cookies.html" class="claim-link">Cookie Policy</a> and <a href="../policies/privacy.html" class="claim-link">Privacy Policy</a>.</h1>
+      <h1 style="display:inline-block;" class="copyright-claim">By proceeding, you agree to our <a href="../policies/terms.html" target="_blank" rel="noopener noreferrer" class="claim-link">Terms of Service</a>, <a href="../policies/cookies.html" target="_blank" rel="noopener noreferrer" class="claim-link">Cookie Policy</a> and <a href="../policies/privacy.html" target="_blank" rel="noopener noreferrer" class="claim-link">Privacy Policy</a>.</h1>
  
       <br>
 
@@ -65,6 +65,7 @@ setMenu('login')
 
 //================================
 async function login(user, key) {
+  document.getElementById('logbtn').textContent = '...';
 
   var result = await DB({type:'chkusr', user:user, pass:key})
 
@@ -73,17 +74,20 @@ async function login(user, key) {
     expirationDate.setMonth(expirationDate.getMonth() + 1);
     
     sessionStorage.setItem('LRUserLogin', encrypt(`{"user":"${user}", "key":"${key}"}`), sameSite='lax');
-    document.cookie = `user=${user}; samesite=strict; expires=${expirationDate.toUTCString()}; Secure`;
-    document.cookie = `key=${key}; samesite=strict; expires=${expirationDate.toUTCString()}; Secure`;
+    document.cookie = `user=${encrypt(user)}; samesite=strict; expires=${expirationDate.toUTCString()}; Secure`;
+    document.cookie = `key=${encrypt(key)}; samesite=strict; expires=${expirationDate.toUTCString()}; Secure`;
 
     location.href = '../app';
   } else {
-    addNotif("Login failed")
+    addNotif("Login failed");
   }
+
+  document.getElementById('logbtn').textContent = 'Log in';
 }
 
 //==============================
 async function cr_account(user, key) {
+  document.getElementById('crbtn').textContent = '...';
   var result = await DB({type:'cr_user', user:user, pass:key})
   result = result.status;
 
@@ -107,6 +111,8 @@ async function cr_account(user, key) {
       }
     }
   }
+
+  document.getElementById('crbtn').textContent = 'Create account';
 }
 //==============================
 

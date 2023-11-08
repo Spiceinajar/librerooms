@@ -32,7 +32,7 @@ async function openMenu(m_id, args={}) {
   
   <div id="menu" style="position:fixed; z-index: 2; width:100%; height:100%; top:0; left:0; right:0; background-color: rgba(0, 0, 0, 0.5); opacity:0;">
     <div id="center_div" class="center_div" style="max-width:100%; max-height:100%;">
-      <div id="menu-bg" style="border-radius: 10px; background-color: rgb(25, 25, 25); text-align: center; width:850px; height:500px; max-height: calc(100% - 20px); max-width: calc(100% - 20px);">
+      <div id="menu-bg" style="width:850px; height:500px;">
         <div style='width=100%; text-align: right; margin-bottom:-20px'>
           <button id="xbtn" title="Close" style="width:25px; height:25px; background-color: red; border-radius:5">X</button>
         </div>
@@ -91,7 +91,7 @@ async function openMenu(m_id, args={}) {
     let userDisplay = args.user;
     for (var r in roles) {
       let role = roles[r];
-      userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" alt="roleicon" title="${role}" style="padding-left: 1vh; height:100%;">`;
+      userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" alt="roleicon" onclick="openMenu('badgeinfo', {badgename:'${role}'})" title="${role}" style="padding-left: 1vh; height:100%;">`;
     }
 
     document.getElementById('profile-avatar-display').src = await getAvatar(args.user);
@@ -114,7 +114,7 @@ async function openMenu(m_id, args={}) {
   if (m_id === 'settings') {
     document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
     <h1 class='settings-header'>Settings</h1>
-    <hr style="width:70%;">
+    <hr class="softhr">
 
     <div style="overflow-y:scroll; height:calc(100% - 140px)">
       <h1 class="settings-section-header">Account</h1>
@@ -125,7 +125,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.1.8.9 [Beta]</h1>
+      <h1 style="font-size:10px;">Version: 1.1.9 [Public Release]</h1>
     </div>
     `);
 
@@ -170,53 +170,81 @@ async function openMenu(m_id, args={}) {
     let rooms = result['list'].sort((a, b) => a.membercount - b.membercount).reverse();
 
     document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
-    <h1 style="font-size:20px">Room Browser</h1>
-    <hr style="width:80%;">
+    <h1 style="font-size:20px; display: inline; vertical-align: top;">Room Browser</h1>
+
+    <textarea name="" id="room_search" style="width: 100px; height:30px; padding:0; display: inline; vertical-align: top; border-radius: 5px; border-top-right-radius:0; border-bottom-right-radius:0; margin-right: -5px; background-color: rgb(40, 40, 40); margin-left: 20px"></textarea>
+    <button id="room-search-button" style="height:30px; width:30px; border-radius: 5px; border-top-left-radius:0; border-bottom-left-radius:0; background-color: rgb(100, 100, 215);">🔎︎</button>
+
+    <hr class="softhr">
 
     <div id="rcontainer" style="display:flex; justify-content: center; width:100%; height:calc(100% - 70px); align-items: flex-start; flex-wrap: wrap; overflow-y: auto; overflow-x: hidden;">
-      <button onclick='openMenu("room-creator");' class="roombrowser-card">
-      <img src="../site/assets/icons/create_room_banner.svg" style="width:100%; border-radius:inherit; margin-top:5px;">
-
-      <div class="center-div" style="width:100%;">
-      
-      <h1 style="font-size: 25px; display: inline-block;">Create Room</h1>
-
-      <h1 style="font-weight: 100;">Make a room of your very own!</h1>
-      </div>
-      </button>
     </div>
     `
     );
 
-    for (var r in rooms) {
-      let room = rooms[r];
+    function populateMenu(filter) {
+      document.getElementById("rcontainer").innerHTML = `
+        <button onclick='openMenu("room-creator");' class="roombrowser-card">
+        <img src="../site/assets/icons/create_room_banner.svg" style="width:100%; border-radius:inherit; margin-top:5px;">
 
-      let rbadge;
+        <div class="center-div" style="width:100%;">
+        
+        <h1 style="font-size: 25px; display: inline-block;">Create Room</h1>
 
-      if (room.public === true) {
-        rbadge = "globe";
-      } else {
-        rbadge = "lock";
+        <h1 style="font-weight: 100;">Make a room of your very own!</h1>
+        </div>
+        </button>
+      `;
+
+      for (var r in rooms) {
+        let room = rooms[r];
+
+        if (! room.public) {
+          if (filter.publicOnly) {
+            continue
+          }
+        }
+
+        if (! room.name.toLowerCase().includes(filter.contains)) {
+          continue
+        }
+  
+        let rbadge;
+  
+        if (room.public === true) {
+          rbadge = "globe";
+        } else {
+          rbadge = "lock";
+        }
+  
+        document.getElementById("rcontainer").insertAdjacentHTML('beforeend', `
+        <button onclick='joinRoom("${room.name}", ${room.public});' class="roombrowser-card">
+        <img src="${room.banner}" style="width:100%; border-radius:inherit; margin-top:5px; aspect-ratio:1200/640">
+        <img style="height:30px; position:absolute; top:10px; left:10px" src="../site/assets/icons/${rbadge}.svg" title="${rbadge}">
+
+        <span style="font-size: 20px; font-weight: 100; position:absolute; top:10px; right:10px; background-color: rgba(0, 0, 0, .5); border-radius:5px; padding:5px"><img style="height:20px;" src="../site/assets/icons/members.svg" title="Member Count"> ${room.membercount}/${room.maxmembers}</span>
+  
+        <div class="center-div" style="width:100%;">
+        
+        <div style="width:100%">
+          <h1 style="font-size: 25px; display: inline;">${room.name}</h1>
+        </div>
+  
+        <h1 style="font-weight: 100;">${room.description}</h1>
+        </div>
+        </button>
+        `);
       }
-
-      document.getElementById("rcontainer").insertAdjacentHTML('beforeend', `
-      <button onclick='joinRoom("${room.name}", ${room.public});' class="roombrowser-card">
-      <img src="${room.banner}" style="width:100%; border-radius:inherit; margin-top:5px; aspect-ratio:1200/640">
-
-      <div class="center-div" style="width:100%;">
-      
-      <div style="width:100%">
-        <img style="height:30px; display: inline-block; float:left; padding-top:20px; padding-left:20px;" src="../site/assets/icons/${rbadge}.svg" title="${rbadge}">
-        <h1 style="font-size: 25px; display: inline-block;">${room.name}</h1>
-        <h1 style="font-size: 20px; font-weight: 100; display: inline-block; float:right; padding-top:10px; padding-right:20px;"><img style="height:20px;" src="../site/assets/icons/members.svg" title="Member Count"> ${room.membercount}/${room.maxmembers}</h1>
-      </div>
-
-      <h1 style="font-weight: 100;">${room.description}</h1>
-      </div>
-      </button>
-      `);
     }
 
+    populateMenu({contains:"", publicOnly:false})
+
+    document.getElementById('room-search-button').onclick = function() {
+      let query = document.getElementById('room_search').value;
+      //this.value = this.value.replace(/\n/g,'');
+
+      populateMenu({contains:query.toLowerCase(), publicOnly:false})
+    }
   }
 
 
@@ -267,7 +295,7 @@ async function openMenu(m_id, args={}) {
     </div>
     `);
 
-    let result = await DB({'type':'getnotifs', 'user':username})
+    let result = await DB({'type':'getnotifs', 'user':username, 'pass':userkey})
     result = result.list;
 
     for (var n in result) {
@@ -285,10 +313,55 @@ async function openMenu(m_id, args={}) {
   }
 
   if (m_id === "badgeinfo") {
+    let descriptions = {
+      AlphaTester:`
+      This badge was given to members who joined during LibreRooms' 
+      alpha development stage. This badge is no longer obtainable.
+      `,
+
+      BetaTester:`
+      This badge was given to members who joined during LibreRooms' 
+      beta development stage. This badge is no longer obtainable.
+      `,
+
+      Founder:`
+      This badge was given to the founder of LibreRooms.
+      `,
+
+      Administrator:`
+      This badge is given to LibreRooms admins.
+      `,
+
+      Moderator:`
+      This badge is given to LibreRooms moderators.
+      `,
+
+      Contributor:`
+      This badge is given to Members who have directly contributed
+      to LibreRooms.
+      `,
+
+      Developer:`
+      This badge is given to Members who have directly and repeatedly
+      contributed to LibreRooms' source code repeatedly.
+      `,
+
+      Donor:`
+      This badge is given to Members who have financially supported
+      LibreRooms.
+      `,
+
+      System:`
+      This badge is given to automated LibreRooms accounts. This badge 
+      is completely unobtainable.
+      `,
+    }
+
     document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
-    <h1>Notifications</h1>
-    <div id="notif-board" style="width:100%; height:80%; position:relative; bottom:0; left:0; background-color:rgb(15, 15, 15); overflow-y:auto;">
-    </div>
+    <img src="../site/assets/icons/roles/${args.badgename}.svg" alt="roleicon" title="${args.badgename}" style="height:100px;">
+    <h1>${args.badgename} Badge</h1>
+
+    <span style="background-color: rgb(10, 10, 10); font-weight:100; color:white; border-radius:5px; margin:5px; width:300px; max-width:90%; display: inline-block; font-family: Standard; font-size: 22px">${descriptions[args.badgename]}</span>
     `);
   }
 
@@ -297,7 +370,7 @@ async function openMenu(m_id, args={}) {
     <h1 style="font-size:40px">Configure Room</h1>
     <hr style="width:70%;">
 
-    <h1 style="font-size:2vh; display: inline;">This feature is under development. Please get staff to help you instead.</h1>
+    <h1 style="font-size:20px; display: inline;">This feature is under development. Please get staff to help you instead.</h1>
     `);
   }
 
@@ -315,7 +388,7 @@ async function openMenu(m_id, args={}) {
     <button id="sendreportbtn" style="width:200px; height:50px; background-color: rgb(100, 100, 215); margin:10px">Send</button>
     `);
 
-    document.getElementById('sendreportbtn').onclick = function() {DB({'type':'submit-report', 'contents':document.getElementById('sendreportbtn').value}); closeMenu(); addNotif('Thank you for your feedback')}
+    document.getElementById('sendreportbtn').onclick = function() {DB({'type':'submit-report', 'contents':document.getElementById('reportentry').value}); closeMenu(); addNotif('Thank you for your feedback')}
   }
 
   if (m_id === "buttonmenu") {
@@ -389,8 +462,6 @@ async function openMenu(m_id, args={}) {
         </div>
         <span id="catalog-7" class="catalog-row">
         </span>
-
-        <button id="save-avatar-btn" style="width:200px; height:50px; background-color: rgb(100, 100, 215); margin:10px">Save</button>
       </div>
     `);
 
@@ -477,10 +548,11 @@ async function openMenu(m_id, args={}) {
       }
     }
 
-    document.getElementById('save-avatar-btn').onclick = async function() {
+    document.getElementById('xbtn').onclick = async function() {
       await DB({'type':'updateavatar', 'obj':avObj, 'user':username, 'pass':userkey});
       //delete cachedAvs[username];
       addNotif("Avatar updated."); 
+      closeMenu();
     }
   }
 
@@ -511,7 +583,7 @@ async function authMenu(query, ondone) {
   
   <div id="authmenu" style="position:fixed; z-index: 2; width:100%; height:100%; top:0; left:0; right:0; left:0; background-color: rgba(0, 0, 0, 0.5);">
     <div class="center_div" style="max-width:100%; max-height:100%;">
-      <div id="menu-bg" style="border-radius: 10px; background-color: rgb(25, 25, 25); text-align: center; max-height: calc(100% - 20px); max-width: calc(100% - 20px); width:4in; box-shadow: 0px 0px 10px black;">
+      <div id="menu-bg" style="width: 400px">
         <h1 style="margin:2vh">${query}</h1>
 
         <textarea name="" id="entry" cols="30" rows="1" style="width: 90%; height: 3.5vh; border-radius: 1vh; font-size: 2.5vh; font-family: Block;"></textarea>
@@ -537,6 +609,33 @@ async function authMenu(query, ondone) {
 }
 
 
+async function Warn(header, content, closeterm="Ok", onclose=null) {
+  document.body.insertAdjacentHTML("beforeend", `
+  
+  <div id="menu" style="position:fixed; z-index: 2; width:100%; height:100%; top:0; left:0; right:0; left:0; background-color: rgba(0, 0, 0, 0.5);">
+    <div class="center_div" style="max-width:100%; max-height:100%;">
+      <div id="menu-bg" style="width: 400px; padding:10px">
+        <h1 style="font-size: 25px">${header}</h1>
+        <hr class="softhr">
+
+        <h1 style="font-weight: 100">${content}</h1>
+
+        <button id="continuebtn" style="width:20%; height:4vh; background-color: rgb(100, 100, 215); border-radius: 5; margin:1vh">${closeterm}</button>
+      </div>
+    </div>
+  </div>
+  
+  `);
+
+  document.getElementById('continuebtn').onclick = function() {
+    if (onclose) {
+      onclose()
+    }
+    closeMenu();
+  };
+}
+
+
 
 
 async function closeFriendMenu() {
@@ -553,7 +652,7 @@ async function addFriendMenu() {
   document.getElementById('room-display').insertAdjacentHTML('afterend', `
   
   <div id="addfrmenu" style="height:100px; text-align:center;">
-  <hr>
+  <hr class="softhr">
   <h1 style="font-weight:100">Recipient username: (case sensitive)</h1>
   
   <span>
@@ -593,4 +692,22 @@ async function addFriendMenu() {
     }
     
   };
+}
+
+
+function addNotif(ct) {
+  document.body.insertAdjacentHTML("beforebegin", `
+  
+  <div id="notif" class="notif">
+    <h1 style="margin-top:20px">${ct}</h1>
+  </div>
+
+  `)
+  
+  let notif_element = document.querySelector(".notif");
+  
+  notif_element.classList.add("notif_anim");
+  notif_element.addEventListener("animationend", () => {
+    document.getElementById("notif").remove("animate");
+  });
 }

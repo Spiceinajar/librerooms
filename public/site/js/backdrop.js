@@ -17,10 +17,10 @@ function drawCircle(ctx, x, y, radius, fill, stroke, strokeWidth) {
 
 var spots;
 
-const loopTime = 100;
 function regen() {
   canvas.width = canvas.clientWidth;
   canvas.height = canvas.clientHeight;
+  let loopTime = canvas.clientWidth*canvas.clientHeight/15000;
 
   spots = [];
   for (let i = 0; i < loopTime; i++) {

@@ -14,6 +14,32 @@ try {
 }
 
 
+(async () => {
+  let consent = await DB({'type':'getconsent', 'user':username, 'pass':userkey});
+
+  let pendingConsent = "";
+  let docs = [
+    {name:'Privacy Policy', link:'../policies/privacy.html'}, 
+    {name:'Terms of Service', link:'../policies/terms.html'}, 
+    {name:'Cookie Policy', link:'../policies/cookies.html'}
+  ];
+
+  for (i in consent.userConsent) {
+    if (consent.userConsent[i] < consent.latest[i]) {
+      pendingConsent += ` -  <a href="${docs[i].link}" target="_blank" rel="noopener noreferrer" class="claim-link">${docs[i].name}</a> <br>`;
+    }
+  }
+
+  if (pendingConsent.length > 0) {
+    Warn("Policy updates", `<strong>The following documents have been updated:</strong> <br><br> 
+
+    ${pendingConsent} <br>
+
+    <small>By clicking "Accept", you have read and accepted the changes made to the above documents.</small>
+    `, "Accept", function() {DB({'type':'updateconsent', 'user':username, 'pass':userkey})})
+  }
+})();
+
 
 let catalog = {
   "skintones":[
@@ -84,6 +110,7 @@ let catalog = {
       "squared afro",
       "mohawk",
       "receding",
+      "medium",
   ],
 
   "facialhair":[
@@ -104,6 +131,7 @@ let catalog = {
       "smirk",
       "toothy",
       "wide smile",
+      "drool",
   ],
 
   "accessories":[
@@ -117,6 +145,14 @@ let catalog = {
     "space helmet",
     "monitor head",
     "beanie",
+    "crown",
+    "king's robe",
+    "queen's robe",
+    "earrings 1",
+    "earrings 2",
+    "black durag",
+    "red durag",
+    "blue durag",
 ],
 }
 
@@ -341,7 +377,7 @@ async function updateMessageBoard() {
         userDisplay = msg['user'];
         for (var r in roles) {
           let role = roles[r];
-          userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" alt="roleicon" title="${role}" style="padding-left: 5px; height:15px;">`;
+          userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" onclick="openMenu('badgeinfo', {badgename:'${role}'})" alt="roleicon" title="${role}" style="padding-left: 5px; height:15px;">`;
         }
         
         if (datetime) {
@@ -352,49 +388,51 @@ async function updateMessageBoard() {
           if (lastdt.day < msg.dt.day) {
             boardcontent += `
             <div style="padding-top:10px; padding-bottom:10px">
-              <div style="width: 100%; height: 9px; border-bottom: 1px solid white; text-align: center">
-                <h1 style="font-size: 14px; background-color: rgb(20, 20, 20); padding: 0 10px; display:inline">
+              <div style="width: calc(100% - 40px); margin-left: 20px; height: 9px; border-bottom: 1px solid rgb(100, 100, 100); text-align: center">
+                <h1 style="font-size: 14px; color: rgb(150, 150, 150); font-weight:100; background-color: rgb(20, 20, 20); padding: 0 10px; display:inline">
                   ${datetime.date}
                 </h1>
               </div>
             </div>
-            `
+            `;
+            lastauth = null;
           }
         }
   
         contents = msg['text'].replace(/<[^>]*>/g, '<script type="text/plain">' + "$&" + '</script>');
   
         contents = contents.replace(/(\bhttps?:\/\/\S+)/gi, (match) => {
-          var filetype = match.slice(match.lastIndexOf("."));
+          if (Settings.embedFiles) {
+            var filetype = match.slice(match.lastIndexOf("."));
   
-          filetype = filetype.split("?")[0];
-  
-          if (filetype === ".mp4") {
-            return `
-            <br>
-  
-            <video class="msg-content" controls>
-              <source src="${match}" type="video/mp4">
-              [ Your browser does not support the video element. ]
-            </video>
-  
-            `;
-  
-          } else if ([".mp3"].includes(filetype)) {
-            return `
-            <br>
-            <audio controls>
-              <source src="${match}" type="audio/mpeg">
-            [ Your browser does not support the audio element. ]
-            </audio>
-            `;
-  
-          } else if ([".png", ".jpg", ".webp", ".gif", "svg"].includes(filetype)) {
-            return `<br><img class="msg-content" src="${match}"></img>`;
-  
-          } else if (match.startsWith('https://www.youtube.com/watch?v')) {
-            return `<br><iframe class="msg-content" width="560" height="315" src="https://www.youtube.com/embed/${match.split("watch?v=")[1]}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`
-          
+            filetype = filetype.split("?")[0];
+    
+            if (filetype === ".mp4") {
+              return `
+              <br>
+    
+              <video class="msg-content" controls>
+                <source src="${match}" type="video/mp4">
+                [ Your browser does not support the video element. ]
+              </video>
+    
+              `;
+    
+            } else if ([".mp3"].includes(filetype)) {
+              return `
+              <br>
+              <audio controls>
+                <source src="${match}" type="audio/mpeg">
+              [ Your browser does not support the audio element. ]
+              </audio>
+              `;
+    
+            } else if ([".png", ".jpg", ".webp", ".gif", "svg"].includes(filetype)) {
+              return `<br><img class="msg-content" src="${match}"></img>`;
+    
+            } else {
+              return `<a target="_blank" rel="noopener noreferrer" href="${match}">${match}</a>`;
+            }
           } else {
             return `<a target="_blank" rel="noopener noreferrer" href="${match}">${match}</a>`;
           }
@@ -550,33 +588,41 @@ async function joinRoom(r, public) {
 }
 
 function switch_room(room, displayname, mode, created=false) {
-  document.getElementById('loading-ind').style.display = 'inline';
-  active_room = room;
-  document.getElementById('room_name_display').textContent = displayname;
-  document.getElementById('msgs').innerHTML = ``;
-  lastauth = null;
-  lastdt = null;
-  latestRange = -50;
+  //let trig = document.getElementById(`room-button-${room}`);
+  //
+  //if (trig) {
+  //  document.getElementById(`room-button-${room}`).style.backgroundColor = 'rgb(100, 0, 100)';
+  //}
 
-  if (mode === "r") {
-    if (created === true) {
-      document.getElementById('leavebtn').onclick = function() {openMenu("rconfig")};
-      document.getElementById('leavebtn').src = "../site/assets/icons/wrench.svg";
-      document.getElementById('leavebtn').title = "Configure Room";
+  if (active_room !== room) {
+    document.getElementById('loading-ind').style.display = 'inline';
+    active_room = room;
+    document.getElementById('room_name_display').textContent = displayname;
+    document.getElementById('msgs').innerHTML = ``;
+    lastauth = null;
+    lastdt = null;
+    latestRange = -50;
+  
+    if (mode === "r") {
+      if (created === true) {
+        document.getElementById('leavebtn').onclick = function() {openMenu("rconfig")};
+        document.getElementById('leavebtn').src = "../site/assets/icons/wrench.svg";
+        document.getElementById('leavebtn').title = "Configure Room";
+      } else {
+        document.getElementById('leavebtn').onclick = leaveroom;
+        document.getElementById('leavebtn').src = "../site/assets/icons/door.svg";
+        document.getElementById('leavebtn').title = "Leave Room";
+      }
     } else {
-      document.getElementById('leavebtn').onclick = leaveroom;
-      document.getElementById('leavebtn').src = "../site/assets/icons/door.svg";
-      document.getElementById('leavebtn').title = "Leave Room";
+      document.getElementById('leavebtn').onclick = unfriend;
+      document.getElementById('leavebtn').src = "../site/assets/icons/unfriend.svg";
+      document.getElementById('leavebtn').title = "Remove Friend";
     }
-  } else {
-    document.getElementById('leavebtn').onclick = unfriend;
-    document.getElementById('leavebtn').src = "../site/assets/icons/unfriend.svg";
-    document.getElementById('leavebtn').title = "Remove Friend";
-  }
-
-  if (mobileLayout) {
-    sidebarBool = false;
-    toggleSidebar();
+  
+    if (mobileLayout) {
+      sidebarBool = false;
+      toggleSidebar();
+    }
   }
 }
 
@@ -612,7 +658,7 @@ async function populateSidebar(mode) {
   document.getElementById('room-display').innerHTML = ''
 
   if (mode === 'r') {
-    let result = await DB({'type':'getrooms', 'user':username});
+    let result = await DB({'type':'getrooms', 'user':username, 'pass':userkey});
 
     let rooms = result['list'];
 
@@ -631,7 +677,7 @@ async function populateSidebar(mode) {
       document.getElementById('fbtn').style.backgroundColor = 'rgb(30, 30, 30)';
     }
   } else {
-    let result = await DB({'type':'getfriends', 'user':username});
+    let result = await DB({'type':'getfriends', 'user':username, 'pass':userkey});
 
     document.getElementById('addbtn').textContent = '+ Add friend';
     document.getElementById('addbtn').onclick = function() {addFriendMenu()};
@@ -693,7 +739,7 @@ updateMessageBoard();
 
 
 async function sendMessage() {
-  let val = document.getElementById('msgtxt').value;
+  let val = document.getElementById('msgtxt').value.replace(/\n/g,'');
   document.getElementById('msgtxt').value = '';
   if (val.length > 1) {
     let res = await DB({type:'addmsg', room:active_room, contents: val, user:username, pass:userkey})

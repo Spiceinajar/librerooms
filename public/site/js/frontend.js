@@ -12,39 +12,21 @@ function getCookie(name) {
 
 const apiUrl = `${window.location.origin}:${window.location.port}/server`;
 
-var Settings = {fancyGFX:true};
+var Settings = {fancyGFX:true, embedFiles:false};
 
 //=====================================================
 
-var chars = [' ', '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', "á", "é", "í", "ó", "ú", "ü", "ñ", "•"]
-var key = ['t', 'V', 'R', '0', 'u', "'", '|', 'U', 'x', 'Y', 'r', 'g', 'P', ',', 'X', 'H', '@', '+', 'e', '5', 'B', ' ', 's', '>', '7', 'M', '{', 'G', '=', '6', 'w', '/', 'Q', '.', 'c', 'i', '"', '-', 'K', '^', 'C', '*', '~', 'f', '}', 'a', '#', ';', 'W', '`', 'n', '4', '&', 'I', 'O', '3', 'S', '(', 'J', 'l', 'p', ':', 'L', 'm', 'N', '1', 'v', 'y', 'd', '!', 'E', 'h', 'q', '\\', '_', '2', 'D', 'F', 'o', '9', ')', 'b', 'A', 'j', 'k', 'Z', '[', '<', 'z', 'T', '$', '8', ']', '%', '?', "á", "é", "í", "ó", "ú", "ü", "ñ", "•"]
 
-function encrypt(string) {
-  let encrypted_str = ""
-  for (var ch in string) {
-    let char = string[ch];
-    if (key.includes(char)) {
-      encrypted_str += key[chars.indexOf(char)];
-    } else {
-      encrypted_str += char;
-    }
-  }
+let key = 't+mq5RKjh3l0x4S5lYHdL/f5XK+gogAtnvZ2o5b5YXUNqIWa67uBE3Es31vbfmNX';
 
-  return encrypted_str
+function encrypt(input) {
+  return CryptoJS.AES.encrypt(input, key).toString()
 }
 
-function decrypt(string) {
-    let decrypted_str = ""
-    for (var ch in string) {
-      let char = string[ch]
-      if (key.includes(char)) {
-        decrypted_str += chars[key.indexOf(char)]
-      } else {
-        decrypted_str += char;
-      }
-    }
-
-    return decrypted_str
+function decrypt(input) {
+  const bytes = CryptoJS.AES.decrypt(input, key);
+  const plaintext = bytes.toString(CryptoJS.enc.Utf8);
+  return plaintext;
 }
 
 function getTime() {
@@ -80,23 +62,6 @@ function formatTime(time) {
   }
 }
 
-function addNotif(ct) {
-  document.body.insertAdjacentHTML("beforebegin", `
-  
-  <div id="notif" class="notif">
-    <h1 style="margin-top:20px">${ct}</h1>
-  </div>
-
-  `)
-  
-  let notif_element = document.querySelector(".notif");
-  
-  notif_element.classList.add("notif_anim");
-  notif_element.addEventListener("animationend", () => {
-    document.getElementById("notif").remove("animate");
-  });
-}
-
 //========================================================================
 
 function chkLayout() {
@@ -124,8 +89,9 @@ async function DB(data) {
       })
       .catch(error => {
         console.error('Error:', error);
+        console.log(response)
         if (error.name === 'TypeError') {
-          location.href = './error.html?err=connerror';
+          Warn('Connection lost', 'Please check your connection.');
         }
       });
 

@@ -72,6 +72,7 @@ body {
 #sendbtn {
     vertical-align: bottom;
     height: 44px;
+    cursor: pointer;
 }
 
 #addbtn {
@@ -102,6 +103,15 @@ body {
     margin:5px;
 }
 
+#menu-bg {
+    border-radius: 10px; 
+    background-color: rgb(25, 25, 25); 
+    text-align: center; 
+    max-height: calc(100% - 20px); 
+    max-width: calc(100% - 20px); 
+    box-shadow: 0px 0px 10px black;
+}
+
 .sidebar-footer {
     padding:5px; 
     width:calc(100% - 10px); 
@@ -111,6 +121,11 @@ body {
     left:0; 
     background-color: rgb(15, 15, 15); 
     white-space: nowrap;
+}
+
+.softhr {
+    width: calc(100% - 40px); 
+    border-color: rgb(100, 100, 100)
 }
 
 .sidebar-header {
@@ -145,10 +160,11 @@ button {
     font-family: "Standard";
     border: 0;
     cursor: pointer;
+    transition: background-color .1s;
 }
 
 button:hover{
-    background: rgb(35, 35, 35);
+    background-color: rgb(35, 35, 35);
 }
 
 textarea {
@@ -206,12 +222,13 @@ textarea {
     text-align: center;
     top: -5%;
     left: 50%;
+    box-shadow: 0px 0px 10px black;
 }
   
 .notif_anim {
-animation-name: notifanim;
-animation-duration: 2s;
-animation-fill-mode: forwards;
+    animation-name: notifanim;
+    animation-duration: 2s;
+    animation-fill-mode: forwards;
 }
 
 .center_div {
@@ -260,6 +277,7 @@ animation-fill-mode: forwards;
     aspect-ratio:3/2; 
     max-width:80%; 
     margin: 10px;
+    position: relative;
 }
 
 .msg-content {
@@ -567,50 +585,6 @@ background: #888;
 
 ::-webkit-scrollbar-thumb:hover {
 background: #555;
-}
-
-
-
-
-
-
-
-.avatar-layer {
-    position: absolute; 
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    image-rendering: pixelated; 
-    image-rendering: -moz-crisp-edges;
-
-    cursor: pointer;
-}
-
-.avatar-eyes {
-    width: 62.5%;
-    height: 12.5%;
-    top: 37.5%; 
-    left: 18.75%;
-}
-
-.avatar-mouth {
-    width: 37.5%;
-    height: 12.5%;
-    top: 56.25%; 
-    left: 31.25%;
-}
-
-.avatar-shirt {
-    height: 25%;
-    top: 75%;
-}
-
-.avatar-hat {
-    width: 62.5%;
-    height: 25%;
-    top: 12.5%; 
-    left: 18.75%;
 }
 
 
