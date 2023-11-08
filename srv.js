@@ -2,37 +2,35 @@ async function run() {
   try {
     const netCfg = require('./netconfig.json');
 
+    const POLICY_VERSIONS = [2, 1, 1];
+
     //=================================
-  
-    var chars = [' ', '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', "á", "é", "í", "ó", "ú", "ü", "ñ", "•"]
-    var key = ['t', 'V', 'R', '0', 'u', "'", '|', 'U', 'x', 'Y', 'r', 'g', 'P', ',', 'X', 'H', '@', '+', 'e', '5', 'B', ' ', 's', '>', '7', 'M', '{', 'G', '=', '6', 'w', '/', 'Q', '.', 'c', 'i', '"', '-', 'K', '^', 'C', '*', '~', 'f', '}', 'a', '#', ';', 'W', '`', 'n', '4', '&', 'I', 'O', '3', 'S', '(', 'J', 'l', 'p', ':', 'L', 'm', 'N', '1', 'v', 'y', 'd', '!', 'E', 'h', 'q', '\\', '_', '2', 'D', 'F', 'o', '9', ')', 'b', 'A', 'j', 'k', 'Z', '[', '<', 'z', 'T', '$', '8', ']', '%', '?', "á", "é", "í", "ó", "ú", "ü", "ñ", "•"]
-  
-    function encrypt(string) {
-      let encrypted_str = ""
-      for (var ch in string) {
-        let char = string[ch];
-        if (key.includes(char)) {
-          encrypted_str += key[chars.indexOf(char)];
-        } else {
-          encrypted_str += char;
-        }
-      }
-  
-      return encrypted_str
+
+    var CryptoJS = require('crypto-js');
+
+    let key = 't+mq5RKjh3l0x4S5lYHdL/f5XK+gogAtnvZ2o5b5YXUNqIWa67uBE3Es31vbfmNX';
+
+    function encrypt(input) {
+      return CryptoJS.AES.encrypt(input, key).toString()
     }
-  
-    function decrypt(string) {
-        let decrypted_str = ""
-        for (var ch in string) {
-          let char = string[ch]
-          if (key.includes(char)) {
-            decrypted_str += chars[key.indexOf(char)]
-          } else {
-            decrypted_str += char;
-          }
-        }
-  
-        return decrypted_str
+    
+    function decrypt(input) {
+      const bytes = CryptoJS.AES.decrypt(input, key);
+      const plaintext = bytes.toString(CryptoJS.enc.Utf8);
+      return plaintext;
+    }
+
+
+    function getMDY(includetime=true) {
+      let d = new Date();
+      let result = {day:d.getUTCDate(), month:d.getUTCMonth(), year:d.getUTCFullYear()};
+      
+      if (includetime) {
+        result.hour = d.getUTCHours();
+        result.minute = d.getUTCMinutes();
+      }
+
+      return result;
     }
 
     //function profanityFilter(string) {
@@ -45,11 +43,22 @@ async function run() {
     const express = require('express');
     const app = express();
     app.use(express.static('public'));
+
+    const EXRL = require('express-rate-limit');
+
+    const limiter = EXRL({
+      windowMs: 60000, //1 min
+      limit: 50, //requests per minute
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+    })
+    
+    app.use(limiter);
   
     var dat;
     const { MongoClient, ServerApiVersion } = require('mongodb');
     //================================
-    const uri = `mongodb+srv://admin:${process.env.MONGO_KEY}@cluster0.jgmyraj.mongodb.net/?retryWrites=true&w=majority`;
+    const uri = `mongodb+srv://admin:${'lzGm0Yzjm6MCkOoV'}@cluster0.jgmyraj.mongodb.net/?retryWrites=true&w=majority`;
   
     const client = new MongoClient(uri, {
       serverApi: {
@@ -157,12 +166,12 @@ async function run() {
     }
 
     function sysMessage(text, room) {
-      dat.collections.rooms[room].messages.push({'text':text, 'user':'System', 'dt': undefined});
+      dat.collections.rooms[room].messages.push({'text':text, 'user':'System', 'dt': getMDY()});
     }
 
-    //for (i in dat.collections.users) {
-    //  dat.collections.users[i].avatar.push(null);
-    //}
+    for (i in dat.collections.users) {
+      dat.collections.users[i].consent = [1, 1, 1];
+    }
 
     function notify(user, contents) {
       if (user in dat.collections.users) {
@@ -218,34 +227,51 @@ async function run() {
         };
     
         if (parsed.type === 'getrooms') {
-          let r = [];
+          if (authenticate(parsed.user, parsed.pass)) {
+            let r = [];
     
-          for (var i in dat.collections.rooms) {
-            if (dat.collections.rooms[i]['type'] === 'room') {
-              let rval = dat.collections.rooms[i];
-              if (rval.members.includes(parsed.user)) {
-                r.push({name:i, created:(rval.creator === parsed.user)});
+            for (var i in dat.collections.rooms) {
+              if (dat.collections.rooms[i]['type'] === 'room') {
+                let rval = dat.collections.rooms[i];
+                if (rval.members.includes(parsed.user)) {
+                  r.push({name:i, created:(rval.creator === parsed.user)});
+                }
               }
             }
+      
+            return {list:r};
           }
-    
-          return {list:r};
         };
     
     
         if (parsed.type === 'getfriends') {
-          return {friends:getFriends(parsed.user), requests:dat.collections.users[parsed.user].requests};
+          if (authenticate(parsed.user, parsed.pass)) {
+            return {friends:getFriends(parsed.user), requests:dat.collections.users[parsed.user].requests};
+          }
+        };
+
+        if (parsed.type === 'getconsent') {
+          if (authenticate(parsed.user, parsed.pass)) {
+            return {userConsent:dat.collections.users[parsed.user].consent, latest:POLICY_VERSIONS};
+          }
+        };
+
+        if (parsed.type === 'updateconsent') {
+          if (authenticate(parsed.user, parsed.pass)) {
+            dat.collections.users[parsed.user].consent = POLICY_VERSIONS
+          }
         };
     
-    
         if (parsed.type === 'getnotifs') {
-          console.log(`Client request of notifications "${parsed.user}"`);
-          dat.collections.users[parsed.user].unread = 0;
-    
-          try {
-            return {'list':dat.collections.users[parsed.user].notifs};
-          } catch {
-            return {'list':[]}
+          if (authenticate(parsed.user, parsed.pass)) {
+            console.log(`Client request of notifications "${parsed.user}"`);
+            dat.collections.users[parsed.user].unread = 0;
+      
+            try {
+              return {'list':dat.collections.users[parsed.user].notifs};
+            } catch {
+              return {'list':[]}
+            }
           }
         };
     
@@ -320,18 +346,6 @@ async function run() {
           return {auth:authenticate(parsed.user, parsed.pass)};
         };
 
-        function getMDY(includetime=true) {
-          let d = new Date();
-          let result = {day:d.getUTCDate(), month:d.getUTCMonth(), year:d.getUTCFullYear()};
-          
-          if (includetime) {
-            result.hour = d.getUTCHours();
-            result.minute = d.getUTCMinutes();
-          }
-
-          return result;
-        }
-
         if (parsed.type === 'cr_user') {
           if (authenticate(parsed.user, null, true)) {
             return {"status":"exists"};
@@ -339,8 +353,8 @@ async function run() {
             if (checkChars(parsed.user)) {
               if (parsed.user.length > 2) {
                 if (parsed.user.length < 16) {
-                  dat.collections.users[parsed.user] = {'key':parsed.pass, 'avatar':[9, 0, 0, null, null, null, 8, []], 'bio':'This user has not yet created a description.', 'roles':['BetaTester'], 'notifs':[], 'unread':0, 'requests':[], 'joindate':getMDY(false), 'blocked':[]};
-                  notify(parsed.user, `Welcome to LibreRooms, ${parsed.user}! If you need help, you can see our guide at https://librerooms.org/guide.html. Because you joined during LibreRooms' beta stage, you've been given the [BetaTester] badge. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`);
+                  dat.collections.users[parsed.user] = {'key':parsed.pass, 'avatar':[9, 0, 0, null, null, null, 8, [], null], 'bio':'This user has not yet created a description.', 'roles':[], 'notifs':[], 'unread':0, 'requests':[], 'joindate':getMDY(false), 'blocked':[], 'consent':POLICY_VERSIONS};
+                  notify(parsed.user, `Welcome to LibreRooms, ${parsed.user}! If you need help, you can see our guide at https://librerooms.org/guide/. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`);
                   dat.collections.rooms["Main room"].members.push(parsed.user);
                   dat.collections.rooms["updates"].members.push(parsed.user);
                   console.log(`Account '${parsed.user}' has been created.`);
@@ -359,7 +373,7 @@ async function run() {
         };
     
         if (parsed.type === 'addmsg') {
-          parsed.contents = parsed.contents.replace(/</g, '').replace(/>/g, ''); //makes sure people dont send html that embeds
+          parsed.contents = parsed.contents;
 
           let spam = false;
 
@@ -383,7 +397,13 @@ async function run() {
                 if (parsed.contents.includes('@')) {
                   for (i of parsed.contents.replace(/\B@\w+\b/g, (match) => {return ` ${match} `}).split(" ")) {
                     let us = i.substring(1);
-                    if (dat.collections.rooms[parsed.room].members.includes(us)) {
+                    if (us === 'all') {
+                      if (dat.collections.users[parsed.user].roles.includes('Administrator')) {
+                        for (let u in dat.collections.users) {
+                          notify(u, `Public announcement: "${parsed.contents}"`)
+                        }
+                      }
+                    } else if (dat.collections.rooms[parsed.room].members.includes(us)) {
                       if (! dat.collections.users[us].blocked.includes(parsed.user)) {
                         notify(us, `@${parsed.user} mentioned you in ${parsed.room}: "${parsed.contents}"`)
                       }
@@ -672,6 +692,7 @@ async function run() {
     
         
         if (parsed.type === 'submit-report') {
+          console.log(parsed.contents)
           dat.collections.reports.push(parsed.contents)
         }
     
