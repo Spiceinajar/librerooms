@@ -8,7 +8,7 @@ async function run() {
 
     var CryptoJS = require('crypto-js');
 
-    let key = 't+mq5RKjh3l0x4S5lYHdL/f5XK+gogAtnvZ2o5b5YXUNqIWa67uBE3Es31vbfmNX';
+    let key = process.env.CRYPT_KEY;
 
     function encrypt(input) {
       return CryptoJS.AES.encrypt(input, key).toString()
@@ -57,7 +57,7 @@ async function run() {
     var dat;
     const { MongoClient, ServerApiVersion } = require('mongodb');
     //================================
-    const uri = `mongodb+srv://admin:${'lzGm0Yzjm6MCkOoV'}@cluster0.jgmyraj.mongodb.net/?retryWrites=true&w=majority`;
+    const uri = `mongodb+srv://admin:${process.env.MONGO_KEY}@cluster0.jgmyraj.mongodb.net/?retryWrites=true&w=majority`;
   
     const client = new MongoClient(uri, {
       serverApi: {
