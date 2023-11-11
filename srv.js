@@ -79,7 +79,7 @@ async function run() {
         
         if (op === 'getDB') {
           let c = await collection.findOne({});
-          return JSON.parse(decrypt(c.content))
+          return JSON.parse(decrypt(c.content, process.env.CRYPT_KEY_DATABASE))
         } else if (op === 'setDB') {
           await collection.bulkWrite( [
             {
