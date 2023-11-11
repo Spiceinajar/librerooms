@@ -7,14 +7,13 @@ async function run() {
     //=================================
 
     var CryptoJS = require('crypto-js');
+    var sha256 = require('js-sha256');
 
-    let key = process.env.CRYPT_KEY;
-
-    function encrypt(input) {
+    function encrypt(input, key=process.env.CRYPT_KEY) {
       return CryptoJS.AES.encrypt(input, key).toString()
     }
     
-    function decrypt(input) {
+    function decrypt(input, key=process.env.CRYPT_KEY) {
       const bytes = CryptoJS.AES.decrypt(input, key);
       const plaintext = bytes.toString(CryptoJS.enc.Utf8);
       return plaintext;
@@ -86,7 +85,7 @@ async function run() {
             {
               updateOne: {
                 filter: {}, // Filter to find the item to update
-                update: {$set:{content: encrypt(JSON.stringify(dat))}}, // New content to update
+                update: {$set:{content: encrypt(JSON.stringify(dat), process.env.CRYPT_KEY_DATABASE)}}, // New content to update
               },
             },
          ] );
@@ -104,7 +103,7 @@ async function run() {
   
     function authenticate(usern, key, keyless=false) {
       if (usern in dat.collections.users) {
-        if ((dat.collections.users[usern].key === key) || keyless) {
+        if ((dat.collections.users[usern].key === sha256(key)) || keyless) {
           if (! keyless) {
             console.log(`Successful authentication attempt to '${parsed.user}'`);
           }
@@ -168,10 +167,6 @@ async function run() {
 
     function sysMessage(text, room) {
       dat.collections.rooms[room].messages.push({'text':text, 'user':'System', 'dt': getMDY()});
-    }
-
-    for (i in dat.collections.users) {
-      dat.collections.users[i].consent = [1, 1, 1];
     }
 
     function notify(user, contents) {
