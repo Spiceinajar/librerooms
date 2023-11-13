@@ -352,7 +352,7 @@ async function run() {
             if (checkChars(parsed.user)) {
               if (parsed.user.length > 2) {
                 if (parsed.user.length < 16) {
-                  dat.collections.users[parsed.user] = {'key':parsed.pass, 'avatar':[9, 0, 0, null, null, null, 8, [], null], 'bio':'This user has not yet created a description.', 'roles':[], 'notifs':[], 'unread':0, 'requests':[], 'joindate':getMDY(false), 'blocked':[], 'consent':POLICY_VERSIONS};
+                  dat.collections.users[parsed.user] = {'key':sha256(parsed.pass), 'avatar':[9, 0, 0, null, null, null, 8, [], null], 'bio':'This user has not yet created a description.', 'roles':[], 'notifs':[], 'unread':0, 'requests':[], 'joindate':getMDY(false), 'blocked':[], 'consent':POLICY_VERSIONS};
                   notify(parsed.user, `Welcome to LibreRooms, ${parsed.user}! If you need help, you can see our guide at https://librerooms.org/guide/. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`);
                   dat.collections.rooms["Main room"].members.push(parsed.user);
                   dat.collections.rooms["updates"].members.push(parsed.user);
