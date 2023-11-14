@@ -98,6 +98,7 @@ let catalog = {
       "blue tee",
       "green tee",
       "space suit",
+      "connor's jacket",
   ],
 
   "eyes":[
