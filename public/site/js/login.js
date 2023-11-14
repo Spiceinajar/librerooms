@@ -1,26 +1,26 @@
 function setMenu(x) {
   if (x === 'login') {
     document.getElementById('login-bg').innerHTML = `
-    <div style="padding:6vh; max-width:100%;">
-      <h1 style="font-family: Header; font-size: 4.5vh; width:fit-content; display:inline-block;">Log in</h1>
+    <div style="padding:60px; max-width:100%;">
+      <h1 style="font-family: Header; font-size: 45px; width:fit-content; display:inline-block;">Log in</h1>
       <br>
 
-      <h1 style="height:2.5vh; font-size:3vh; display:inline-block;">Username:</h1>
+      <h1 style="height:25px; font-size:30px; display:inline-block;">Username:</h1>
       <br>
-      <textarea name="" id="user_input" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 40vh; max-width:100%; height: 3.5vh; border-radius: 1vh; font-size: 3vh;"></textarea>
-      <br>
-
-      <h1 style="height:2.5vh; font-size:3vh; display:inline-block;">Password:</h1>
-      <br>
-      <textarea name="" id="pass_input" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 40vh; max-width:100%; height: 3.5vh; border-radius: 1vh; font-size: 2.5vh; font-family: Block;"></textarea>
-
+      <textarea name="" id="user_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 400px; max-width:100%; height: 35px; border-radius: 10px; font-size: 30px;"></textarea>
       <br>
 
-      <button id="logbtn" style="width: 40vh; height: 10vh; font-size: 3vh; border-radius: 1vh; margin-top:3vh; max-width:100%;">Log in</button>
+      <h1 style="height:25px; font-size:30px; display:inline-block;">Password:</h1>
+      <br>
+      <textarea name="" id="pass_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 400px; max-width:100%; height: 35px; border-radius: 10px; font-size: 25px; font-family: Block;"></textarea>
 
       <br>
 
-      <button id="cr" style="width: 40vh; height: 5vh; font-size: 3vh; border-radius: 1vh; max-width:100%; margin-top:1.5vh">Create account</button>
+      <button id="logbtn" style="width: 400px; height: 100px; font-size: 30px; border-radius: 10px; max-width:100%; margin-top: 30px">Log in</button>
+
+      <br>
+
+      <button id="cr" style="width: 400px; height: 45px; font-size: 30px; border-radius: 10px; max-width:100%; margin-top:10px">Create account</button>
     </div>
     `
 
@@ -31,28 +31,29 @@ function setMenu(x) {
     document.getElementById('pass_input').value = decrypt(getCookie('key'));
   } else {
     document.getElementById('login-bg').innerHTML = `
-    <div style="padding:6vh; max-width:100%;">
-      <h1 style="font-family: Header; font-size: 4.5vh; width:fit-content; display:inline-block;">Sign up</h1>
+    <div style="padding:60px; max-width:100%;">
+      <h1 style="font-family: Header; font-size: 45px; width:fit-content; display:inline-block;">Sign up</h1>
       <br>
 
-      <h1 style="height:2.5vh; font-size:3vh; display:inline-block;">Username:</h1>
+      <h1 style="height:25px; font-size:30px; display:inline-block;">Username:</h1>
       <br>
-      <textarea name="" id="user_input" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 40vh; max-width:100%; height: 3.5vh; border-radius: 1vh; font-size: 3vh;"></textarea>
+      <textarea name="" id="user_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 400px; max-width:100%; height: 35px; border-radius: 10px; font-size: 30px;"></textarea>
       <br>
 
-      <h1 style="height:2.5vh; font-size:3vh; display:inline-block;">Password:</h1>
+      <h1 style="height:25px; font-size:30px; display:inline-block;">Password:</h1>
       <br>
-      <textarea name="" id="pass_input" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 40vh; max-width:100%; height: 3.5vh; border-radius: 1vh; font-size: 2.5vh; font-family: Block;"></textarea>
-
-      <h1 style="display:inline-block;" class="copyright-claim">By proceeding, you agree to our <a href="../policies/terms.html" target="_blank" rel="noopener noreferrer" class="claim-link">Terms of Service</a>, <a href="../policies/cookies.html" target="_blank" rel="noopener noreferrer" class="claim-link">Cookie Policy</a> and <a href="../policies/privacy.html" target="_blank" rel="noopener noreferrer" class="claim-link">Privacy Policy</a>.</h1>
+      <textarea name="" id="pass_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 400px; max-width:100%; height: 35px; border-radius: 10px; font-size: 25px; font-family: Block;"></textarea>
  
+      <div style="padding:10px">
+        <input type="checkbox" id="agreement">
+        <label class="agreement-label" for="agreement">I agree to the <a href="../policies/terms.html" target="_blank" rel="noopener noreferrer" class="claim-link">Terms of Service</a>, <br> <a href="../policies/cookies.html" target="_blank" rel="noopener noreferrer" class="claim-link">Cookie Policy</a> and <a href="../policies/privacy.html" target="_blank" rel="noopener noreferrer" class="claim-link">Privacy Policy</a>.</label>
+      </div>
+
+      <button id="crbtn" style="width: 400px; height: 100px; font-size: 30px; border-radius: 10px; max-width:100%;">Create account</button>
+
       <br>
 
-      <button id="crbtn" style="width: 40vh; height: 10vh; font-size: 3vh; border-radius: 1vh; margin-top:3vh; max-width:100%;">Create account</button>
-
-      <br>
-
-      <button id="backbtn" style="width: 40vh; height: 5vh; font-size: 3vh; border-radius: 1vh; max-width:100%; margin-top:1.5vh">Back</button>
+      <button id="backbtn" style="width: 400px; height: 45px; font-size: 30px; border-radius: 10px; max-width:100%; margin-top:10px">Back</button>
     </div>
   `
 
@@ -69,7 +70,7 @@ async function login(user, key) {
 
   var result = await DB({type:'chkusr', user:user, pass:key})
 
-  if (result['auth'] === true) {
+  if (result) {
     const expirationDate = new Date();
     expirationDate.setMonth(expirationDate.getMonth() + 1);
     
@@ -87,32 +88,36 @@ async function login(user, key) {
 
 //==============================
 async function cr_account(user, key) {
-  document.getElementById('crbtn').textContent = '...';
-  var result = await DB({type:'cr_user', user:user, pass:key})
-  result = result.status;
-
-  if (result === true) {
-    setMenu('login');
-    addNotif('Account created')
-  } else {
-    if (result === "shortuser") {
-      addNotif('Username must be at least 3 characters')
+  if (document.getElementById('agreement').checked) {
+    document.getElementById('crbtn').textContent = '...';
+    var result = await DB({type:'cr_user', user:user, pass:key})
+    result = result.status;
+  
+    if (result === true) {
+      setMenu('login');
+      addNotif('Account created')
     } else {
-      if (result === "exists") {
-        addNotif('Username is taken')
+      if (result === "shortuser") {
+        addNotif('Username must be at least 3 characters')
       } else {
-        if (result === "badchars") {
-          addNotif('Username can only contain letters and numbers')
+        if (result === "exists") {
+          addNotif('Username is taken')
         } else {
-          if (result === "longuser") {
-            addNotif('Username must be shorter than 16 characters')
+          if (result === "badchars") {
+            addNotif('Username can only contain letters and numbers')
+          } else {
+            if (result === "longuser") {
+              addNotif('Username must be shorter than 16 characters')
+            }
           }
         }
       }
     }
+  
+    document.getElementById('crbtn').textContent = 'Create account';
+  } else {
+    addNotif('You must agree to the listed terms and policies')
   }
-
-  document.getElementById('crbtn').textContent = 'Create account';
 }
 //==============================
 
@@ -124,7 +129,7 @@ async function reportWindowSize() {
   } else {
     document.getElementById('login-bg').style.width = "fit-content";
     document.getElementById('login-bg').style.height = "fit-content";
-    document.getElementById('login-bg').style.margin = "6vh";
+    document.getElementById('login-bg').style.margin = "60px";
   }
 }
 

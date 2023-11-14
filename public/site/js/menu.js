@@ -97,7 +97,7 @@ async function openMenu(m_id, args={}) {
     document.getElementById('profile-avatar-display').src = await getAvatar(args.user);
     document.getElementById('profile-desc').textContent = (await DB({'type':'getdesc', 'targuser':args.user})).contents;
     document.getElementById('profile-username-display').innerHTML = userDisplay;
-    document.getElementById('profile-joindate').textContent = `Joined ${joinDate.res.day}/${joinDate.res.month+1}/${joinDate.res.year}`;
+    document.getElementById('profile-joindate').textContent = `Joined ${joinDate.day}/${joinDate.month+1}/${joinDate.year}`;
 
     if (args.user === username) {
       let userDesc = document.getElementById('profile-desc');
@@ -125,7 +125,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.1.9 [Public Release]</h1>
+      <h1 style="font-size:10px;">Version: 1.2.0</h1>
     </div>
     `);
 
@@ -254,9 +254,9 @@ async function openMenu(m_id, args={}) {
     <hr style="width:70%;">
 
     <h1>Room name: </h1>
-    <textarea name="" id="room_name_input" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 350px;"></textarea>
+    <textarea name="" id="room_name_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 350px;"></textarea>
     <h1>Room password: (leave blank if public)</h1>
-    <textarea name="" id="room_pass_input" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 350px;"></textarea>
+    <textarea name="" id="room_pass_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 350px;"></textarea>
 
     <h1 style="font-size:10px; color:rgb(100, 100, 100)">Other prefrences such as your room's banner image can be changed later in room settings.</h1>
 
@@ -266,7 +266,6 @@ async function openMenu(m_id, args={}) {
 
     document.getElementById("crbtn").onclick = async function() {
       let res = await DB({'type':'cr_room', 'rname':document.getElementById("room_name_input").value, 'roomkey':document.getElementById("room_pass_input").value, 'user':username, 'pass':userkey});
-      res = res.res;
 
       if (res === true) {
         addNotif("Room created");
@@ -283,7 +282,7 @@ async function openMenu(m_id, args={}) {
       } else if (res === "tooshort") {
         addNotif("Room name must be at least 4 characters long");
       } else if (res === "toolong") {
-        addNotif("Room name cannot exceed 10 characters");
+        addNotif("Room name cannot exceed 20 characters");
       }
     }
   }
@@ -380,10 +379,10 @@ async function openMenu(m_id, args={}) {
     <hr style="width:70%;">
 
     <h1 style="font-weight:100">
-    Use this menu to report bugs, report users, or send feedback. Please be as specific as possible. All reports are anonymous.
+    Use this menu to report bugs, report users, or send feedback. Please be as specific as possible and do not include personal information. All reports are anonymous.
     </h1>
 
-    <textarea name="" id="reportentry" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 90%; height: 50%;"></textarea>
+    <textarea name="" id="reportentry" cols="30" rows="1" style="width: 90%; height: 50%;"></textarea>
 
     <button id="sendreportbtn" style="width:200px; height:50px; background-color: rgb(100, 100, 215); margin:10px">Send</button>
     `);
@@ -656,7 +655,7 @@ async function addFriendMenu() {
   <h1 style="font-weight:100">Recipient username: (case sensitive)</h1>
   
   <span>
-  <textarea name="" id="requser" cols="30" rows="1" oninput="this.value = this.value.replace(/\n/g,'')" style="width: 70%; height: 25px; border-radius: 1vh; font-size: 20px; vertical-align: top;"></textarea>
+  <textarea name="" id="requser" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 70%; height: 25px; border-radius: 1vh; font-size: 20px; vertical-align: top;"></textarea>
   <button id="reqbtn" style="width:20%; height:29px; background-color: rgb(100, 100, 215); border-radius: 5; vertical-align: top;">Send</button>
   </span>
   </div>
@@ -665,25 +664,24 @@ async function addFriendMenu() {
 
   document.getElementById('reqbtn').onclick = async function() {
     let res = await DB({'type':'friend-request', 'recipient':document.getElementById('requser').value, 'user':username, 'pass':userkey});
-    res = res.res;
 
     if (res === true) {
       addNotif("Request sent");
       closeFriendMenu();
     } else {
-      if (res === "nouser") {
+      if (res === "NOUSER") {
         addNotif("That user does not exist")
       } else {
-        if (res === "noauth") {
+        if (res === "NOAUTH") {
           addNotif("Authentication error")
         } else {
-          if (res === "exists") {
+          if (res === "EXISTS") {
             addNotif("You already have a pending request to this user")
           } else {
-            if (res === "alreadyadded") {
+            if (res === "ALREADYADDED") {
               addNotif("You already have this user added as a friend")
             } else {
-              if (res === "selfrequest") {
+              if (res === "SELFREQUEST") {
               addNotif("You cannot add yourself as a friend")
             }}
           }
@@ -695,19 +693,33 @@ async function addFriendMenu() {
 }
 
 
+let notifQueue = [];
 function addNotif(ct) {
-  document.body.insertAdjacentHTML("beforebegin", `
-  
-  <div id="notif" class="notif">
-    <h1 style="margin-top:20px">${ct}</h1>
-  </div>
-
-  `)
-  
-  let notif_element = document.querySelector(".notif");
-  
-  notif_element.classList.add("notif_anim");
-  notif_element.addEventListener("animationend", () => {
-    document.getElementById("notif").remove("animate");
-  });
+  notifQueue.push(ct)
 }
+
+function updateNotifs() {
+  let delay = 10;
+  if (notifQueue.length > 0) {
+    document.body.insertAdjacentHTML("beforebegin", `
+    <div id="notif" class="notif">
+      <h1 style="margin-top:20px">${notifQueue[0]}</h1>
+    </div>
+    `);
+  
+    notifQueue.shift();
+    
+    let notif_element = document.querySelector(".notif");
+    
+    notif_element.classList.add("notif_anim");
+    notif_element.addEventListener("animationend", () => {
+      document.getElementById("notif").remove("animate");
+    });
+
+    delay = 3000
+  }
+
+  setTimeout(updateNotifs, delay);
+}
+
+updateNotifs()

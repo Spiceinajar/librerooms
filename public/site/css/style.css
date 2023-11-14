@@ -3,6 +3,26 @@ html {
     user-select: none;
 }
 
+@font-face {
+    font-family: 'Header';
+    src: url('../assets/fonts/IBMPlexSans-Bold.ttf');
+}
+
+@font-face {
+    font-family: 'Standard';
+    src: url('../assets/fonts/NotoSans-Light.ttf');
+}
+
+@font-face {
+    font-family: 'Block';
+    src: url('../assets/fonts/FlowBlock-Regular.ttf');
+}
+
+.agreement-label {
+    color: white;
+    font-family: Standard;
+}
+
 .offscreen {
     content-visibility: auto;
     contain-intrinsic-size: 100px 100px;
@@ -92,6 +112,7 @@ body {
     left:0; 
     width:75%; 
     height:60px;
+    box-shadow: 0px 0px 10px black;
 }
 
 .sidebar-header-button {
@@ -178,21 +199,6 @@ textarea {
     outline: none;
 }
 
-@font-face {
-    font-family: 'Header';
-    src: url('../assets/fonts/IBMPlexSans-Bold.ttf');
-    }
-
-@font-face {
-    font-family: 'Standard';
-    src: url('../assets/fonts/NotoSans-Light.ttf');
-    }
-
-@font-face {
-    font-family: 'Block';
-    src: url('../assets/fonts/FlowBlock-Regular.ttf');
-    }
-
 
 @keyframes notifanim {
     0% {
@@ -269,6 +275,7 @@ textarea {
     position:relative; 
     transform: translateX(-100%); 
     left:calc(100% - 10px);
+    text-align: right !important
 }
 
 .roombrowser-card {
@@ -362,7 +369,7 @@ textarea {
     bottom:60px; 
     left:0; 
     width:75%; 
-    overflow-y: auto; 
+    overflow-y: scroll; 
     overflow-x: hidden;
     max-height: calc(100% - 120px);
     scroll-behavior: smooth;

@@ -62,6 +62,13 @@ let catalog = {
     [25, 80, 300],
     [0, 0, 300],
     [0, 0, 10],
+    [10, 100, 25],
+    [215, 100, 100],
+    [115, 100, 100],
+    [0, 100, 100],
+    [30, 100, 100],
+    [275, 100, 100],
+    [295, 100, 100],
   ],
 
   "backgrounds":[
@@ -71,6 +78,8 @@ let catalog = {
       "white stripes",
       "bricks 01",
       "bricks 02",
+      "sun rays",
+      "colors",
   ],
 
   "shirts":[
@@ -143,7 +152,7 @@ let catalog = {
     "glasses 2",
     "mask 1",
     "space helmet",
-    "monitor head",
+    "spice's monitor head",
     "beanie",
     "crown",
     "king's robe",
@@ -153,6 +162,22 @@ let catalog = {
     "black durag",
     "red durag",
     "blue durag",
+    "black fedora",
+    "red fedora",
+    "green fedora",
+    "blue fedora",
+    "purple fedora",
+    "connor's fedora",
+    "robo's tophat",
+    "aussie hat",
+    "scout's cap",
+    "red cap",
+    "green cap",
+    "blue cap",
+    "purple cap",
+    "white cap",
+    "black cap",
+    "ushanka",
 ],
 }
 
@@ -280,7 +305,7 @@ async function getRoles(us) {
 })();
 
 document.getElementById('personal-username-display').textContent = '@' + username;
-document.getElementById('personal-profile-btn').onclick = function () { openMenu('profile', {user:username}); };
+document.getElementById('personal-profile-btn').onclick = function () { openMenu('profile', {user:username})};
 
 
 async function leaveroom() { 
@@ -294,7 +319,7 @@ async function leaveroom() {
     if (status === "cannotleave") {
       addNotif("You cannot leave this room")
     }
-    if (status === "noauth") {
+    if (status === "NOAUTH") {
       addNotif("Authentication error")
     }
   }
@@ -311,7 +336,7 @@ async function unfriend() {
 
   let res = await DB({'type':'removefriend', 'targ':user, 'user':username, 'pass':userkey});
 
-  if (res === "noauth") {
+  if (res === "NOAUTH") {
     addNotif("Authentication error")
   } else if (res === true) {
     addNotif(`Unfriended @${user}`)
@@ -326,10 +351,79 @@ if (Settings.fancyGFX) {
   document.body.insertAdjacentHTML('afterbegin', '<h1 id="loading-ind" style="position: absolute; bottom: 80px; left: 20px; z-index: 5; font-size: 30px;">Loading...</h1>')
 }
 
+
+
+
+let totalUnreads = 0;
+let lastUnread = {notifications:0, rooms:{}}
+async function updateUnreads() {
+  let result = await DB({'type':'getunreads', 'user':username});
+
+  totalUnreads = 0;
+
+  if (lastUnread.notifications < result.notifications) {
+    lastUnread.notifications = result.notifications;
+
+    //pushNotif("You have new notifications");
+    var audio = new Audio('../site/assets/audio/pop-notification.mp3');
+    audio.play();
+  }
+
+  if (result.notifications > 0) {
+    totalUnreads += result.notifications;
+    document.getElementById('mailbtn').src = '../site/assets/icons/letter-notif.svg'
+  } else {
+    document.getElementById('mailbtn').src = '../site/assets/icons/letter.svg'
+  }
+
+  for (i in result.rooms) {
+    let watching = (active_room === i);
+
+    if (! document.hasFocus()) {
+      watching = false
+    }
+
+    if (! watching) {
+      console.log(i)
+      let button = document.getElementById("room-button-" + i);
+  
+      if (button) {
+        document.getElementById("room-button-" + i).style.color = 'white';
+      }
+  
+      if (i.includes('/')) { //since DMs are the only kind of room that have the slash symbol (formatted as user1/user2), this plays the pop sound IF the new unread message is from a DM
+        if (! (i in lastUnread.rooms)) {
+          lastUnread.rooms[i] = 0
+        }
+  
+        if (lastUnread.rooms[i] < result.rooms[i]) {
+          lastUnread.rooms[i] = result.rooms[i];
+      
+          //pushNotif("You have new notifications");
+          var audio = new Audio('../site/assets/audio/pop-notification.mp3');
+          audio.play();
+        }
+  
+        totalUnreads += result.rooms[i]
+      }
+    }
+  }
+
+  if (totalUnreads > 0) {
+    document.title = `LibreRooms (${totalUnreads})`
+  } else {
+    document.title = "LibreRooms"
+  }
+}
+
+setInterval(updateUnreads, 5000)
+
+
+
+
 let latestRange = -50;
 var lastauth = null;
 var lastdt = null;
-let lastUnread = 0;
 
 const board = document.getElementById("msgs");
 var prevheight = board.scrollHeight;
@@ -339,21 +433,6 @@ async function updateMessageBoard() {
     let requestedRoom = active_room;
     let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'beg':latestRange});
     latestRange = result.range;
-
-    //notif
-    if (lastUnread < result.unread) {
-      lastUnread = result.unread;
-
-      var audio = new Audio('../site/assets/audio/pop-notification.mp3');
-      audio.play();
-    }
-
-    if (result.unread > 0) {
-      document.getElementById('mailbtn').src = '../site/assets/icons/letter-notif.svg'
-    } else {
-      document.getElementById('mailbtn').src = '../site/assets/icons/letter.svg'
-    }
-    //notif
 
     let boardcontent = ``;
   
@@ -441,6 +520,19 @@ async function updateMessageBoard() {
         contents = contents.replace(/\B@\w+\b/g, (match) => {
           return `<div onclick="openMenu('profile', {user:'${match.substring(1)}'})" class='mention' title="User Mention">${match}</div>`
         });
+
+        //FORMATTING
+        contents = contents.replace(/\*\*([^]*?)\*\*/g, (match) => {
+          return `<b>${match.slice(2).slice(0, -2)}</b>`
+        });
+        contents = contents.replace(/__(.*?)__/g, (match) => {
+          return `<u>${match.slice(2).slice(0, -2)}</u>`
+        });
+
+        contents = contents.replace(/\*([^]*?)\*/g, (match) => {
+          return `<i>${match.slice(1).slice(0, -1)}</i>`
+        });
+        //=======
   
         if (msg['user'] === 'System') {
           boardcontent += `
@@ -568,11 +660,11 @@ async function joinRoom(r, public) {
       closeMenu();
       addNotif(`Joined "${r}"`);
     } else {
-      if (status === "alreadyin") {
+      if (status === "ALREADYIN") {
         addNotif("You have already joined this room")
-      } else if (status === "noauth") {
+      } else if (status === "NOAUTH") {
         addNotif("Authentication error")
-      } else if (status === "full") {
+      } else if (status === "FULL") {
         addNotif("This room is full")
       }
     }
@@ -593,6 +685,11 @@ function switch_room(room, displayname, mode, created=false) {
   //if (trig) {
   //  document.getElementById(`room-button-${room}`).style.backgroundColor = 'rgb(100, 0, 100)';
   //}
+
+  let button = document.getElementById("room-button-" + room);
+  if (button) {
+    document.getElementById("room-button-" + room).style.color = 'grey';
+  }
 
   if (active_room !== room) {
     document.getElementById('loading-ind').style.display = 'inline';
@@ -666,7 +763,7 @@ async function populateSidebar(mode) {
       document.getElementById('room-display').innerHTML += `
       
       <div style='width:100%; height:60px; padding:5px;'>
-        <button id="room-button-${rooms[room].name}" onclick='switch_room("${rooms[room].name}", "${rooms[room].name}", "r", ${rooms[room].created});' style='width:calc(100% - 10px); height:100%; font-size: 20px;'>${rooms[room].name}</button>
+        <button id="room-button-${rooms[room].name}" onclick='switch_room("${rooms[room].name}", "${rooms[room].name}", "r", ${rooms[room].created});' style='width:calc(100% - 10px); height:100%; font-size: 20px; color:grey;'>${rooms[room].name}</button>
       </div>
       
       `;
@@ -694,9 +791,15 @@ async function populateSidebar(mode) {
       document.getElementById('room-display').innerHTML += `
       
       <div style='width:100%; height:30px; padding:5px;'>
-        <button onclick='switch_room("${c}", "@${friends[friend]}", "f");' style='width:calc(100% - 10px); height:100%; font-size: 20px;'>@${friends[friend]}</button>
+        <button id="room-button-${c}" onclick='switch_room("${c}", "@${friends[friend]}", "f");' style='width:calc(100% - 10px); height:100%; font-size: 20px; color:grey;'>@${friends[friend]}</button>
       </div>
       
+      `;
+    }
+
+    if (friends.length === 0) {
+      document.getElementById('room-display').innerHTML += `
+      <h1 style='font-weight:100; text-align:center; position:relative; top:50%'>No friends here... ಥ_ಥ</h1>
       `;
     }
 
@@ -741,14 +844,13 @@ updateMessageBoard();
 async function sendMessage() {
   let val = document.getElementById('msgtxt').value.replace(/\n/g,'');
   document.getElementById('msgtxt').value = '';
-  if (val.length > 1) {
+  if (val.length > 0) {
     let res = await DB({type:'addmsg', room:active_room, contents: val, user:username, pass:userkey})
-    res = res.res;
 
-    if (res === 'noauth') {
+    if (res === 'NOAUTH') {
       addNotif('Authentication error')
     }
-    if (res === 'toolong') {
+    if (res === 'TOOLONG') {
       addNotif('Message exceeds 500 character limit')
     }
   }

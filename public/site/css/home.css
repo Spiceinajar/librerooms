@@ -1,0 +1,37 @@
+@font-face {
+    font-family: 'Header';
+    src: url('../assets/fonts/IBMPlexSans-Bold.ttf');
+}
+
+@font-face {
+    font-family: 'Standard';
+    src: url('../assets/fonts/NotoSans-Light.ttf');
+}
+
+@font-face {
+    font-family: 'Block';
+    src: url('../assets/fonts/FlowBlock-Regular.ttf');
+}
+
+html {
+    background-image: url(../assets/icons/home-background.svg); 
+    background-size: auto 100%; 
+    background-repeat: repeat-x;
+    background-color: rgb(20, 20, 20);
+    height: 100%;
+    color: white;
+    font-family: Standard;
+    text-align: center;
+}
+
+.mainButton {
+    background-color: rgb(100, 100, 215); 
+    height: 50px; 
+    width: 150px; 
+    border: 0; 
+    border-radius: 5px; 
+    font-size: 20px; 
+    color: white;
+    margin: 5px;
+    cursor: pointer;
+}
