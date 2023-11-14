@@ -1,4 +1,8 @@
-const TESTING_MODE = false;
+const TESTING_MODE = true;
+
+process.env.MONGO_KEY = 'lzGm0Yzjm6MCkOoV';
+process.env.CRYPT_KEY = 't+mq5RKjh3l0x4S5lYHdL/f5XK+gogAtnvZ2o5b5YXUNqIWa67uBE3Es31vbfmNX';
+process.env.CRYPT_KEY_DATABASE = 'om8lyF1vqcFLdvAwZruvdW1zjf5aSS4cFIRL6XyCUeBMEYrovh9Z6vB9P+Wb7WbW';
 
 async function run() {
   try {
@@ -241,8 +245,8 @@ async function run() {
                   dat.collections.users[parsed.user].unread.rooms[parsed.room] = fullLength;
   
                   return {
-                    contents:(dat.collections.rooms[parsed.room].messages.slice(parsed['beg'])).filter(obj => ! dat.collections.users[parsed.user].blocked.includes(obj.user)), 
-                    range:dat.collections.rooms[parsed.room].messages.length
+                    contents:(dat.collections.rooms[parsed.room].messages.slice(parsed['beg'])), 
+                    range:fullLength, startingRange:fullLength + parsed.beg
                   };
                 }
               }
@@ -549,11 +553,8 @@ async function run() {
                         }
   
                         if (cmd === "REVERT") { // Reverts to backup
-                          sysMessage('Reverting database to backup...', parsed.room)
-  
                           (async () => {
                             dat = await mongoOperation('getDB').catch(console.dir);
-                            sysMessage('Database reverted.', parsed.room)
                           })();
                         }
                       }
@@ -729,6 +730,22 @@ async function run() {
           if (parsed.type === 'delmsg') {
             if (authenticate(parsed.user, parsed.pass)) {
               wipeMessage(parsed.user);
+              return true;
+            } else {
+              return "noauth";
+            }
+          }
+
+          if (parsed.type === 'moderation-remove') {
+            if (authenticate(parsed.user, parsed.pass)) {
+              let roles = dat.collections.users[parsed.user].roles;
+
+              console.log(dat.collections.rooms[parsed.room].messages[parsed.messId], parsed.messId)
+
+              if (roles.includes('Moderator') || roles.includes('Administrator')) {
+                dat.collections.rooms[parsed.room].messages[parsed.messId].text = '[removed by moderator]'
+              }
+
               return true;
             } else {
               return "noauth";
