@@ -422,6 +422,28 @@ setInterval(updateUnreads, 5000)
 
 
 
+async function messageContextMenu(e, id) {
+  let roles = await getRoles(username);
+  console.log(roles)
+
+  if (roles.includes('Administrator') || roles.includes('Moderator')) {
+    e.preventDefault();
+    document.getElementById('msgctxmenu').hidden = false;
+    document.getElementById('msgctxmenu').style.top = mouse.y + 'px'
+    document.getElementById('msgctxmenu').style.left = mouse.x + 'px'
+  
+    document.getElementById('msgdelbtn').onclick = function () {
+      DB({'type':'moderation-remove', 'user':username, 'pass':userkey, 'room':active_room, 'messId':id});
+      console.log(id)
+    };
+  }
+}
+
+document.addEventListener('click', function() {document.getElementById('msgctxmenu').hidden = true})
+
+
+
+
 let latestRange = -50;
 var lastauth = null;
 var lastdt = null;
@@ -435,6 +457,9 @@ async function updateMessageBoard() {
     let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'beg':latestRange});
     latestRange = result.range;
 
+    let startingRange = result.startingRange;
+    console.log(startingRange)
+
     let boardcontent = ``;
   
     if (document.getElementById('msgs').children.length < 1) {
@@ -442,7 +467,7 @@ async function updateMessageBoard() {
     }
   
     if (requestedRoom === active_room) {  
-      let messages = result['contents'];
+      let messages = result.contents;
   
       var pfp;
       var roles;
@@ -537,7 +562,7 @@ async function updateMessageBoard() {
   
         if (msg['user'] === 'System') {
           boardcontent += `
-          <div style="background-color: rgba(100, 100, 215, 0.06); width:100%; text-align: center; color: white; font-family: Standard; padding: 5px;">
+          <div class="message-container" style="background-color: rgba(100, 100, 215, 0.06); width:100%; text-align: center; color: white; font-family: Standard; padding: 5px;" oncontextmenu="messageContextMenu(event, ${startingRange})" >
             ${contents}
           </div>
           `;
@@ -545,7 +570,7 @@ async function updateMessageBoard() {
           if (msg['user'] === username) {
             if (msg['user'] === lastauth) {
               boardcontent += `
-              <div>
+              <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange})">
                 <div class='chat_bubble message-right' style='border-top-right-radius: 0'>
                   <span class='message-content'>${contents}</span>
                 </div>
@@ -553,9 +578,11 @@ async function updateMessageBoard() {
               `;
             } else {
               boardcontent += `
-        
-              <div class='chat_bubble message-right' style='border-bottom-right-radius: 0;'>
-                <span class='message-content'>${contents}</span>
+
+              <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange})">
+                <div class='chat_bubble message-right' style='border-bottom-right-radius: 0;'>
+                  <span class='message-content'>${contents}</span>
+                </div>
               </div>
         
               `;
@@ -567,7 +594,7 @@ async function updateMessageBoard() {
     
               boardcontent += `
     
-              <div>
+              <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange})">
                 <div class='chat_bubble' style='border-top-left-radius: 0; margin-left: 69px; margin-top: -5px; margin-bottom: 10px;'>
                     <span class='message-content''>${contents}</span>
                 </div>
@@ -578,7 +605,7 @@ async function updateMessageBoard() {
             } else {
               boardcontent += `
     
-              <div style="margin-bottom: 5px;">
+              <div style="margin-bottom: 5px;" class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange})">
                 <div style='display:inline-block; vertical-align: bottom;'>
                   <img src='${pfp}' title="Open Profile" class="profilepic" onclick="openMenu('profile', {user:'${msg.user}'})">
                 </div>
@@ -598,6 +625,8 @@ async function updateMessageBoard() {
   
         lastauth = msg['user'];
         lastdt = msg.dt;
+
+        startingRange += 1
       }
   
       document.getElementById('msgs').insertAdjacentHTML('beforeend', boardcontent);
@@ -918,3 +947,11 @@ async function reportWindowSize() {
 
 reportWindowSize();
 window.addEventListener("resize", reportWindowSize);
+
+
+var mouse = {x:0, y:0};
+
+document.onmousemove = function(e) {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY
+}
