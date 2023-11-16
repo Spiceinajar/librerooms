@@ -14,9 +14,21 @@
 </head>
 
 <body>
-    <div id="msgctxmenu" style="position: absolute; z-index: 6; padding: 5px;" hidden="true">
-      <button id="msgdelbtn" style="width: 100px; height: 50px;">
+    <div id="msgctxmenu" hidden="true">
+      <button id="msgdelbtn" class="ctx-menu-button">
         Delete
+      </button>
+      <br>
+      <button id="msgrepbtn" class="ctx-menu-button">
+        Report
+      </button>
+      <br>
+      <button id="msgblockbtn" class="ctx-menu-button">
+        Block sender
+      </button>
+      <br>
+      <button id="msgunblockbtn" class="ctx-menu-button">
+        Unblock sender
       </button>
     </div>
 
@@ -42,6 +54,9 @@
       </div>
       
       <h1 id="room_name_display">N/A</h1>
+    </div>
+
+    <div id="mention-popup">
     </div>
 
     <span id="bottom_bar">
