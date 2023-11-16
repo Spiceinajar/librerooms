@@ -1,26 +1,26 @@
 function setMenu(x) {
   if (x === 'login') {
     document.getElementById('login-bg').innerHTML = `
-    <div style="padding:60px; max-width:100%;">
-      <h1 style="font-family: Header; font-size: 45px; width:fit-content; display:inline-block;">Log in</h1>
+    <div class="login-sub-bg">
+      <h1 class="login-header">Log in</h1>
       <br>
 
-      <h1 style="height:25px; font-size:30px; display:inline-block;">Username:</h1>
+      <h1 class="login-label">Username:</h1>
       <br>
-      <textarea name="" id="user_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 400px; max-width:100%; height: 35px; border-radius: 10px; font-size: 30px;"></textarea>
-      <br>
-
-      <h1 style="height:25px; font-size:30px; display:inline-block;">Password:</h1>
-      <br>
-      <textarea name="" id="pass_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 400px; max-width:100%; height: 35px; border-radius: 10px; font-size: 25px; font-family: Block;"></textarea>
-
+      <textarea id="user_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" class="login-textarea"></textarea>
       <br>
 
-      <button id="logbtn" style="width: 400px; height: 100px; font-size: 30px; border-radius: 10px; max-width:100%; margin-top: 30px">Log in</button>
+      <h1 class="login-label">Password:</h1>
+      <br>
+      <textarea id="pass_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" class="login-textarea" style="font-family: Block;"></textarea>
 
       <br>
 
-      <button id="cr" style="width: 400px; height: 45px; font-size: 30px; border-radius: 10px; max-width:100%; margin-top:10px">Create account</button>
+      <button id="logbtn" class="login-btn">Log in</button>
+
+      <br>
+
+      <button id="cr" class="login-btn login-button-small">Create account</button>
     </div>
     `
 
@@ -31,29 +31,31 @@ function setMenu(x) {
     document.getElementById('pass_input').value = decrypt(getCookie('key'));
   } else {
     document.getElementById('login-bg').innerHTML = `
-    <div style="padding:60px; max-width:100%;">
-      <h1 style="font-family: Header; font-size: 45px; width:fit-content; display:inline-block;">Sign up</h1>
+    <div class="login-sub-bg">
+      <h1 class="login-header">Sign up</h1>
       <br>
 
-      <h1 style="height:25px; font-size:30px; display:inline-block;">Username:</h1>
+      <h1 class="login-label">Username:</h1>
       <br>
-      <textarea name="" id="user_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 400px; max-width:100%; height: 35px; border-radius: 10px; font-size: 30px;"></textarea>
+      <textarea id="user_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" class="login-textarea"></textarea>
       <br>
 
-      <h1 style="height:25px; font-size:30px; display:inline-block;">Password:</h1>
+      <h1 class="login-label">Password:</h1>
       <br>
-      <textarea name="" id="pass_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 400px; max-width:100%; height: 35px; border-radius: 10px; font-size: 25px; font-family: Block;"></textarea>
- 
-      <div style="padding:10px">
+      <textarea id="pass_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" class="login-textarea" style="font-family: Block;"></textarea>
+
+      <div style="padding:1vh">
         <input type="checkbox" id="agreement">
         <label class="agreement-label" for="agreement">I agree to the <a href="../policies/terms.html" target="_blank" rel="noopener noreferrer" class="claim-link">Terms of Service</a>, <br> <a href="../policies/cookies.html" target="_blank" rel="noopener noreferrer" class="claim-link">Cookie Policy</a> and <a href="../policies/privacy.html" target="_blank" rel="noopener noreferrer" class="claim-link">Privacy Policy</a>.</label>
       </div>
 
-      <button id="crbtn" style="width: 400px; height: 100px; font-size: 30px; border-radius: 10px; max-width:100%;">Create account</button>
+      <br>
+
+      <button id="crbtn" class="login-btn" style="margin-top:0">Create account</button>
 
       <br>
 
-      <button id="backbtn" style="width: 400px; height: 45px; font-size: 30px; border-radius: 10px; max-width:100%; margin-top:10px">Back</button>
+      <button id="backbtn" class="login-btn login-button-small">back</button>
     </div>
   `
 
@@ -123,13 +125,13 @@ async function cr_account(user, key) {
 
 async function reportWindowSize() {
   if (mobileLayout) {
-    document.getElementById('login-bg').style.width = "calc(100% - 10px)";
-    document.getElementById('login-bg').style.height = "calc(100% - 10px)";
+    document.getElementById('login-bg').style.width = "calc(100% - 1vh)";
+    document.getElementById('login-bg').style.height = "calc(100% - 1vh)";
     document.getElementById('login-bg').style.margin = "0";
   } else {
     document.getElementById('login-bg').style.width = "fit-content";
     document.getElementById('login-bg').style.height = "fit-content";
-    document.getElementById('login-bg').style.margin = "60px";
+    document.getElementById('login-bg').style.margin = "6vh";
   }
 }
 

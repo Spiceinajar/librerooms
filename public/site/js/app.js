@@ -306,7 +306,7 @@ async function getRoles(us) {
 })();
 
 document.getElementById('personal-username-display').textContent = '@' + username;
-document.getElementById('personal-profile-btn').onclick = function () { openMenu('profile', {user:username})};
+document.getElementById('personal-profile-btn').onclick = function () { openMenu('profile', {user:username});};
 
 
 async function leaveroom() { 
@@ -347,9 +347,9 @@ async function unfriend() {
 }
 
 if (Settings.fancyGFX) {
-  document.body.insertAdjacentHTML('afterbegin', '<img id="loading-ind" style="position: absolute; bottom: 80px; left: 20px; z-index: 5; height: 150px; max-width: 50%;" src="../site/assets/icons/loading.gif" alt="loading">')
+  document.body.insertAdjacentHTML('afterbegin', '<img id="loading-ind" style="position: absolute; bottom: 80px; left: 20px; height: 150px; max-width: 50%;" src="../site/assets/icons/loading.gif" alt="loading">')
 } else {
-  document.body.insertAdjacentHTML('afterbegin', '<h1 id="loading-ind" style="position: absolute; bottom: 80px; left: 20px; z-index: 5; font-size: 30px;">Loading...</h1>')
+  document.body.insertAdjacentHTML('afterbegin', '<h1 id="loading-ind" style="position: absolute; bottom: 80px; left: 20px; font-size: 30px;">Loading...</h1>')
 }
 
 
@@ -368,6 +368,7 @@ async function updateUnreads() {
     //pushNotif("You have new notifications");
     var audio = new Audio('../site/assets/audio/pop-notification.mp3');
     audio.play();
+    console.log('fd')
   }
 
   if (result.notifications > 0) {
@@ -419,37 +420,86 @@ async function updateUnreads() {
 
 setInterval(updateUnreads, 5000)
 
-
-
-
-async function messageContextMenu(e, id) {
-  let roles = await getRoles(username);
-  console.log(roles)
-
-  if (roles.includes('Administrator') || roles.includes('Moderator')) {
-    e.preventDefault();
-    document.getElementById('msgctxmenu').hidden = false;
-    document.getElementById('msgctxmenu').style.top = mouse.y + 'px'
-    document.getElementById('msgctxmenu').style.left = mouse.x + 'px'
-  
-    document.getElementById('msgdelbtn').onclick = function () {
-      DB({'type':'moderation-remove', 'user':username, 'pass':userkey, 'room':active_room, 'messId':id});
-      console.log(id)
-    };
-  }
-}
-
-document.addEventListener('click', function() {document.getElementById('msgctxmenu').hidden = true})
-
-
-
-
 let latestRange = -50;
 var lastauth = null;
 var lastdt = null;
 
 const board = document.getElementById("msgs");
 var prevheight = board.scrollHeight;
+
+
+
+
+
+async function messageContextMenu(e, id, sender) {
+  let roles = await getRoles(username);
+  let personallySent = (sender === username)
+
+  e.preventDefault();
+  document.getElementById('msgctxmenu').hidden = false;
+  document.getElementById('msgctxmenu').style.top = mouse.y + 'px';
+  document.getElementById('msgctxmenu').style.left = mouse.x + 'px';
+
+  if (roles.includes('Administrator') || roles.includes('Moderator') || personallySent) {
+    let delbtn = document.getElementById('msgdelbtn');
+
+    delbtn.display = 'inline-block';
+  
+    delbtn.onclick = async function () {
+      await DB({'type':'remove-message', 'user':username, 'pass':userkey, 'room':active_room, 'messId':id});
+      document.getElementById(`msg-inner-${id}`).innerHTML = '[removed]';
+    };
+  } else {
+    delbtn.display = 'none';
+  }
+
+
+  document.getElementById('msgrepbtn').onclick = async function () {
+    await DB({'type':'submit-report', 
+    'contents':`Report by: ${username}; 
+    Reported message id: ${id}; 
+    Room id: ${active_room}; 
+    Message contents: ${document.getElementById(`msg-inner-${id}`).innerHTML}; 
+    Message sender: @${sender};
+    `}); 
+    
+    addNotif('Your feedback has been recorded')
+  };
+
+
+  document.getElementById('msgblockbtn').onclick = async function () {
+    let res = await DB({'type':'blockusr', 'user':username, 'pass':userkey, 'targuser':sender}); 
+
+    if (res === 'NOAUTH') {
+      addNotif('Authentication failed')
+    } else if (res === 'ALREADYBLOCKED') {
+      addNotif('You have already blocked this user')
+    } else if (res === 'SELFBLOCK') {
+      addNotif('You cannot block yourself')
+    } else if (res === true) {
+      addNotif(`Blocked @${sender}`)
+    }
+  };
+
+  document.getElementById('msgunblockbtn').onclick = async function () {
+    let res = await DB({'type':'unblockusr', 'user':username, 'pass':userkey, 'targuser':sender}); 
+
+    if (res === 'NOAUTH') {
+      addNotif('Authentication failed')
+    } else if (res === 'NOTBLOCKED') {
+      addNotif('You have not blocked this user')
+    } else if (res === true) {
+      addNotif(`Unblocked @${sender}`)
+    }
+  };
+}
+
+document.addEventListener('click', function() {document.getElementById('msgctxmenu').hidden = true});
+board.addEventListener('scroll', function() {document.getElementById('msgctxmenu').hidden = true});
+
+
+
+
 
 async function updateMessageBoard() {
   if (document.hasFocus()) {
@@ -562,7 +612,7 @@ async function updateMessageBoard() {
   
         if (msg['user'] === 'System') {
           boardcontent += `
-          <div class="message-container" style="background-color: rgba(100, 100, 215, 0.06); width:100%; text-align: center; color: white; font-family: Standard; padding: 5px;" oncontextmenu="messageContextMenu(event, ${startingRange})" >
+          <div id="msg-inner-${startingRange}" class="message-container" style="background-color: rgba(100, 100, 215, 0.06); width:100%; text-align: center; color: white; font-family: Standard; padding: 5px;" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
             ${contents}
           </div>
           `;
@@ -570,18 +620,18 @@ async function updateMessageBoard() {
           if (msg['user'] === username) {
             if (msg['user'] === lastauth) {
               boardcontent += `
-              <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange})">
+              <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
                 <div class='chat_bubble message-right' style='border-top-right-radius: 0'>
-                  <span class='message-content'>${contents}</span>
+                  <span id="msg-inner-${startingRange}" class='message-content'>${contents}</span>
                 </div>
               </div>
               `;
             } else {
               boardcontent += `
 
-              <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange})">
+              <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
                 <div class='chat_bubble message-right' style='border-bottom-right-radius: 0;'>
-                  <span class='message-content'>${contents}</span>
+                  <span id="msg-inner-${startingRange}" class='message-content'>${contents}</span>
                 </div>
               </div>
         
@@ -594,9 +644,9 @@ async function updateMessageBoard() {
     
               boardcontent += `
     
-              <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange})">
+              <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
                 <div class='chat_bubble' style='border-top-left-radius: 0; margin-left: 69px; margin-top: -5px; margin-bottom: 10px;'>
-                    <span class='message-content''>${contents}</span>
+                    <span id="msg-inner-${startingRange}" class='message-content''>${contents}</span>
                 </div>
               </div>
     
@@ -605,7 +655,7 @@ async function updateMessageBoard() {
             } else {
               boardcontent += `
     
-              <div style="margin-bottom: 5px;" class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange})">
+              <div style="margin-bottom: 5px;" class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
                 <div style='display:inline-block; vertical-align: bottom;'>
                   <img src='${pfp}' title="Open Profile" class="profilepic" onclick="openMenu('profile', {user:'${msg.user}'})">
                 </div>
@@ -613,7 +663,7 @@ async function updateMessageBoard() {
                 <div style='display:inline-block; width:80%'>
                   <span class='message-user'>${userDisplay}</span>
                   <div class='chat_bubble' style='border-bottom-left-radius: 0; max-width:100%;'>
-                    <span class='message-content'>${contents}</span>
+                    <span id="msg-inner-${startingRange}" class='message-content'>${contents}</span>
                   </div>
                 </div>
               </div>
@@ -954,4 +1004,15 @@ var mouse = {x:0, y:0};
 document.onmousemove = function(e) {
   mouse.x = e.clientX;
   mouse.y = e.clientY
+}
+
+
+
+let msgtxt = document.getElementById('msgtxt');
+msgtxt.oninput = function() {
+  if (msgtxt.value.slice(-1) === "@") {
+    mentionPopup()
+  } else {
+    document.getElementById('mention-popup').style.display = 'none';
+  }
 }

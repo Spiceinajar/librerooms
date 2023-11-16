@@ -85,20 +85,6 @@ async function openMenu(m_id, args={}) {
     </div>
     `);
 
-    let roles = await getRoles(args.user);
-    let joinDate = await DB({'type':'getjoindate', 'targuser':args.user});
-
-    let userDisplay = args.user;
-    for (var r in roles) {
-      let role = roles[r];
-      userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" alt="roleicon" onclick="openMenu('badgeinfo', {badgename:'${role}'})" title="${role}" style="padding-left: 1vh; height:100%;">`;
-    }
-
-    document.getElementById('profile-avatar-display').src = await getAvatar(args.user);
-    document.getElementById('profile-desc').textContent = (await DB({'type':'getdesc', 'targuser':args.user})).contents;
-    document.getElementById('profile-username-display').innerHTML = userDisplay;
-    document.getElementById('profile-joindate').textContent = `Joined ${joinDate.day}/${joinDate.month+1}/${joinDate.year}`;
-
     if (args.user === username) {
       let userDesc = document.getElementById('profile-desc');
       document.getElementById('pfp-button').onclick = function() {openMenu('avatar-editor')};
@@ -109,6 +95,25 @@ async function openMenu(m_id, args={}) {
         addNotif('Revision saved.');
       });
     }
+
+
+
+
+    (async () => { //for some reason this was stopping the above code from running until it was done despite this already being in an async function (and being below it) so i just put it in another async function. whatever works i guess
+      let roles = await getRoles(args.user);
+      let joinDate = await DB({'type':'getjoindate', 'targuser':args.user});
+  
+      let userDisplay = args.user;
+      for (var r in roles) {
+        let role = roles[r];
+        userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" alt="roleicon" onclick="openMenu('badgeinfo', {badgename:'${role}'})" title="${role}" style="padding-left: 1vh; height:100%;">`;
+      }
+
+      document.getElementById('profile-avatar-display').src = await getAvatar(args.user);
+      document.getElementById('profile-desc').textContent = (await DB({'type':'getdesc', 'targuser':args.user})).contents;
+      document.getElementById('profile-username-display').innerHTML = userDisplay;
+      document.getElementById('profile-joindate').textContent = `Joined ${joinDate.day}/${joinDate.month+1}/${joinDate.year}`;
+    })();
   }
 
   if (m_id === 'settings') {
@@ -125,7 +130,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.2.0</h1>
+      <h1 style="font-size:10px;">Version: 1.2.1</h1>
     </div>
     `);
 
@@ -290,7 +295,7 @@ async function openMenu(m_id, args={}) {
   if (m_id === "notifications") {
     document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
     <h1>Notifications</h1>
-    <div id="notif-board" style="width:100%; height:80%; position:relative; bottom:0; left:0; background-color:rgb(15, 15, 15); overflow-y:auto;">
+    <div id="notif-board">
     </div>
     `);
 
@@ -301,9 +306,7 @@ async function openMenu(m_id, args={}) {
       let notif = result[n];
 
       document.getElementById("notif-board").insertAdjacentHTML('afterbegin', `
-      <div>
       <h1 style="font-weight:100;">${notif}</h1>
-      </div>
       <hr style="border-color: rgb(20, 20, 20); width:90%">
       `);
     }
@@ -723,3 +726,29 @@ function updateNotifs() {
 }
 
 updateNotifs()
+
+
+
+
+
+
+
+
+function mentionPopup() {
+  let bar = document.getElementById('bottom_bar');
+
+  let popup = document.getElementById('mention-popup');
+
+  popup.innerHTML = '';
+  popup.style.display = 'inline';
+  popup.style.bottom = (bar.clientHeight + 10) + "px"
+
+  for (u in cachedAvs) {
+    popup.insertAdjacentHTML('beforeend', `
+    <button style="border-radius: 0; width:100%; font-size: 20px" onclick="document.getElementById('msgtxt').value += ('${u}' + ' '); document.getElementById('mention-popup').style.display = 'none'; document.getElementById('msgtxt').focus()">
+      @${u}
+    </button>
+    <br>
+    `)
+  }
+}
