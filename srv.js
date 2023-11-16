@@ -1,8 +1,4 @@
-const TESTING_MODE = true;
-
-process.env.MONGO_KEY = 'lzGm0Yzjm6MCkOoV';
-process.env.CRYPT_KEY = 't+mq5RKjh3l0x4S5lYHdL/f5XK+gogAtnvZ2o5b5YXUNqIWa67uBE3Es31vbfmNX';
-process.env.CRYPT_KEY_DATABASE = 'om8lyF1vqcFLdvAwZruvdW1zjf5aSS4cFIRL6XyCUeBMEYrovh9Z6vB9P+Wb7WbW';
+const TESTING_MODE = false;
 
 async function run() {
   try {
@@ -109,39 +105,6 @@ async function run() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    for (u in dat.collections.users) {
-      dat.collections.users[u].unread = {notifications:0, rooms:{}}
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     if (! TESTING_MODE) {
       setInterval(function(){mongoOperation('setDB').catch(console.dir)}, 3600000); //Makes backup every hour (3600000 ms)
     }
@@ -243,9 +206,19 @@ async function run() {
                   let fullLength = dat.collections.rooms[parsed.room].messages.length;
   
                   dat.collections.users[parsed.user].unread.rooms[parsed.room] = fullLength;
+
+                  let processed = dat.collections.rooms[parsed.room].messages.slice(parsed['beg']);
+                  let blocked = dat.collections.users[parsed.user].blocked;
+
+                  processed = processed.map(obj => {
+                    if (blocked.includes(obj.user)) {
+                      return {'text':'[ Blocked ]', 'user':obj.user, 'dt': obj.dt};
+                    }
+                    return obj;
+                  });
   
                   return {
-                    contents:(dat.collections.rooms[parsed.room].messages.slice(parsed['beg'])), 
+                    contents:processed, 
                     range:fullLength, startingRange:fullLength + parsed.beg
                   };
                 }
@@ -417,6 +390,45 @@ async function run() {
           if (parsed.type === 'chkusr') {
             return authenticate(parsed.user, parsed.pass);
           };
+
+
+          if (parsed.type === 'blockusr') {
+            if (authenticate(parsed.user, parsed.pass)) {
+              if (parsed.user === parsed.targuser) {
+                return 'SELFBLOCK'
+              } else {
+                if (dat.collections.users[parsed.user].blocked.includes(parsed.targuser)) {
+                  return 'ALREADYBLOCKED'
+                } else {
+                  dat.collections.users[parsed.user].blocked.push(parsed.targuser);
+
+                  console.log(`@${parsed.user} has blocked @${parsed.targuser}.`)
+                  return true
+                }
+              }
+            } else {
+              return 'NOAUTH'
+            }
+          };
+
+          
+          if (parsed.type === 'unblockusr') {
+            if (authenticate(parsed.user, parsed.pass)) {
+              let blocked = dat.collections.users[parsed.user].blocked;
+
+              var index = blocked.indexOf(parsed.targuser);
+              if (index > -1) {
+                dat.collections.users[parsed.user].blocked.splice(index, 1);
+
+                console.log(`@${parsed.user} has unblocked @${parsed.targuser}.`)
+                return true
+              } else {
+                return 'NOTBLOCKED'
+              }
+            } else {
+              return 'NOAUTH'
+            }
+          };
   
           if (parsed.type === 'cr_user') {
             if (authenticate(parsed.user, null, true)) {
@@ -469,6 +481,7 @@ async function run() {
                   if (parsed.contents.includes('@')) {
                     for (i of parsed.contents.replace(/\B@\w+\b/g, (match) => {return ` ${match} `}).split(" ")) {
                       let us = i.substring(1);
+
                       if (us === 'all') {
                         if (dat.collections.users[parsed.user].roles.includes('Administrator')) {
                           for (let u in dat.collections.users) {
@@ -476,8 +489,10 @@ async function run() {
                           }
                         }
                       } else if (dat.collections.rooms[parsed.room].members.includes(us)) {
-                        if (! dat.collections.users[us].blocked.includes(parsed.user)) {
-                          notify(us, `@${parsed.user} mentioned you in ${parsed.room}: "${parsed.contents}"`)
+                        if (us in dat.collections.users) {
+                          if (! dat.collections.users[us].blocked.includes(parsed.user)) {
+                            notify(us, `@${parsed.user} mentioned you in ${parsed.room}: "${parsed.contents}"`)
+                          }
                         }
                       }
                     }
@@ -736,17 +751,19 @@ async function run() {
             }
           }
 
-          if (parsed.type === 'moderation-remove') {
+          if (parsed.type === 'remove-message') {
             if (authenticate(parsed.user, parsed.pass)) {
               let roles = dat.collections.users[parsed.user].roles;
 
               console.log(dat.collections.rooms[parsed.room].messages[parsed.messId], parsed.messId)
 
-              if (roles.includes('Moderator') || roles.includes('Administrator')) {
-                dat.collections.rooms[parsed.room].messages[parsed.messId].text = '[removed by moderator]'
+              if (dat.collections.rooms[parsed.room].messages[parsed.messId].user === parsed.user) {
+                dat.collections.rooms[parsed.room].messages[parsed.messId].text = '[ removed ]'
+                return true;
+              } else if (roles.includes('Moderator') || roles.includes('Administrator')) {
+                dat.collections.rooms[parsed.room].messages[parsed.messId].text = '[ removed by moderator ]'
+                return true;
               }
-
-              return true;
             } else {
               return "noauth";
             }
