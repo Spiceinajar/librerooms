@@ -474,6 +474,7 @@ text-decoration: underline;
     background-color: black;
     color:white;
     font-size: .5cm;
+    overflow-y: scroll;
 }
 
 .document-subheader {
