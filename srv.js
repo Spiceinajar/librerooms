@@ -1,4 +1,4 @@
-const TESTING_MODE = true;
+const TESTING_MODE = false;
 
 process.env.MONGO_KEY = 'lzGm0Yzjm6MCkOoV';
 process.env.CRYPT_KEY = 't+mq5RKjh3l0x4S5lYHdL/f5XK+gogAtnvZ2o5b5YXUNqIWa67uBE3Es31vbfmNX';
