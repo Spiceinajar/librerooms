@@ -12,7 +12,30 @@ function getCookie(name) {
 
 const apiUrl = `${window.location.origin}:${window.location.port}/server`;
 
-var Settings = {fancyGFX:true, embedFiles:false};
+var Settings = getCookie('LRSettings');
+
+try {
+  Settings = JSON.parse(Settings)
+} catch {
+  Settings = {
+    "Safety":{
+      "Profanity Filter":false,
+      "Embed Files":false,
+      "Clickable links":true,
+      "Room Banners":true,
+    },
+  
+    "General":{
+      "Notification Sounds":true,
+      "Removed Annotations":false,
+    },
+  
+    "Accessibility":{
+      "Fancy Graphics":true,
+      "Load Avatars":true,
+    }
+  };
+}
 
 //=====================================================
 
@@ -101,7 +124,7 @@ async function DB(data) {
       } else {
         r.res = JSON.parse(decrypt(r['res']));
         if (r.res.locked) {
-          location.href = `./locked.html?reason=${r.res.reason}`;
+          location.href = `../locked/?reason=${r.res.reason}`;
         }
       }
 

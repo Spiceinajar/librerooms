@@ -1,5 +1,5 @@
 {
-    "address":"",
+    "address":"localhost",
     "port":"80",
     "protocol":"http"
   }

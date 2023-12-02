@@ -13,7 +13,7 @@ async function closeMenu() {
     }, 10);
   }
 
-  if (Settings.fancyGFX) {
+  if (Settings.Accessibility["Fancy Graphics"]) {
     await fadeout();
   } else {
     document.getElementById("menu").remove();
@@ -42,7 +42,7 @@ async function openMenu(m_id, args={}) {
   
   `);
 
-  if (Settings.fancyGFX) {
+  if (Settings.Accessibility["Fancy Graphics"]) {
     document.getElementById('menu-bg').style['box-shadow'] = '0px 0px 10px black';
   }
 
@@ -110,7 +110,7 @@ async function openMenu(m_id, args={}) {
       }
 
       document.getElementById('profile-avatar-display').src = await getAvatar(args.user);
-      document.getElementById('profile-desc').textContent = (await DB({'type':'getdesc', 'targuser':args.user})).contents;
+      document.getElementById('profile-desc').textContent = (await DB({'type':'getdesc', 'targuser':args.user, 'noprofanity':Settings.Safety["Profanity Filter"]})).contents;
       document.getElementById('profile-username-display').innerHTML = userDisplay;
       document.getElementById('profile-joindate').textContent = `Joined ${joinDate.day}/${joinDate.month+1}/${joinDate.year}`;
     })();
@@ -119,20 +119,58 @@ async function openMenu(m_id, args={}) {
   if (m_id === 'settings') {
     document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
     <h1 class='settings-header'>Settings</h1>
-    <hr class="softhr">
+    <hr class="softhr" style="margin-bottom:0">
 
-    <div style="overflow-y:scroll; height:calc(100% - 140px)">
+    <div style="overflow-y:scroll; height:calc(100% - 88px)">
+      <div id="options">
+      </div>
+
       <h1 class="settings-section-header">Account</h1>
       
       <button id="logbtn" class="bar-btn">Log Out</button>
+      <br>
+      <button id="datbtn" class="bar-btn">See account data</button>
       <br>
       <button id="delbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Delete Account</button>
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.2.1</h1>
+      <h1 style="font-size:10px;">Version: 1.2.2</h1>
     </div>
     `);
+
+    let options = document.getElementById('options');
+    for (let category in Settings) {
+      options.insertAdjacentHTML('beforeend', `
+      <h1 class="settings-section-header">${category}</h1>
+      `);
+
+      for (let option in Settings[category]) {
+        options.insertAdjacentHTML('beforeend', `
+        <span>
+          <label class="switch">
+            <input id="settings-${category}-${option}" class="switch-input" type="checkbox">
+            <span class="switch-slider"></span>
+          </label>
+
+          <h1 class="settings-option-text">${option}</h1>
+        </span>
+        <br>
+        `);
+
+        let element = document.getElementById(`settings-${category}-${option}`);
+
+        element.checked = Settings[category][option];
+
+        element.onclick = function() {
+          let id = this.id.split('-');
+
+          Settings[id[1]][id[2]] = this.checked;
+
+          console.log(Settings)
+        }
+      }
+    }
 
     document.getElementById('delbtn').onclick = function () {authMenu(
       "This will permanently delete your account and its associated data. To confirm, please enter your password below:", 
@@ -140,7 +178,7 @@ async function openMenu(m_id, args={}) {
 
         let result = await DB({'type':'delaccount', 'user':username, 'pass':enteredkey});
         if (result === true) {
-          location.href = './login.html';
+          location.href = '../login';
         } else {
           if (result === "noauth") {
             addNotif("Password is incorrect")
@@ -149,7 +187,8 @@ async function openMenu(m_id, args={}) {
           }
         }
       
-      })}
+      })
+    }
 
     document.getElementById('erbtn').onclick = function () {authMenu(
       "This will permanently delete all of your messages. To confirm, please enter your password below:", 
@@ -158,16 +197,40 @@ async function openMenu(m_id, args={}) {
         if (result === true) {
           addNotif("Messages erased")
         } else {
-          if (result === "noauth") {
+          if (result === "NOAUTH") {
             addNotif("Password is incorrect")
           } else {
             addNotif("Operation failed")
           }
         }
       
-      })}
+      })
+    }
 
-      document.getElementById('logbtn').onclick = function () {location.href = '../login';}
+    document.getElementById('datbtn').onclick = function () {authMenu(
+      "This will display all of your account data. To confirm, please enter your password below:", 
+      async function(enteredkey){
+        let result = await DB({'type':'getdata', 'user':username, 'pass':enteredkey});
+
+        if (result === "NOAUTH") {
+          addNotif("Password is incorrect")
+        } else {
+          openMenu('userdata', {"content":result})
+        }
+      })
+    }
+
+    document.getElementById('logbtn').onclick = function () {location.href = '../login'};
+
+    document.getElementById('xbtn').onclick = async function() {
+      const expirationDate = new Date();
+      expirationDate.setFullYear(9999);
+
+      document.cookie = `LRSettings=${JSON.stringify(Settings)}; samesite=lax; expires=${expirationDate.toUTCString()};`;
+
+      addNotif("Settings updated."); 
+      closeMenu();
+    }
   }
 
   if (m_id === "room-browser") {
@@ -203,6 +266,10 @@ async function openMenu(m_id, args={}) {
 
       for (var r in rooms) {
         let room = rooms[r];
+
+        if (! Settings.Safety["Room Banners"]) {
+          room.banner = "https://librerooms.org/site/assets/icons/room_default.svg"
+        }
 
         if (! room.public) {
           if (filter.publicOnly) {
@@ -299,8 +366,7 @@ async function openMenu(m_id, args={}) {
     </div>
     `);
 
-    let result = await DB({'type':'getnotifs', 'user':username, 'pass':userkey})
-    result = result.list;
+    let result = await DB({'type':'getnotifs', 'user':username, 'pass':userkey, 'noprofanity':Settings.Safety["Profanity Filter"]})
 
     for (var n in result) {
       let notif = result[n];
@@ -372,8 +438,18 @@ async function openMenu(m_id, args={}) {
     <h1 style="font-size:40px">Configure Room</h1>
     <hr style="width:70%;">
 
-    <h1 style="font-size:20px; display: inline;">This feature is under development. Please get staff to help you instead.</h1>
+    <h1 style="font-size:20px; display: inline;">(ಥ _ ಥ) This feature is under development. Please get staff to help you instead.</h1>
     `);
+  }
+
+  if (m_id === "userdata") {
+    document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
+    <h1>User Data</h1>
+    <div id="datDisplay">
+    </div>
+    `);
+
+    document.getElementById("datDisplay").innerText = JSON.stringify(args.content);
   }
 
   if (m_id === "report") {
@@ -480,7 +556,7 @@ async function openMenu(m_id, args={}) {
       let catId = c;
       let catName = categories[catId];
 
-      if (['3', '4', '5', '7', '8'].includes(c)) { //makes hair, shirts and eyes removable (don't ask me why I'm making eyes removable) =============
+      if (['3', '4', '5', '6', '7', '8'].includes(c)) { //makes some parts removable =============
         document.getElementById(`catalog-${c}`).insertAdjacentHTML('afterbegin', `
         <div class="catalog-item" id="catalog-selector" title="remove">
           <img class="catalog-item-img"  src="../site/assets/icons/remove.png" alt="remove">
@@ -572,7 +648,7 @@ async function openMenu(m_id, args={}) {
     }, 10);
   }
 
-  if (switched || (! Settings.fancyGFX)) {
+  if (switched || (! Settings.Accessibility["Fancy Graphics"])) {
     m.style.opacity = 1
   } else {
     await fadeIn()
@@ -600,9 +676,10 @@ async function authMenu(query, ondone) {
   `);
 
   document.getElementById('continuebtn').onclick = function() {
-    ondone(document.getElementById('entry').value);
+    let val = document.getElementById('entry').value;
     document.getElementById('authmenu').remove();
-    closeMenu();
+    //await closeMenu();
+    ondone(val);
   };
 
   document.getElementById('cancelbtn').onclick = function() {

@@ -184,81 +184,85 @@ let catalog = {
 
 let canvasID = 0;
 async function loadAvatar(arr) {
-  try {
-    // [skin color rgb [r, g, b], hair color hsv [h, s, v], background id, shirt id, eye id, hair id, mouth id]
-
-    let id = `avatarassembler-${canvasID}`
-    canvasID += 1;
-    document.body.insertAdjacentHTML('beforebegin', `<canvas style="display: none;" width="16" height="16" id="${id}"></canvas>`)
-
-    var assembler = document.getElementById(id);
-    var ctx = assembler.getContext("2d", {alpha: false});
-    ctx.filter = 'none';
-
-    //assembler.style.backgroundColor = `rgb(${arr[0][0]}, ${arr[0][1]}, ${arr[0][2]})`;
-
-    if (! (arr[0] === null)) {
-      let st = catalog.skintones[arr[0]]
-      ctx.fillStyle = `rgb(${st[0]}, ${st[1]}, ${st[2]})`;
-      ctx.fillRect(0, 0, 16, 16);
-    }
-
-    function pasteImage(src, loc) {
-      const img = new Image();
-      const imgPromise = new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-      });
-
-      img.src = src;
-
-      imgPromise.then(() => {
-        ctx.drawImage(img, loc.x, loc.y)
-      })
-
-      return imgPromise;
-    }
-
-    await pasteImage(`../site/assets/avatar/backgrounds/${catalog.backgrounds[arr[2]]}.png`, {x:0, y:0})
-
-    if (! (arr[3] === null)) {
-      await pasteImage(`../site/assets/avatar/shirts/${catalog.shirts[arr[3]]}.png`, {x:0, y:12})
-    }
-
-    if (! (arr[4] === null)) {
-      await pasteImage(`../site/assets/avatar/eyes/${catalog.eyes[arr[4]]}.png`, {x:3, y:6})
-    }
-
-    if (! (arr[5] === null)) {
-      let st = catalog.haircolors[arr[1]]
-      ctx.filter = `hue-rotate(${st[0]}deg) saturate(${st[1]}%) brightness(${st[2]}%)`;
-      await pasteImage(`../site/assets/avatar/hair/${catalog.hair[arr[5]]}.png`, {x:0, y:0})
+  if (Settings.Accessibility['Load Avatars']) {
+    try {
+      // [skin color rgb [r, g, b], hair color hsv [h, s, v], background id, shirt id, eye id, hair id, mouth id]
+  
+      let id = `avatarassembler-${canvasID}`
+      canvasID += 1;
+      document.body.insertAdjacentHTML('beforebegin', `<canvas style="display: none;" width="16" height="16" id="${id}"></canvas>`)
+  
+      var assembler = document.getElementById(id);
+      var ctx = assembler.getContext("2d", {alpha: false});
       ctx.filter = 'none';
-    }
-
-    if (! (arr[6] === null)) {
-      await pasteImage(`../site/assets/avatar/mouths/${catalog.mouths[arr[6]]}.png`, {x:5, y:9})
-    }
-
-    if (! (arr[8] === null)) {
-      let st = catalog.haircolors[arr[1]]
-      ctx.filter = `hue-rotate(${st[0]}deg) saturate(${st[1]}%) brightness(${st[2]}%)`;
-      await pasteImage(`../site/assets/avatar/facialhair/${catalog.facialhair[arr[8]]}.png`, {x:3, y:6})
-      ctx.filter = 'none';
-    }
-
-    if (arr[7].length > 0) {
-      for (a of arr[7]) {
-        await pasteImage(`../site/assets/avatar/accessories/${catalog.accessories[a]}.png`, {x:0, y:0})
+  
+      //assembler.style.backgroundColor = `rgb(${arr[0][0]}, ${arr[0][1]}, ${arr[0][2]})`;
+  
+      if (! (arr[0] === null)) {
+        let st = catalog.skintones[arr[0]]
+        ctx.fillStyle = `rgb(${st[0]}, ${st[1]}, ${st[2]})`;
+        ctx.fillRect(0, 0, 16, 16);
       }
+  
+      function pasteImage(src, loc) {
+        const img = new Image();
+        const imgPromise = new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+  
+        img.src = src;
+  
+        imgPromise.then(() => {
+          ctx.drawImage(img, loc.x, loc.y)
+        })
+  
+        return imgPromise;
+      }
+  
+      await pasteImage(`../site/assets/avatar/backgrounds/${catalog.backgrounds[arr[2]]}.png`, {x:0, y:0})
+  
+      if (! (arr[3] === null)) {
+        await pasteImage(`../site/assets/avatar/shirts/${catalog.shirts[arr[3]]}.png`, {x:0, y:12})
+      }
+  
+      if (! (arr[4] === null)) {
+        await pasteImage(`../site/assets/avatar/eyes/${catalog.eyes[arr[4]]}.png`, {x:3, y:6})
+      }
+  
+      if (! (arr[5] === null)) {
+        let st = catalog.haircolors[arr[1]]
+        ctx.filter = `hue-rotate(${st[0]}deg) saturate(${st[1]}%) brightness(${st[2]}%)`;
+        await pasteImage(`../site/assets/avatar/hair/${catalog.hair[arr[5]]}.png`, {x:0, y:0})
+        ctx.filter = 'none';
+      }
+  
+      if (! (arr[6] === null)) {
+        await pasteImage(`../site/assets/avatar/mouths/${catalog.mouths[arr[6]]}.png`, {x:5, y:9})
+      }
+  
+      if (! (arr[8] === null)) {
+        let st = catalog.haircolors[arr[1]]
+        ctx.filter = `hue-rotate(${st[0]}deg) saturate(${st[1]}%) brightness(${st[2]}%)`;
+        await pasteImage(`../site/assets/avatar/facialhair/${catalog.facialhair[arr[8]]}.png`, {x:3, y:6})
+        ctx.filter = 'none';
+      }
+  
+      if (arr[7].length > 0) {
+        for (a of arr[7]) {
+          await pasteImage(`../site/assets/avatar/accessories/${catalog.accessories[a]}.png`, {x:0, y:0})
+        }
+      }
+  
+      let bs4 = assembler.toDataURL('image/png');
+      assembler.parentNode.removeChild(assembler);
+  
+      return bs4;
+    } catch(err) {
+      console.log(err, arr)
+      return "../site/assets/icons/missing.png"
     }
-
-    let bs4 = assembler.toDataURL('image/png');
-    assembler.parentNode.removeChild(assembler);
-
-    return bs4;
-  } catch(err) {
-    console.log(err, arr)
+  } else {
     return "../site/assets/icons/missing.png"
   }
 }
@@ -346,7 +350,7 @@ async function unfriend() {
   }
 }
 
-if (Settings.fancyGFX) {
+if (Settings.Accessibility["Fancy Graphics"]) {
   document.body.insertAdjacentHTML('afterbegin', '<img id="loading-ind" style="position: absolute; bottom: 80px; left: 20px; height: 150px; max-width: 50%;" src="../site/assets/icons/loading.gif" alt="loading">')
 } else {
   document.body.insertAdjacentHTML('afterbegin', '<h1 id="loading-ind" style="position: absolute; bottom: 80px; left: 20px; font-size: 30px;">Loading...</h1>')
@@ -366,9 +370,10 @@ async function updateUnreads() {
     lastUnread.notifications = result.notifications;
 
     //pushNotif("You have new notifications");
-    var audio = new Audio('../site/assets/audio/pop-notification.mp3');
-    audio.play();
-    console.log('fd')
+    if (Settings.General['Notification Sounds']) {
+      var audio = new Audio('../site/assets/audio/pop-notification.mp3');
+      audio.play();
+    }
   }
 
   if (result.notifications > 0) {
@@ -402,8 +407,10 @@ async function updateUnreads() {
           lastUnread.rooms[i] = result.rooms[i];
       
           //pushNotif("You have new notifications");
-          var audio = new Audio('../site/assets/audio/pop-notification.mp3');
-          audio.play();
+          if (Settings.General['Notification Sounds']) {
+            var audio = new Audio('../site/assets/audio/pop-notification.mp3');
+            audio.play();
+          }
         }
   
         totalUnreads += result.rooms[i]
@@ -492,6 +499,10 @@ async function messageContextMenu(e, id, sender) {
       addNotif(`Unblocked @${sender}`)
     }
   };
+
+  document.getElementById('msgcopybtn').onclick = async function () {
+    navigator.clipboard.writeText(document.getElementById(`msg-inner-${id}`).innerHTML)
+  };
 }
 
 document.addEventListener('click', function() {document.getElementById('msgctxmenu').hidden = true});
@@ -504,7 +515,7 @@ board.addEventListener('scroll', function() {document.getElementById('msgctxmenu
 async function updateMessageBoard() {
   if (document.hasFocus()) {
     let requestedRoom = active_room;
-    let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'beg':latestRange});
+    let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'beg':latestRange, 'noprofanity':Settings.Safety["Profanity Filter"]});
     latestRange = result.range;
 
     let startingRange = result.startingRange;
@@ -524,157 +535,166 @@ async function updateMessageBoard() {
       var userDisplay;
   
       for (var msg of messages) {
-        pfp = await getAvatar(msg['user']);
+        let display = true;
+        if ((! Settings.General["Removed Annotations"]) && ['[ deleted ]', '[ removed ]', '[ removed by moderator ]', '[ deleted ]', '[ blocked ]'].includes(msg.text)) {
+          display = false
+        }
 
-        roles = await getRoles(msg['user']);
-        datetime = formatTime(msg.dt);
+        if (display) {
+          pfp = await getAvatar(msg['user']);
+
+          roles = await getRoles(msg['user']);
+          datetime = formatTime(msg.dt);
+    
+          userDisplay = msg['user'];
+          for (var r in roles) {
+            let role = roles[r];
+            userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" onclick="openMenu('badgeinfo', {badgename:'${role}'})" alt="roleicon" title="${role}" style="padding-left: 5px; height:15px;">`;
+          }
+          
+          if (datetime) {
+            userDisplay += ` • ${datetime.time}`;
+          }
   
-        userDisplay = msg['user'];
-        for (var r in roles) {
-          let role = roles[r];
-          userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" onclick="openMenu('badgeinfo', {badgename:'${role}'})" alt="roleicon" title="${role}" style="padding-left: 5px; height:15px;">`;
-        }
-        
-        if (datetime) {
-          userDisplay += ` • ${datetime.time}`;
-        }
-
-        if (lastdt && msg.dt) {
-          if (lastdt.day < msg.dt.day) {
-            boardcontent += `
-            <div style="padding-top:10px; padding-bottom:10px">
-              <div style="width: calc(100% - 40px); margin-left: 20px; height: 9px; border-bottom: 1px solid rgb(100, 100, 100); text-align: center">
-                <h1 style="font-size: 14px; color: rgb(150, 150, 150); font-weight:100; background-color: rgb(20, 20, 20); padding: 0 10px; display:inline">
-                  ${datetime.date}
-                </h1>
+          if (lastdt && msg.dt) {
+            if (lastdt.day < msg.dt.day) {
+              boardcontent += `
+              <div style="padding-top:10px; padding-bottom:10px">
+                <div style="width: calc(100% - 40px); margin-left: 20px; height: 9px; border-bottom: 1px solid rgb(100, 100, 100); text-align: center">
+                  <h1 style="font-size: 14px; color: rgb(150, 150, 150); font-weight:100; background-color: rgb(20, 20, 20); padding: 0 10px; display:inline">
+                    ${datetime.date}
+                  </h1>
+                </div>
               </div>
+              `;
+              lastauth = null;
+            }
+          }
+    
+          contents = msg['text'].replace(/<[^>]*>/g, '<script type="text/plain">' + "$&" + '</script>');
+          
+          if (Settings.Safety["Clickable links"]) {
+            contents = contents.replace(/(\bhttps?:\/\/\S+)/gi, (match) => {
+              if (Settings.Safety['Embed Files']) {
+                var filetype = match.slice(match.lastIndexOf("."));
+      
+                filetype = filetype.split("?")[0];
+        
+                if (filetype === ".mp4") {
+                  return `
+                  <br>
+        
+                  <video class="msg-content" controls>
+                    <source src="${match}" type="video/mp4">
+                    [ Your browser does not support the video element. ]
+                  </video>
+        
+                  `;
+        
+                } else if ([".mp3"].includes(filetype)) {
+                  return `
+                  <br>
+                  <audio controls>
+                    <source src="${match}" type="audio/mpeg">
+                  [ Your browser does not support the audio element. ]
+                  </audio>
+                  `;
+        
+                } else if ([".png", ".jpg", ".webp", ".gif", "svg"].includes(filetype)) {
+                  return `<br><img class="msg-content" src="${match}"></img>`;
+        
+                } else {
+                  return `<a target="_blank" rel="noopener noreferrer" href="${match}">${match}</a>`;
+                }
+              } else {
+                return `<a target="_blank" rel="noopener noreferrer" href="${match}">${match}</a>`;
+              }
+            });
+          }
+  
+          contents = contents.replace(/\B@\w+\b/g, (match) => {
+            return `<div onclick="openMenu('profile', {user:'${match.substring(1)}'})" class='mention' title="User Mention">${match}</div>`
+          });
+  
+          //FORMATTING
+          contents = contents.replace(/\*\*([^]*?)\*\*/g, (match) => {
+            return `<b>${match.slice(2).slice(0, -2)}</b>`
+          });
+          contents = contents.replace(/__(.*?)__/g, (match) => {
+            return `<u>${match.slice(2).slice(0, -2)}</u>`
+          });
+  
+          contents = contents.replace(/\*([^]*?)\*/g, (match) => {
+            return `<i>${match.slice(1).slice(0, -1)}</i>`
+          });
+          //=======
+    
+          if (msg['user'] === 'System') {
+            boardcontent += `
+            <div id="msg-inner-${startingRange}" class="message-container" style="background-color: rgba(100, 100, 215, 0.06); width:100%; text-align: center; color: white; font-family: Standard; padding: 5px;" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
+              ${contents}
             </div>
             `;
-            lastauth = null;
-          }
-        }
-  
-        contents = msg['text'].replace(/<[^>]*>/g, '<script type="text/plain">' + "$&" + '</script>');
-  
-        contents = contents.replace(/(\bhttps?:\/\/\S+)/gi, (match) => {
-          if (Settings.embedFiles) {
-            var filetype = match.slice(match.lastIndexOf("."));
-  
-            filetype = filetype.split("?")[0];
-    
-            if (filetype === ".mp4") {
-              return `
-              <br>
-    
-              <video class="msg-content" controls>
-                <source src="${match}" type="video/mp4">
-                [ Your browser does not support the video element. ]
-              </video>
-    
-              `;
-    
-            } else if ([".mp3"].includes(filetype)) {
-              return `
-              <br>
-              <audio controls>
-                <source src="${match}" type="audio/mpeg">
-              [ Your browser does not support the audio element. ]
-              </audio>
-              `;
-    
-            } else if ([".png", ".jpg", ".webp", ".gif", "svg"].includes(filetype)) {
-              return `<br><img class="msg-content" src="${match}"></img>`;
-    
-            } else {
-              return `<a target="_blank" rel="noopener noreferrer" href="${match}">${match}</a>`;
-            }
           } else {
-            return `<a target="_blank" rel="noopener noreferrer" href="${match}">${match}</a>`;
-          }
-        });
-
-        contents = contents.replace(/\B@\w+\b/g, (match) => {
-          return `<div onclick="openMenu('profile', {user:'${match.substring(1)}'})" class='mention' title="User Mention">${match}</div>`
-        });
-
-        //FORMATTING
-        contents = contents.replace(/\*\*([^]*?)\*\*/g, (match) => {
-          return `<b>${match.slice(2).slice(0, -2)}</b>`
-        });
-        contents = contents.replace(/__(.*?)__/g, (match) => {
-          return `<u>${match.slice(2).slice(0, -2)}</u>`
-        });
-
-        contents = contents.replace(/\*([^]*?)\*/g, (match) => {
-          return `<i>${match.slice(1).slice(0, -1)}</i>`
-        });
-        //=======
-  
-        if (msg['user'] === 'System') {
-          boardcontent += `
-          <div id="msg-inner-${startingRange}" class="message-container" style="background-color: rgba(100, 100, 215, 0.06); width:100%; text-align: center; color: white; font-family: Standard; padding: 5px;" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
-            ${contents}
-          </div>
-          `;
-        } else {
-          if (msg['user'] === username) {
-            if (msg['user'] === lastauth) {
-              boardcontent += `
-              <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
-                <div class='chat_bubble message-right' style='border-top-right-radius: 0'>
-                  <span id="msg-inner-${startingRange}" class='message-content'>${contents}</span>
-                </div>
-              </div>
-              `;
-            } else {
-              boardcontent += `
-
-              <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
-                <div class='chat_bubble message-right' style='border-bottom-right-radius: 0;'>
-                  <span id="msg-inner-${startingRange}" class='message-content'>${contents}</span>
-                </div>
-              </div>
-        
-              `;
-            }
-    
-    
-          } else {
-            if (msg['user'] === lastauth) {
-    
-              boardcontent += `
-    
-              <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
-                <div class='chat_bubble' style='border-top-left-radius: 0; margin-left: 69px; margin-top: -5px; margin-bottom: 10px;'>
-                    <span id="msg-inner-${startingRange}" class='message-content''>${contents}</span>
-                </div>
-              </div>
-    
-              `;
-              
-            } else {
-              boardcontent += `
-    
-              <div style="margin-bottom: 5px;" class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
-                <div style='display:inline-block; vertical-align: bottom;'>
-                  <img src='${pfp}' title="Open Profile" class="profilepic" onclick="openMenu('profile', {user:'${msg.user}'})">
-                </div>
-                
-                <div style='display:inline-block; width:80%'>
-                  <span class='message-user'>${userDisplay}</span>
-                  <div class='chat_bubble' style='border-bottom-left-radius: 0; max-width:100%;'>
+            if (msg['user'] === username) {
+              if (msg['user'] === lastauth) {
+                boardcontent += `
+                <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
+                  <div class='chat_bubble message-right' style='border-top-right-radius: 0'>
                     <span id="msg-inner-${startingRange}" class='message-content'>${contents}</span>
                   </div>
                 </div>
-              </div>
-    
-              `;
-            };
-          }
-        }
+                `;
+              } else {
+                boardcontent += `
   
-        lastauth = msg['user'];
-        lastdt = msg.dt;
+                <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
+                  <div class='chat_bubble message-right' style='border-bottom-right-radius: 0;'>
+                    <span id="msg-inner-${startingRange}" class='message-content'>${contents}</span>
+                  </div>
+                </div>
+          
+                `;
+              }
+      
+      
+            } else {
+              if (msg['user'] === lastauth) {
+      
+                boardcontent += `
+      
+                <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
+                  <div class='chat_bubble' style='border-top-left-radius: 0; margin-left: 69px; margin-top: -5px; margin-bottom: 10px;'>
+                      <span id="msg-inner-${startingRange}" class='message-content''>${contents}</span>
+                  </div>
+                </div>
+      
+                `;
+                
+              } else {
+                boardcontent += `
+      
+                <div style="margin-bottom: 5px;" class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
+                  <div style='display:inline-block; vertical-align: bottom;'>
+                    <img src='${pfp}' title="Open Profile" class="profilepic" onclick="openMenu('profile', {user:'${msg.user}'})">
+                  </div>
+                  
+                  <div style='display:inline-block; width:80%'>
+                    <span class='message-user'>${userDisplay}</span>
+                    <div class='chat_bubble' style='border-bottom-left-radius: 0; max-width:100%;'>
+                      <span id="msg-inner-${startingRange}" class='message-content'>${contents}</span>
+                    </div>
+                  </div>
+                </div>
+      
+                `;
+              };
+            }
+          }
+
+          lastauth = msg['user'];
+          lastdt = msg.dt;
+        }
 
         startingRange += 1
       }
@@ -687,9 +707,18 @@ async function updateMessageBoard() {
 
       prevheight = board.scrollHeight;
 
+      let addthing = false;
       while (board.childElementCount > 50) {
-        let firstElement = board.firstChild;
-        board.removeChild(firstElement);
+        board.removeChild(board.children[0]);
+        addthing = true
+      }
+
+      if (addthing) {
+        board.insertAdjacentHTML('afterbegin', `
+        <div style="text-align:center; width:100%">
+          <h1>No more messages here... (ノへ￣、)</h1>
+        </div>
+        `)
       }
 
 
@@ -732,7 +761,7 @@ async function updateMessageBoard() {
 async function joinRoom(r, public) {
   async function attempt(key) {
     let status = await DB({'type':'joinroom', 'room':r, 'user':username, 'pass':userkey, 'roomkey':key});
-    status = status.status;
+    console.log(status)
 
     if (status === true) {
       switch_room(r, r, "r");
@@ -835,6 +864,8 @@ async function populateSidebar(mode) {
   document.getElementById('room-display').innerHTML = ''
 
   if (mode === 'r') {
+    document.getElementById('rbtn').disabled = true;
+
     let result = await DB({'type':'getrooms', 'user':username, 'pass':userkey});
 
     let rooms = result['list'];
@@ -853,7 +884,11 @@ async function populateSidebar(mode) {
       document.getElementById('rbtn').style.backgroundColor = 'rgb(40, 40, 40)';
       document.getElementById('fbtn').style.backgroundColor = 'rgb(30, 30, 30)';
     }
+
+    document.getElementById('rbtn').disabled = false;
   } else {
+    document.getElementById('fbtn').disabled = true;
+
     let result = await DB({'type':'getfriends', 'user':username, 'pass':userkey});
 
     document.getElementById('addbtn').textContent = '+ Add friend';
@@ -910,6 +945,8 @@ async function populateSidebar(mode) {
       
       `;
     }
+
+    document.getElementById('fbtn').disabled = false;
   }
 }
 

@@ -1,4 +1,8 @@
-const TESTING_MODE = false;
+const TESTING_MODE = true;
+
+process.env.MONGO_KEY = 'lzGm0Yzjm6MCkOoV';
+process.env.CRYPT_KEY = 't+mq5RKjh3l0x4S5lYHdL/f5XK+gogAtnvZ2o5b5YXUNqIWa67uBE3Es31vbfmNX';
+process.env.CRYPT_KEY_DATABASE = 'om8lyF1vqcFLdvAwZruvdW1zjf5aSS4cFIRL6XyCUeBMEYrovh9Z6vB9P+Wb7WbW';
 
 async function run() {
   try {
@@ -34,10 +38,11 @@ async function run() {
       return result;
     }
 
-    //function profanityFilter(string) {
-    //  let profanities = require('./profanities.json');
-    //  return string.replace(new RegExp(profanities.list.join("|"), "gi"), match => "_".repeat(match.length));
-    //}
+    var filter = require('leo-profanity');
+
+    function profanityFilter(string) {
+      return filter.clean(string, "-");
+    }
   
     //=================================
   
@@ -127,8 +132,8 @@ async function run() {
       for (var r in dat.collections.rooms) {
         for (var m in dat.collections.rooms[r].messages) {
           if (dat.collections.rooms[r].messages[m].user === user) {
-            dat.collections.rooms[r].messages[m].user = '[deleted]';
-            dat.collections.rooms[r].messages[m].text = '[deleted]';
+            dat.collections.rooms[r].messages[m].user = '[ deleted ]';
+            dat.collections.rooms[r].messages[m].text = '[ deleted ]';
           }
         }
         dat.collections.rooms[r].messages = dat.collections.rooms[r].messages.filter(msg => msg.user !== user);
@@ -182,6 +187,10 @@ async function run() {
         dat.collections.users[user].notifs.push(
           contents
         )
+
+        while (dat.collections.users[user].notifs.length > 10) {
+          dat.collections.users[user].notifs.shift()
+        }
   
         dat.collections.users[user].unread.notifications += 1
       }
@@ -212,7 +221,10 @@ async function run() {
 
                   processed = processed.map(obj => {
                     if (blocked.includes(obj.user)) {
-                      return {'text':'[ Blocked ]', 'user':obj.user, 'dt': obj.dt};
+                      return {'text':'[ blocked ]', 'user':obj.user, 'dt': obj.dt};
+                    }
+                    if (parsed.noprofanity) {
+                      obj.text = profanityFilter(obj.text)
                     }
                     return obj;
                   });
@@ -285,10 +297,20 @@ async function run() {
               return {friends:getFriends(parsed.user), requests:dat.collections.users[parsed.user].requests};
             }
           };
+
+          if (parsed.type === 'getdata') {
+            if (authenticate(parsed.user, parsed.pass)) {
+              return dat.collections.users[parsed.user];
+            } else {
+              return "NOAUTH"
+            }
+          };
   
           if (parsed.type === 'getconsent') {
             if (authenticate(parsed.user, parsed.pass)) {
               return {userConsent:dat.collections.users[parsed.user].consent, latest:POLICY_VERSIONS};
+            } else {
+              return 'NOAUTH'
             }
           };
   
@@ -305,11 +327,19 @@ async function run() {
             if (authenticate(parsed.user, parsed.pass)) {
               console.log(`Client request of notifications "${parsed.user}"`);
               dat.collections.users[parsed.user].unread.notifications = 0;
+
+              let response = dat.collections.users[parsed.user].notifs;
+
+              if (parsed.noprofanity) {
+                for (r in response) {
+                  response[r] = profanityFilter(response[r])
+                }
+              }
         
               try {
-                return {'list':dat.collections.users[parsed.user].notifs};
+                return response;
               } catch {
-                return {'list':[]}
+                return []
               }
             }
           };
@@ -321,7 +351,7 @@ async function run() {
             try {
               return {'obj':dat.collections.users[parsed.targuser].avatar};
             } catch {
-              return {'obj':[9, null, 0, null, null, null, 8]}
+              return {'obj':["9","0","1",null,null,null,null,[],null]}
             }
           };
   
@@ -336,10 +366,15 @@ async function run() {
           };
       
           if (parsed.type === 'getdesc') {
-            console.log(`Client request of description "${parsed.targuser}"`)
+            console.log(`Client request of description "${parsed.targuser}"`);
+
+            let response = dat.collections.users[parsed.targuser].bio;
+            if (parsed.noprofanity) {
+              response = profanityFilter(response);
+            }
       
             try {
-              return {'contents':dat.collections.users[parsed.targuser].bio};
+              return {'contents':response};
             } catch {
               return {'contents':'Unavailable.'};
             }
@@ -711,7 +746,7 @@ async function run() {
                       }
         
                       if (ownedrooms < 4) {
-                        dat.collections.rooms[parsed['rname']] = {"messages":[], "members":[parsed.user], "type":"room", "banner":"./site/assets/icons/room_default.svg", "description":"This room has no description yet.", "password":parsed['roomkey'], "creator":parsed.user, "maxmembers":1000};
+                        dat.collections.rooms[parsed['rname']] = {"messages":[], "members":[parsed.user], "type":"room", "banner":"https://librerooms.org/site/assets/icons/room_default.svg", "description":"This room has no description yet.", "password":parsed['roomkey'], "creator":parsed.user, "maxmembers":1000};
                         console.log(`User ${parsed.user} created room "${parsed['rname']}"`)
                         return true
                       } else {
@@ -747,7 +782,7 @@ async function run() {
               wipeMessage(parsed.user);
               return true;
             } else {
-              return "noauth";
+              return "NOAUTH";
             }
           }
 
@@ -851,6 +886,10 @@ async function run() {
       res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
       next();
     });
+
+    //app.use((req, res) => {
+    //  res.status(404).sendFile(__dirname + '/public/404.html');
+    //});
   
     app.post('/server', (req, res) => {
       let body = '';

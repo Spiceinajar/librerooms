@@ -10,24 +10,32 @@
 
   <link rel="icon" href="../site/assets/icons/logo.png">
 
-  <link rel="stylesheet" href="../site/css/style.css">
+  <link rel="stylesheet" href="./site/css/home.css">
 </head>
 
-<body style="overflow: hidden; white-space: pre;">
-    <div style="position: absolute; left: 50%; top: 50%; transform: translateX(-50%) translateY(-50%); background-color: rgb(30, 30, 30); max-width: 90%; width: 800px; text-align: center; color: white; border-radius: .5cm;">
-        <img src="./site/assets/icons/banner.svg" style="max-width: 90%; width: 500px; margin-top: 50px;" alt="banner">
+<body>
+  <img src="./site/assets/icons/banner.svg" style="max-width: 90%; width: 600px; margin-top: 50px" alt="banner">
 
-        <h1 style="display: inline">
-          Our goal is to provide a free, community-centered and 
-          privacy-focused instant messaging app to the public.
+  <h1 style="font-family: Header; font-size: 40px;">Instant-messaging without the nonsense.</h1>
 
-           • We do not sell or distribute personal information.
-           • Our service is completely free and open-sourced.
-           • We are non-corperate and run by an independent developer.
-           • Our service is web-based and does not require downloads.
-        </h1>
+  <h1 style="white-space: pre-line; font-weight: 100; display: inline-block; width: 500px; line-height: 40px; font-size: 25px;">
+    • Open-sourced
+    • Ad-free
+    • Non-corperate
+    • Owned and run by an independent developer
+    • Does not sell or disribute personal information
+    • Donation supported
+  </h1>
 
-        <button onclick="window.location.href='./login'" style="background-color: rgb(100, 100, 215); height: 15mm; width: 40mm; font-size: 6mm; margin-bottom: 1in;">Join us!</button>
-    </div>
+  <br>
+
+  <button onclick="window.location.href='login'" class="mainButton">Join us</button>
+
+  <br>
+
+  <button onclick="window.location.href='login'" class="mainButton" style="background-color: rgb(50, 50, 50);">Learn more</button>
+
+  <script src="main-bg.js"></script>
+
 </body>
 </html>
