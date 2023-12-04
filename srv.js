@@ -174,10 +174,6 @@ async function run() {
       return f;
     }
 
-    for (i in dat.collections.users) {
-      dat.collections.users[i].avatar.push(0)
-    }
-
     function sysMessage(text, room) {
       dat.collections.rooms[room].messages.push({'text':text, 'user':'System', 'dt': getMDY()});
     }
@@ -216,22 +212,40 @@ async function run() {
   
                   dat.collections.users[parsed.user].unread.rooms[parsed.room] = fullLength;
 
-                  let processed = dat.collections.rooms[parsed.room].messages.slice(parsed['beg']);
+                  let processed = [];
                   let blocked = dat.collections.users[parsed.user].blocked;
 
-                  processed = processed.map(obj => {
-                    if (blocked.includes(obj.user)) {
-                      return {'text':'[ blocked ]', 'user':obj.user, 'dt': obj.dt};
+                  let range = parsed.latestID;
+                  if (range === null) {
+                    if (fullLength >= 50) {
+                      range = fullLength - 50;
+                    } else {
+                      range = 0
                     }
+                  } else {
+                    range += 1
+                  }
+
+                  let relId = 0
+                  for (m of dat.collections.rooms[parsed.room].messages.slice(range)) {
+                    let message = m;
+                    if (blocked.includes(m.user)) {
+                      message.text = '[ blocked ]'
+                    }
+
                     if (parsed.noprofanity) {
-                      obj.text = profanityFilter(obj.text)
+                      message.text = profanityFilter(message.text)
                     }
-                    return obj;
-                  });
+
+                    message.id = dat.collections.rooms[parsed.room].messages.indexOf(message);
+                    console.log((fullLength - range) + relId, dat.collections.rooms[parsed.room].messages.indexOf(message))
+
+                    processed.push(message);
+                    relId += 1;
+                  }
   
                   return {
-                    contents:processed, 
-                    range:fullLength, startingRange:fullLength + parsed.beg
+                    contents:processed
                   };
                 }
               }
@@ -798,6 +812,8 @@ async function run() {
               } else if (roles.includes('Moderator') || roles.includes('Administrator')) {
                 dat.collections.rooms[parsed.room].messages[parsed.messId].text = '[ removed by moderator ]'
                 return true;
+              } else {
+                return "noauth";
               }
             } else {
               return "noauth";

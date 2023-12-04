@@ -45,7 +45,7 @@ function updateAnim() {
           spot.rad = Math.random() * 10;
         }
 
-        drawCircle(ctx, spot.x, spot.y, spot.rad, `rgb(100, 100, ${100 + (spot.rad*10)})`, `rgb(100, 100, ${100 + (spot.rad*10)})`, 1);
+        drawCircle(ctx, spot.x, spot.y, spot.rad, `rgb(100, 100, ${100 + (spot.rad*10)})`, `rgb(120, 100, ${100 + (spot.rad*10)})`, 1);
     };
 };
 

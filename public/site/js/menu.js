@@ -34,7 +34,7 @@ async function openMenu(m_id, args={}) {
     <div id="center_div" class="center_div" style="max-width:100%; max-height:100%;">
       <div id="menu-bg" style="width:850px; height:500px;">
         <div style='width=100%; text-align: right; margin-bottom:-20px'>
-          <button id="xbtn" title="Close" style="width:25px; height:25px; background-color: red; border-radius:5">X</button>
+          <button id="xbtn" class="highlighted" title="Close">X</button>
         </div>
       </div>
     </div>
@@ -106,7 +106,7 @@ async function openMenu(m_id, args={}) {
       let userDisplay = args.user;
       for (var r in roles) {
         let role = roles[r];
-        userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" alt="roleicon" onclick="openMenu('badgeinfo', {badgename:'${role}'})" title="${role}" style="padding-left: 1vh; height:100%;">`;
+        userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" alt="roleicon" title="${role}" style="padding-left: 1vh; height:100%;">`;
       }
 
       document.getElementById('profile-avatar-display').src = await getAvatar(args.user);
@@ -135,7 +135,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.2.2</h1>
+      <h1 style="font-size:10px;">Version: 1.2.3</h1>
     </div>
     `);
 
@@ -150,7 +150,7 @@ async function openMenu(m_id, args={}) {
         <span>
           <label class="switch">
             <input id="settings-${category}-${option}" class="switch-input" type="checkbox">
-            <span class="switch-slider"></span>
+            <span class="switch-slider highlighted"></span>
           </label>
 
           <h1 class="settings-option-text">${option}</h1>
@@ -380,59 +380,6 @@ async function openMenu(m_id, args={}) {
     lastUnread = 0;
   }
 
-  if (m_id === "badgeinfo") {
-    let descriptions = {
-      AlphaTester:`
-      This badge was given to members who joined during LibreRooms' 
-      alpha development stage. This badge is no longer obtainable.
-      `,
-
-      BetaTester:`
-      This badge was given to members who joined during LibreRooms' 
-      beta development stage. This badge is no longer obtainable.
-      `,
-
-      Founder:`
-      This badge was given to the founder of LibreRooms.
-      `,
-
-      Administrator:`
-      This badge is given to LibreRooms admins.
-      `,
-
-      Moderator:`
-      This badge is given to LibreRooms moderators.
-      `,
-
-      Contributor:`
-      This badge is given to Members who have directly contributed
-      to LibreRooms.
-      `,
-
-      Developer:`
-      This badge is given to Members who have directly and repeatedly
-      contributed to LibreRooms' source code repeatedly.
-      `,
-
-      Donor:`
-      This badge is given to Members who have financially supported
-      LibreRooms.
-      `,
-
-      System:`
-      This badge is given to automated LibreRooms accounts. This badge 
-      is completely unobtainable.
-      `,
-    }
-
-    document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
-    <img src="../site/assets/icons/roles/${args.badgename}.svg" alt="roleicon" title="${args.badgename}" style="height:100px;">
-    <h1>${args.badgename} Badge</h1>
-
-    <span style="background-color: rgb(10, 10, 10); font-weight:100; color:white; border-radius:5px; margin:5px; width:300px; max-width:90%; display: inline-block; font-family: Standard; font-size: 22px">${descriptions[args.badgename]}</span>
-    `);
-  }
-
   if (m_id === "rconfig") {
     document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
     <h1 style="font-size:40px">Configure Room</h1>
@@ -500,6 +447,12 @@ async function openMenu(m_id, args={}) {
         </span>
 
         <div class="catalog-splitter">
+          Eye color
+        </div>
+        <span id="catalog-9" class="catalog-row">
+        </span>
+
+        <div class="catalog-splitter">
           Background
         </div>
         <span id="catalog-2" class="catalog-row">
@@ -551,7 +504,7 @@ async function openMenu(m_id, args={}) {
 
     updateDisplay();
 
-    let categories = ["skintones", "haircolors", "backgrounds", "shirts", "eyes", "hair", "mouths", "accessories", "facialhair"];
+    let categories = ["skintones", "haircolors", "backgrounds", "shirts", "eyes", "hair", "mouths", "accessories", "facialhair", "eyecolors"];
     for (c in categories) {
       let catId = c;
       let catName = categories[catId];
@@ -580,50 +533,63 @@ async function openMenu(m_id, args={}) {
 
       //======================
 
-      for (item in catalog[catName]) {
-        if (catId > 1) {
+      (async () => { //for some reason this was stopping the above code from running until it was done despite this already being in an async function (and being below it) so i just put it in another async function. whatever works i guess
+        for (item in catalog[catName]) {
           document.getElementById(`catalog-${catId}`).insertAdjacentHTML('beforeend', `
           <div class="catalog-item" id="catalog-selector" title="${catalog[catName][item]}">
-            <img class="catalog-item-img"  src="../site/assets/avatar/${catName}/${catalog[catName][item]}.png" alt="item">
+            <img class="catalog-item-img" id="catalog-item-thumb-${item}-${catName}" alt="item">
           <div>
           `);
-        } else {
-          document.getElementById(`catalog-${catId}`).insertAdjacentHTML('beforeend', `
-          <div class="catalog-item" id="catalog-selector" width: 70px; height: 70px" title="color">
-          <div>
-          `);
-
-          let col;
-          if (catId === '1') {
-            let st = catalog.haircolors[item];
-            document.getElementById(`catalog-selector`).style.backgroundColor = 'red';
-            document.getElementById(`catalog-selector`).style.filter = `hue-rotate(${st[0]}deg) saturate(${st[1]}%) brightness(${st[2]}%)`;
-          } else {
-            let st = catalog.skintones[item];
-            col = `rgb(${st[0]}, ${st[1]}, ${st[2]})`;
-            document.getElementById(`catalog-selector`).style.backgroundColor = col;
-          }
-        }
   
-        document.getElementById(`catalog-selector`).onclick = function() {
-          let category = this.id.split('-')[0];
-          let itemid = this.id.split('-')[1];
-
-          if (category === '7') {
-            if (avObj[category].includes(itemid)) {
-              avObj[category] = avObj[category].filter(item => item !== itemid);;
+          //if (['1', '0', '9'].includes(catId)) {
+          //  let col;
+          //  if (catId === '1') {
+          //    document.getElementById(`catalog-item-thumb-${item}-${catName}`).src = await loadAvatar([9, item, 1, null, null, 1, null, [], null, 0])
+          //  } else if (catId === '9') {
+          //    document.getElementById(`catalog-item-thumb-${item}-${catName}`).src = await loadAvatar([9, 0, 1, null, 4, null, null, [], null, item])
+          //  } else {
+          //    console.log(document.getElementById(`catalog-item-img`))
+          //
+          //    document.getElementById(`catalog-item-thumb-${item}-${catName}`).src = await loadAvatar([item, 0, 1, null, null, null, null, [], null, 0])
+          //  }
+          //} else {
+          //  document.getElementById(`catalog-item-thumb-${item}-${catName}`).src = `../site/assets/avatar/${catName}/${catalog[catName][item]}.png`
+          //}
+  
+          document.getElementById(`catalog-selector`).onclick = function() {
+            let category = this.id.split('-')[0];
+            let itemid = this.id.split('-')[1];
+  
+            if (category === '7') {
+              if (avObj[category].includes(itemid)) {
+                avObj[category] = avObj[category].filter(item => item !== itemid);;
+              } else {
+                avObj[category].push(itemid);
+              }
             } else {
-              avObj[category].push(itemid);
+              avObj[category] = itemid;
             }
-          } else {
-            avObj[category] = itemid;
+            
+            updateDisplay()
           }
-          
-          updateDisplay()
-        }
+  
+          document.getElementById(`catalog-selector`).id = `${catId}-${item}`;
 
-        document.getElementById(`catalog-selector`).id = `${catId}-${item}`;
-      }
+
+          displayObj = [9, 0, 2, null, null, null, null, [], null, 0];
+          displayObj[catId] = item;
+  
+          if (catId === '1') {
+            displayObj[5] = 1
+          } else if (catId === '9') {
+            displayObj[4] = 4
+          } else if (catId === '7') {
+            displayObj[7] = [item]
+          }
+  
+          document.getElementById(`catalog-item-thumb-${item}-${catName}`).src = await loadAvatar(displayObj);
+        }
+      })();
     }
 
     document.getElementById('xbtn').onclick = async function() {
@@ -720,14 +686,14 @@ async function Warn(header, content, closeterm="Ok", onclose=null) {
 async function closeFriendMenu() {
   document.getElementById('addbtn').textContent = '+ Add friend';
   document.getElementById('addbtn').onclick = addFriendMenu;
-  document.getElementById('room-display').style.height = 'calc(100% - 130px)';
+  document.getElementById('room-display').style.height = 'calc(100% - 124px)';
   document.getElementById('addfrmenu').remove();
 }
 
 async function addFriendMenu() {
   document.getElementById('addbtn').textContent = 'Cancel';
   document.getElementById('addbtn').onclick = closeFriendMenu;
-  document.getElementById('room-display').style.height = 'calc(100% - 240px)';
+  document.getElementById('room-display').style.height = 'calc(100% - 230px)';
   document.getElementById('room-display').insertAdjacentHTML('afterend', `
   
   <div id="addfrmenu" style="height:100px; text-align:center;">
@@ -782,7 +748,7 @@ function updateNotifs() {
   let delay = 10;
   if (notifQueue.length > 0) {
     document.body.insertAdjacentHTML("beforebegin", `
-    <div id="notif" class="notif">
+    <div id="notif" class="notif highlighted">
       <h1 style="margin-top:20px">${notifQueue[0]}</h1>
     </div>
     `);

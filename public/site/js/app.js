@@ -3,6 +3,9 @@ var userkey = '';
 var personalpfp = '../site/assets/icons/missing.png'
 var active_room = ''
 
+const board = document.getElementById("msgs");
+var prevheight = board.scrollHeight;
+
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 try {
@@ -57,18 +60,30 @@ let catalog = {
   ],
 
   "haircolors":[
-    [25, 100, 15],
-    [70, 35, 300],
-    [25, 80, 300],
-    [0, 0, 300],
-    [0, 0, 10],
-    [10, 100, 25],
-    [215, 100, 100],
-    [115, 100, 100],
-    [0, 100, 100],
-    [30, 100, 100],
-    [275, 100, 100],
-    [295, 100, 100],
+    [38, 16, 0],
+    [240, 255, 166],
+    [255, 136, 51],
+    [255, 255, 255],
+    [10, 10, 10],
+    [64, 11, 0],
+    [0, 106, 255],
+    [21, 255, 0],
+    [255, 50, 50],
+    [255, 128, 0],
+    [149, 0, 255],
+    [234, 100, 255],
+  ],
+
+  "eyecolors":[
+    [5, 5, 5],
+    [42, 50, 192],
+    [46, 19, 0],
+    [42, 192, 50],
+    [192, 42, 50],
+    [192, 42, 192],
+    [192, 42, 192],
+    [50, 192, 192],
+    [50, 192, 100],
   ],
 
   "backgrounds":[
@@ -80,6 +95,8 @@ let catalog = {
       "bricks 02",
       "sun rays",
       "colors",
+      "white void",
+      "snow",
   ],
 
   "shirts":[
@@ -99,6 +116,22 @@ let catalog = {
       "green tee",
       "space suit",
       "connor's jacket",
+      "black jacket",
+      "white jacket",
+      "red jacket",
+      "green jacket",
+      "blue jacket",
+      "pink jacket",
+      "yellow jacket",
+      "tank top",
+      "red dress",
+      "blue dress",
+      "black dress",
+      "white dress",
+      "strapless white dress",
+      "strapless black dress",
+      "fancy red robe",
+      "fancy yellow robe",
   ],
 
   "eyes":[
@@ -121,6 +154,10 @@ let catalog = {
       "mohawk",
       "receding",
       "medium",
+      "bun",
+      "pig tails",
+      "side part",
+      "draped long hair",
   ],
 
   "facialhair":[
@@ -128,6 +165,10 @@ let catalog = {
       "long beard",
       "mustache",
       "horseshoe mustache",
+      "goatee",
+      "thick goatee",
+      "pointy mustache",
+      "skinny long beard",
   ],
 
   "mouths":[
@@ -156,8 +197,8 @@ let catalog = {
     "spice's monitor head",
     "beanie",
     "crown",
-    "king's robe",
-    "queen's robe",
+    "spooky pumpkin",
+    "holiday hat",
     "earrings 1",
     "earrings 2",
     "black durag",
@@ -179,22 +220,45 @@ let catalog = {
     "white cap",
     "black cap",
     "ushanka",
+    "pumpkin",
 ],
 }
 
 let canvasID = 0;
 async function loadAvatar(arr) {
+  canvasID += 1;
   if (Settings.Accessibility['Load Avatars']) {
     try {
       // [skin color rgb [r, g, b], hair color hsv [h, s, v], background id, shirt id, eye id, hair id, mouth id]
   
       let id = `avatarassembler-${canvasID}`
-      canvasID += 1;
       document.body.insertAdjacentHTML('beforebegin', `<canvas style="display: none;" width="16" height="16" id="${id}"></canvas>`)
   
       var assembler = document.getElementById(id);
-      var ctx = assembler.getContext("2d", {alpha: false});
-      ctx.filter = 'none';
+      var ctx = assembler.getContext("2d", {alpha: false, willReadFrequently: true});
+
+      function replaceColor(canvas, oldColor, newColor) {
+        // Get the 2D rendering context
+        var ctx = canvas.getContext("2d");
+
+        // Get the image data of the canvas
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var data = imageData.data;
+
+        // Loop through the pixel data
+        for (var i = 0; i < data.length; i += 4) {
+            // Check if the current pixel matches the oldColor
+            if (data[i] === oldColor[0] && data[i + 1] === oldColor[1] && data[i + 2] === oldColor[2]) {
+                // Replace the old color with the new color
+                data[i] = newColor[0];
+                data[i + 1] = newColor[1];
+                data[i + 2] = newColor[2];
+            }
+        }
+
+        // Put the modified image data back onto the canvas
+        ctx.putImageData(imageData, 0, 0);
+    }
   
       //assembler.style.backgroundColor = `rgb(${arr[0][0]}, ${arr[0][1]}, ${arr[0][2]})`;
   
@@ -231,10 +295,7 @@ async function loadAvatar(arr) {
       }
   
       if (! (arr[5] === null)) {
-        let st = catalog.haircolors[arr[1]]
-        ctx.filter = `hue-rotate(${st[0]}deg) saturate(${st[1]}%) brightness(${st[2]}%)`;
         await pasteImage(`../site/assets/avatar/hair/${catalog.hair[arr[5]]}.png`, {x:0, y:0})
-        ctx.filter = 'none';
       }
   
       if (! (arr[6] === null)) {
@@ -242,10 +303,7 @@ async function loadAvatar(arr) {
       }
   
       if (! (arr[8] === null)) {
-        let st = catalog.haircolors[arr[1]]
-        ctx.filter = `hue-rotate(${st[0]}deg) saturate(${st[1]}%) brightness(${st[2]}%)`;
         await pasteImage(`../site/assets/avatar/facialhair/${catalog.facialhair[arr[8]]}.png`, {x:3, y:6})
-        ctx.filter = 'none';
       }
   
       if (arr[7].length > 0) {
@@ -253,7 +311,13 @@ async function loadAvatar(arr) {
           await pasteImage(`../site/assets/avatar/accessories/${catalog.accessories[a]}.png`, {x:0, y:0})
         }
       }
-  
+
+      let haircolor = catalog.haircolors[arr[1]];
+      let eyecolor = catalog.eyecolors[arr[9]];
+
+      replaceColor(assembler, [169, 89, 231], haircolor); //123, 12, 69 is the color of the hair in the source images, i just have to make sure none of the other items contain this color
+      replaceColor(assembler, [46, 42, 39], eyecolor);
+
       let bs4 = assembler.toDataURL('image/png');
       assembler.parentNode.removeChild(assembler);
   
@@ -391,11 +455,10 @@ async function updateUnreads() {
     }
 
     if (! watching) {
-      console.log(i)
       let button = document.getElementById("room-button-" + i);
   
       if (button) {
-        document.getElementById("room-button-" + i).style.color = 'white';
+        document.getElementById("unread-ind-" + i).style.backgroundColor = 'white';
       }
   
       if (i.includes('/')) { //since DMs are the only kind of room that have the slash symbol (formatted as user1/user2), this plays the pop sound IF the new unread message is from a DM
@@ -427,12 +490,9 @@ async function updateUnreads() {
 
 setInterval(updateUnreads, 5000)
 
-let latestRange = -50;
+let latestMsgId = null;
 var lastauth = null;
 var lastdt = null;
-
-const board = document.getElementById("msgs");
-var prevheight = board.scrollHeight;
 
 
 
@@ -442,14 +502,25 @@ async function messageContextMenu(e, id, sender) {
   let roles = await getRoles(username);
   let personallySent = (sender === username)
 
+  let ctxmenu = document.getElementById('msgctxmenu');
+
   e.preventDefault();
-  document.getElementById('msgctxmenu').hidden = false;
-  document.getElementById('msgctxmenu').style.top = mouse.y + 'px';
-  document.getElementById('msgctxmenu').style.left = mouse.x + 'px';
+  ctxmenu.hidden = false;
 
+  ctxmenu.style.top = mouse.y + 'px';
+  ctxmenu.style.left = mouse.x + 'px';
+
+
+  if (ctxmenu.getBoundingClientRect().bottom > window.innerHeight) {
+    ctxmenu.style.top = (mouse.y-150) + 'px';
+  }
+
+  if (ctxmenu.getBoundingClientRect().right > board.clientWidth) {
+    ctxmenu.style.left = (mouse.x-100) + 'px';
+  }
+
+  let delbtn = document.getElementById('msgdelbtn');
   if (roles.includes('Administrator') || roles.includes('Moderator') || personallySent) {
-    let delbtn = document.getElementById('msgdelbtn');
-
     delbtn.display = 'inline-block';
   
     delbtn.onclick = async function () {
@@ -515,11 +586,7 @@ board.addEventListener('scroll', function() {document.getElementById('msgctxmenu
 async function updateMessageBoard() {
   if (document.hasFocus()) {
     let requestedRoom = active_room;
-    let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'beg':latestRange, 'noprofanity':Settings.Safety["Profanity Filter"]});
-    latestRange = result.range;
-
-    let startingRange = result.startingRange;
-    console.log(startingRange)
+    let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'latestID':latestMsgId, 'noprofanity':Settings.Safety["Profanity Filter"]});
 
     let boardcontent = ``;
   
@@ -540,16 +607,18 @@ async function updateMessageBoard() {
           display = false
         }
 
-        if (display) {
-          pfp = await getAvatar(msg['user']);
+        msgId = msg.id;
 
-          roles = await getRoles(msg['user']);
+        if (display) {
+          pfp = await getAvatar(msg.user);
+
+          roles = await getRoles(msg.user);
           datetime = formatTime(msg.dt);
     
-          userDisplay = msg['user'];
+          userDisplay = msg.user;
           for (var r in roles) {
             let role = roles[r];
-            userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" onclick="openMenu('badgeinfo', {badgename:'${role}'})" alt="roleicon" title="${role}" style="padding-left: 5px; height:15px;">`;
+            userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" alt="roleicon" title="${role}" style="padding-left: 5px; height:15px;">`;
           }
           
           if (datetime) {
@@ -571,7 +640,7 @@ async function updateMessageBoard() {
             }
           }
     
-          contents = msg['text'].replace(/<[^>]*>/g, '<script type="text/plain">' + "$&" + '</script>');
+          contents = msg.text.replace(/<[^>]*>/g, '<script type="text/plain">' + "$&" + '</script>');
           
           if (Settings.Safety["Clickable links"]) {
             contents = contents.replace(/(\bhttps?:\/\/\S+)/gi, (match) => {
@@ -631,7 +700,7 @@ async function updateMessageBoard() {
     
           if (msg['user'] === 'System') {
             boardcontent += `
-            <div id="msg-inner-${startingRange}" class="message-container" style="background-color: rgba(100, 100, 215, 0.06); width:100%; text-align: center; color: white; font-family: Standard; padding: 5px;" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
+            <div id="msg-inner-${msgId}" class="message-container" style="background-color: rgba(100, 100, 215, 0.06); width:100%; text-align: center; color: white; font-family: Standard; padding: 5px;" oncontextmenu="messageContextMenu(event, ${msgId}, '${msg.user}')">
               ${contents}
             </div>
             `;
@@ -639,18 +708,18 @@ async function updateMessageBoard() {
             if (msg['user'] === username) {
               if (msg['user'] === lastauth) {
                 boardcontent += `
-                <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
-                  <div class='chat_bubble message-right' style='border-top-right-radius: 0'>
-                    <span id="msg-inner-${startingRange}" class='message-content'>${contents}</span>
+                <div class="message-container" oncontextmenu="messageContextMenu(event, ${msgId}, '${msg.user}')">
+                  <div class='chat_bubble message-right highlighted' style='border-top-right-radius: 0'>
+                    <span id="msg-inner-${msgId}" class='message-content'>${contents}</span>
                   </div>
                 </div>
                 `;
               } else {
                 boardcontent += `
   
-                <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
-                  <div class='chat_bubble message-right' style='border-bottom-right-radius: 0;'>
-                    <span id="msg-inner-${startingRange}" class='message-content'>${contents}</span>
+                <div class="message-container" oncontextmenu="messageContextMenu(event, ${msgId}, '${msg.user}')">
+                  <div class='chat_bubble message-right highlighted' style='border-bottom-right-radius: 0;'>
+                    <span id="msg-inner-${msgId}" class='message-content'>${contents}</span>
                   </div>
                 </div>
           
@@ -663,9 +732,9 @@ async function updateMessageBoard() {
       
                 boardcontent += `
       
-                <div class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
-                  <div class='chat_bubble' style='border-top-left-radius: 0; margin-left: 69px; margin-top: -5px; margin-bottom: 10px;'>
-                      <span id="msg-inner-${startingRange}" class='message-content''>${contents}</span>
+                <div class="message-container" oncontextmenu="messageContextMenu(event, ${msgId}, '${msg.user}')">
+                  <div class='chat_bubble highlighted' style='border-top-left-radius: 0; margin-left: 69px; margin-top: -5px; margin-bottom: 10px;'>
+                      <span id="msg-inner-${msgId}" class='message-content''>${contents}</span>
                   </div>
                 </div>
       
@@ -674,15 +743,15 @@ async function updateMessageBoard() {
               } else {
                 boardcontent += `
       
-                <div style="margin-bottom: 5px;" class="message-container" oncontextmenu="messageContextMenu(event, ${startingRange}, '${msg.user}')">
+                <div style="margin-bottom: 5px;" class="message-container" oncontextmenu="messageContextMenu(event, ${msgId}, '${msg.user}')">
                   <div style='display:inline-block; vertical-align: bottom;'>
                     <img src='${pfp}' title="Open Profile" class="profilepic" onclick="openMenu('profile', {user:'${msg.user}'})">
                   </div>
                   
                   <div style='display:inline-block; width:80%'>
                     <span class='message-user'>${userDisplay}</span>
-                    <div class='chat_bubble' style='border-bottom-left-radius: 0; max-width:100%;'>
-                      <span id="msg-inner-${startingRange}" class='message-content'>${contents}</span>
+                    <div class='chat_bubble highlighted' style='border-bottom-left-radius: 0; max-width:100%;'>
+                      <span id="msg-inner-${msgId}" class='message-content'>${contents}</span>
                     </div>
                   </div>
                 </div>
@@ -696,7 +765,7 @@ async function updateMessageBoard() {
           lastdt = msg.dt;
         }
 
-        startingRange += 1
+        latestMsgId = msgId;
       }
   
       document.getElementById('msgs').insertAdjacentHTML('beforeend', boardcontent);
@@ -711,12 +780,14 @@ async function updateMessageBoard() {
       while (board.childElementCount > 50) {
         board.removeChild(board.children[0]);
         addthing = true
+        console.log(board.childElementCount)
       }
+      console.log(board.childElementCount)
 
       if (addthing) {
         board.insertAdjacentHTML('afterbegin', `
         <div style="text-align:center; width:100%">
-          <h1>No more messages here... (ノへ￣、)</h1>
+          <h1>The above messages are hidden so your device doesn't lag... you're welcome. :)</h1>
         </div>
         `)
       }
@@ -797,7 +868,7 @@ function switch_room(room, displayname, mode, created=false) {
 
   let button = document.getElementById("room-button-" + room);
   if (button) {
-    document.getElementById("room-button-" + room).style.color = 'grey';
+    document.getElementById("unread-ind-" + room).style.backgroundColor = 'transparent';
   }
 
   if (active_room !== room) {
@@ -807,7 +878,7 @@ function switch_room(room, displayname, mode, created=false) {
     document.getElementById('msgs').innerHTML = ``;
     lastauth = null;
     lastdt = null;
-    latestRange = -50;
+    latestMsgId = null;
   
     if (mode === "r") {
       if (created === true) {
@@ -872,17 +943,13 @@ async function populateSidebar(mode) {
 
     for (var room in rooms) {
       document.getElementById('room-display').innerHTML += `
-      
-      <div style='width:100%; height:60px; padding:5px;'>
-        <button id="room-button-${rooms[room].name}" onclick='switch_room("${rooms[room].name}", "${rooms[room].name}", "r", ${rooms[room].created});' style='width:calc(100% - 10px); height:100%; font-size: 20px; color:grey;'>${rooms[room].name}</button>
-      </div>
-      
+      <button id="room-button-${rooms[room].name}" onclick='switch_room("${rooms[room].name}", "${rooms[room].name}", "r", ${rooms[room].created});' class="room-button"><span class="unread-ind" id="unread-ind-${rooms[room].name}"></span> ${rooms[room].name}</button>
       `;
 
       document.getElementById('addbtn').textContent = '+ Add room';
       document.getElementById('addbtn').onclick = function() {openMenu("room-browser")};
-      document.getElementById('rbtn').style.backgroundColor = 'rgb(40, 40, 40)';
-      document.getElementById('fbtn').style.backgroundColor = 'rgb(30, 30, 30)';
+      document.getElementById('rbtn').style.backgroundColor = 'rgb(50, 50, 50)';
+      document.getElementById('fbtn').style.backgroundColor = 'rgb(40, 40, 40)';
     }
 
     document.getElementById('rbtn').disabled = false;
@@ -893,8 +960,8 @@ async function populateSidebar(mode) {
 
     document.getElementById('addbtn').textContent = '+ Add friend';
     document.getElementById('addbtn').onclick = function() {addFriendMenu()};
-    document.getElementById('fbtn').style.backgroundColor = 'rgb(40, 40, 40)';
-    document.getElementById('rbtn').style.backgroundColor = 'rgb(30, 30, 30)';
+    document.getElementById('fbtn').style.backgroundColor = 'rgb(50, 50, 50)';
+    document.getElementById('rbtn').style.backgroundColor = 'rgb(40, 40, 40)';
 
     let friends = result.friends;
     let requests = result.requests;
@@ -904,11 +971,7 @@ async function populateSidebar(mode) {
       c = `${c[0]}/${c[1]}`;
 
       document.getElementById('room-display').innerHTML += `
-      
-      <div style='width:100%; height:30px; padding:5px;'>
-        <button id="room-button-${c}" onclick='switch_room("${c}", "@${friends[friend]}", "f");' style='width:calc(100% - 10px); height:100%; font-size: 20px; color:grey;'>@${friends[friend]}</button>
-      </div>
-      
+      <button id="room-button-${c}" onclick='switch_room("${c}", "@${friends[friend]}", "f");' class="room-button" style="height:30px">@${friends[friend]}</button>
       `;
     }
 
@@ -1006,29 +1069,29 @@ function toggleSidebar() {
 
 
 async function reportWindowSize() {
-  if (mobileLayout) {
-    sidebarBool = false;
-
-    document.getElementById('personal-username-display').style.display = "none";
-    document.getElementById('personal-profile-btn').style.backgroundColor = "rgba(0, 0, 0, 0)";
-
-    document.getElementById('buttonmenu-btn').style.display = 'inline';
-    document.getElementById('settingsbtn').style.display = 'none';
-    document.getElementById('reportbtn').style.display = 'none';
-    document.getElementById('mailbtn').style.display = 'none';
-  } else {
-    sidebarBool = true;
-
-    document.getElementById('personal-username-display').style.display = "inline-block";
-    document.getElementById('personal-profile-btn').style.backgroundColor = "rgb(30, 30, 30)";
-
-    document.getElementById('buttonmenu-btn').style.display = 'none';
-    document.getElementById('settingsbtn').style.display = 'inline';
-    document.getElementById('reportbtn').style.display = 'inline';
-    document.getElementById('mailbtn').style.display = 'inline';
+  if (! (document.getElementById('requser') === document.activeElement)) {
+    if (mobileLayout) {
+      sidebarBool = false;
+  
+      document.getElementById('personal-username-display').style.display = "none";
+  
+      document.getElementById('buttonmenu-btn').style.display = 'inline';
+      document.getElementById('settingsbtn').style.display = 'none';
+      document.getElementById('reportbtn').style.display = 'none';
+      document.getElementById('mailbtn').style.display = 'none';
+    } else {
+      sidebarBool = true;
+  
+      document.getElementById('personal-username-display').style.display = "inline-block";
+  
+      document.getElementById('buttonmenu-btn').style.display = 'none';
+      document.getElementById('settingsbtn').style.display = 'inline';
+      document.getElementById('reportbtn').style.display = 'inline';
+      document.getElementById('mailbtn').style.display = 'inline';
+    }
+  
+    toggleSidebar()
   }
-
-  toggleSidebar()
 }
 
 
