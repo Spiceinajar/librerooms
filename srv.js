@@ -1,9 +1,5 @@
 const TESTING_MODE = false;
 
-process.env.MONGO_KEY = 'lzGm0Yzjm6MCkOoV';
-process.env.CRYPT_KEY = 't+mq5RKjh3l0x4S5lYHdL/f5XK+gogAtnvZ2o5b5YXUNqIWa67uBE3Es31vbfmNX';
-process.env.CRYPT_KEY_DATABASE = 'om8lyF1vqcFLdvAwZruvdW1zjf5aSS4cFIRL6XyCUeBMEYrovh9Z6vB9P+Wb7WbW';
-
 async function run() {
   try {
     const netCfg = require('./netconfig.json');
@@ -176,6 +172,10 @@ async function run() {
       }
   
       return f;
+    }
+
+    for (i in dat.collections.users) {
+      dat.collections.users[i].avatar.push(0)
     }
 
     function sysMessage(text, room) {
@@ -351,7 +351,7 @@ async function run() {
             try {
               return {'obj':dat.collections.users[parsed.targuser].avatar};
             } catch {
-              return {'obj':["9","0","1",null,null,null,null,[],null]}
+              return {'obj':[9,0,1,null,null,null,null,[],null,0]}
             }
           };
   
@@ -472,7 +472,7 @@ async function run() {
               if (checkChars(parsed.user)) {
                 if (parsed.user.length > 2) {
                   if (parsed.user.length < 16) {
-                    dat.collections.users[parsed.user] = {'key':sha256(parsed.pass), 'avatar':[9, 0, 0, null, null, null, 8, [], null], 'bio':'This user has not yet created a description.', 'roles':[], 'notifs':[], 'unread':{notifications:0, rooms:{}}, 'requests':[], 'joindate':getMDY(false), 'blocked':[], 'consent':POLICY_VERSIONS};
+                    dat.collections.users[parsed.user] = {'key':sha256(parsed.pass), 'avatar':[9, 0, 0, null, null, null, 8, [], null, 0], 'bio':'This user has not yet created a description.', 'roles':[], 'notifs':[], 'unread':{notifications:0, rooms:{}}, 'requests':[], 'joindate':getMDY(false), 'blocked':[], 'consent':POLICY_VERSIONS};
                     notify(parsed.user, `Welcome to LibreRooms, ${parsed.user}! If you need help, you can see our guide at https://librerooms.org/guide/. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`);
                     dat.collections.rooms["Main room"].members.push(parsed.user);
                     dat.collections.rooms["updates"].members.push(parsed.user);
