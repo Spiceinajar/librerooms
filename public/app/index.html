@@ -7,7 +7,7 @@
 
   <title>LibreRooms</title>
 
-  <link rel="icon" href="../site/assets/icons/logo.png">
+  <link rel="icon" href="../branding/logo.svg">
 
   <link rel="stylesheet" href="../site/css/style.css">
 
@@ -41,7 +41,7 @@
 
     <div id="header_bar">
       <div style="padding-left: 10px;">
-        <img id="buttonmenu-btn" class="header-btn" onclick="openMenu('buttonmenu')" src="../site/assets/icons/bt-menu.svg" alt="buttonmenu" title="Menu" style="margin-left: 10px;">
+        <img id="buttonmenu-btn" class="header-btn" onclick="openMenu('buttonmenu')" src="../site/assets/icons/bt-menu.svg" alt="buttonmenu" title="Menu">
         <img id="settingsbtn" class="header-btn" onclick="openMenu('settings')" src="../site/assets/icons/cog.svg" alt="settings" title="Settings">
         <img id="reportbtn" class="header-btn" onclick="openMenu('report')" src="../site/assets/icons/report.svg" alt="report" title="Report">
         <img id="leavebtn" class="header-btn" onclick="" src="" alt="leave">
@@ -64,7 +64,7 @@
     </div>
 
     <span id="bottom_bar">
-      <textarea id="msgtxt" cols="1" rows="1"></textarea>
+      <textarea placeholder="Type a message..." id="msgtxt" cols="1" rows="1"></textarea>
       <img id="sendbtn" onclick="sendMessage()" alt="send" src="../site/assets/icons/send.svg" title="Send">
       <br>
     </span>
@@ -74,8 +74,8 @@
 
         <button title="Toggle Sidebar" id="sidebartoggler" onclick="toggleSidebar()">←</button>
 
-        <button id="rbtn" class="sidebar-header-button">Rooms</button>
-        <button id="fbtn" class="sidebar-header-button">Friends</button>
+        <button id="rbtn" class="sidebar-header-button"><img class="header-button-icon" src="../site/assets/icons/room.svg"> Rooms</button>
+        <button id="fbtn" class="sidebar-header-button"><img class="header-button-icon" src="../site/assets/icons/direct.svg"> Friends</button>
       </div>
 
       <div id="room-display">
@@ -86,9 +86,9 @@
       </div>
     </div>
     
-    <script src="../site/js/menu.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="../site/js/frontend.js"></script>
+    <script src="../site/js/menu.js"></script>
     <script src="../site/js/app.js"></script>
 </body>
 </html>

@@ -1,44 +1,4 @@
-function getCookie(name) {
-  var cookies = document.cookie.split('; ');
-  for (var c in cookies) {
-    let cookie = cookies[c];
-
-    if (cookie.split('=')[0] === name) {
-      return cookie.split('=')[1];
-    }
-  }
-  return '';
-}
-
 const apiUrl = `${window.location.origin}:${window.location.port}/server`;
-
-var Settings = getCookie('LRSettings');
-
-try {
-  Settings = JSON.parse(Settings)
-} catch {
-  Settings = {
-    "Safety":{
-      "Profanity Filter":false,
-      "Embed Files":false,
-      "Clickable links":true,
-      "Room Banners":true,
-    },
-  
-    "General":{
-      "Notification Sounds":true,
-      "Removed Annotations":false,
-    },
-  
-    "Accessibility":{
-      "Fancy Graphics":true,
-      "Load Avatars":true,
-    }
-  };
-}
-
-//=====================================================
-
 
 let key = 't+mq5RKjh3l0x4S5lYHdL/f5XK+gogAtnvZ2o5b5YXUNqIWa67uBE3Es31vbfmNX';
 

@@ -4,8 +4,8 @@ async function run() {
   try {
     const netCfg = require('./netconfig.json');
 
-    const POLICY_VERSIONS = [1, 2, 1];
-    // privacy, tos, cookies
+    const POLICY_VERSIONS = [2, 3];
+    // privacy, tos
 
     //=================================
 
@@ -110,17 +110,27 @@ async function run() {
       setInterval(function(){mongoOperation('setDB').catch(console.dir)}, 3600000); //Makes backup every hour (3600000 ms)
     }
   
-    function authenticate(usern, key, keyless=false) {
+    function authenticate(usern, sessID) {
       if (usern in dat.collections.users) {
-        if ((dat.collections.users[usern].key === sha256(key)) || keyless) {
-          if (! keyless) {
-            console.log(`Successful authentication attempt to '${parsed.user}'`);
-          }
+        if ((sessions[usern] === sessID)) {
+          console.log(`Successful authentication attempt to '${parsed.user}'`);
           return true;
         }
       }
   
       console.log(`Failed authentication attempt to '${parsed.user}'`);
+      return false;
+    }
+
+    function passAuthenticate(usern, key) {
+      if (usern in dat.collections.users) {
+        if ((dat.collections.users[usern].key === sha256(key))) {
+          console.log(`Successful password authentication attempt to '${parsed.user}'`);
+          return true;
+        }
+      }
+  
+      console.log(`Failed password authentication attempt to '${parsed.user}'`);
       return false;
     }
   
@@ -191,6 +201,36 @@ async function run() {
         dat.collections.users[user].unread.notifications += 1
       }
     }
+
+
+
+
+
+    //for (let user in dat.collections.users) {
+    //  dat.collections.users[user].settings = 'DEFAULT';
+    //  dat.collections.users[user].consent.pop();
+    //}
+
+
+
+
+
+    let sessions = [];
+    function makeID(user) {
+      let id = '';
+      let takenIds = Object.values(sessions);
+      let chars = [...'qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM'];
+
+      while ((takenIds.includes(id)) || (id === '')) {
+        id = '';
+        for(let i = 0; i < 16; i++){
+          id += chars[Math.floor(Math.random()*chars.length)]
+        }
+      }
+
+      sessions[user] = id;
+      return id
+    }
   
     function processRequest(str) {
       try {
@@ -203,9 +243,27 @@ async function run() {
   
     
         if (! l) {
+          if (parsed.type === 'requestSession') {
+            if (parsed.user in dat.collections.users) {
+                if ((dat.collections.users[parsed.user].key === sha256(parsed.key))) {
+                  console.log(`Granted session for '${parsed.user}'`);
+                  return makeID(parsed.user)
+                }
+              }
+          
+              console.log(`Denied session for '${parsed.user}'`);
+              return 'denied';
+            };
+
+          if (parsed.type === 'endSession') {
+            if (authenticate(parsed.user, parsed.sessId)) {
+              delete sessions[parsed.user]
+            }
+          };
+
           if (parsed.type === 'getmsg') {
             if (parsed.room in dat.collections.rooms) {
-              if (authenticate(parsed.user, parsed.pass)) {
+              if (authenticate(parsed.user, parsed.sessID)) {
                 if (dat.collections.rooms[parsed.room].members.includes(parsed.user)) {
                   //console.log(`Client request of "${parsed.room}" contents`)
                   let fullLength = dat.collections.rooms[parsed.room].messages.length;
@@ -238,7 +296,6 @@ async function run() {
                     }
 
                     message.id = dat.collections.rooms[parsed.room].messages.indexOf(message);
-                    console.log((fullLength - range) + relId, dat.collections.rooms[parsed.room].messages.indexOf(message))
 
                     processed.push(message);
                     relId += 1;
@@ -289,7 +346,7 @@ async function run() {
           };
       
           if (parsed.type === 'getrooms') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               let r = [];
       
               for (var i in dat.collections.rooms) {
@@ -307,21 +364,37 @@ async function run() {
       
       
           if (parsed.type === 'getfriends') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               return {friends:getFriends(parsed.user), requests:dat.collections.users[parsed.user].requests};
             }
           };
 
           if (parsed.type === 'getdata') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (passAuthenticate(parsed.user, parsed.pass)) {
               return dat.collections.users[parsed.user];
+            } else {
+              return "NOAUTH"
+            }
+          };
+
+          if (parsed.type === 'getsettings') {
+            if (authenticate(parsed.user, parsed.sessID)) {
+              return dat.collections.users[parsed.user].settings;
+            } else {
+              return "NOAUTH"
+            }
+          };
+
+          if (parsed.type === 'updsettings') {
+            if (authenticate(parsed.user, parsed.sessID)) {
+              return dat.collections.users[parsed.user].settings = parsed.value;
             } else {
               return "NOAUTH"
             }
           };
   
           if (parsed.type === 'getconsent') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               return {userConsent:dat.collections.users[parsed.user].consent, latest:POLICY_VERSIONS};
             } else {
               return 'NOAUTH'
@@ -329,7 +402,7 @@ async function run() {
           };
   
           if (parsed.type === 'updateconsent') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               dat.collections.users[parsed.user].consent = POLICY_VERSIONS
               return true
             } else {
@@ -338,7 +411,7 @@ async function run() {
           };
       
           if (parsed.type === 'getnotifs') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               console.log(`Client request of notifications "${parsed.user}"`);
               dat.collections.users[parsed.user].unread.notifications = 0;
 
@@ -366,16 +439,6 @@ async function run() {
               return {'obj':dat.collections.users[parsed.targuser].avatar};
             } catch {
               return {'obj':[9,0,1,null,null,null,null,[],null,0]}
-            }
-          };
-  
-          if (parsed.type === 'getuserinfo') {
-            console.log(`Client request of info "${parsed.targuser}"`)
-      
-            try {
-              return {'obj':dat.collections.users};
-            } catch {
-              return {'obj':'badauth'}
             }
           };
       
@@ -416,7 +479,7 @@ async function run() {
       
       
           if (parsed.type === 'updateavatar') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               dat.collections.users[parsed.user].avatar = parsed['obj'];
               console.log(`"${parsed.user}" updated their avatar.`);
               return true
@@ -426,7 +489,7 @@ async function run() {
           };
       
           if (parsed.type === 'changebio') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               dat.collections.users[parsed.user].bio = parsed.contents;
               console.log(`"${parsed.user}" changed their user description.`)
               return true
@@ -437,22 +500,26 @@ async function run() {
       
       
           if (parsed.type === 'chkusr') {
-            return authenticate(parsed.user, parsed.pass);
+            return authenticate(parsed.user, parsed.sessID);
           };
 
 
           if (parsed.type === 'blockusr') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               if (parsed.user === parsed.targuser) {
                 return 'SELFBLOCK'
               } else {
                 if (dat.collections.users[parsed.user].blocked.includes(parsed.targuser)) {
                   return 'ALREADYBLOCKED'
                 } else {
-                  dat.collections.users[parsed.user].blocked.push(parsed.targuser);
-
-                  console.log(`@${parsed.user} has blocked @${parsed.targuser}.`)
-                  return true
+                  if (dat.collections.users[parsed.targuser].roles.includes("Moderator") || dat.collections.users[parsed.targuser].roles.includes("Administrator")) {
+                    return 'STAFFBLOCK'
+                  } else {
+                    dat.collections.users[parsed.user].blocked.push(parsed.targuser);
+  
+                    console.log(`@${parsed.user} has blocked @${parsed.targuser}.`)
+                    return true
+                  }
                 }
               }
             } else {
@@ -462,7 +529,7 @@ async function run() {
 
           
           if (parsed.type === 'unblockusr') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               let blocked = dat.collections.users[parsed.user].blocked;
 
               var index = blocked.indexOf(parsed.targuser);
@@ -480,13 +547,13 @@ async function run() {
           };
   
           if (parsed.type === 'cr_user') {
-            if (authenticate(parsed.user, null, true)) {
+            if (parsed.user in dat.collections.users) {
               return {"status":"exists"};
             } else {
               if (checkChars(parsed.user)) {
                 if (parsed.user.length > 2) {
                   if (parsed.user.length < 16) {
-                    dat.collections.users[parsed.user] = {'key':sha256(parsed.pass), 'avatar':[9, 0, 0, null, null, null, 8, [], null, 0], 'bio':'This user has not yet created a description.', 'roles':[], 'notifs':[], 'unread':{notifications:0, rooms:{}}, 'requests':[], 'joindate':getMDY(false), 'blocked':[], 'consent':POLICY_VERSIONS};
+                    dat.collections.users[parsed.user] = {'key':sha256(parsed.key), 'avatar':[9, 0, 0, null, null, null, 8, [], null, 0], 'bio':'This user has not yet created a description.', 'roles':[], 'notifs':[], 'unread':{notifications:0, rooms:{}}, 'requests':[], 'joindate':getMDY(false), 'blocked':[], 'consent':POLICY_VERSIONS, 'settings':'DEFAULT'};
                     notify(parsed.user, `Welcome to LibreRooms, ${parsed.user}! If you need help, you can see our guide at https://librerooms.org/guide/. If you want to suggest a change or report an issue or bug, please share feedback with the developer using the report menu.`);
                     dat.collections.rooms["Main room"].members.push(parsed.user);
                     dat.collections.rooms["updates"].members.push(parsed.user);
@@ -520,7 +587,7 @@ async function run() {
             }
             
             if (! spam) {
-              if (authenticate(parsed.user, parsed.pass)) {
+              if (authenticate(parsed.user, parsed.sessID)) {
                 if (parsed.contents.length < 500) {
                   dat.collections.rooms[parsed.room].messages.push({'text':parsed.contents, 'user':parsed.user, 'dt': getMDY()});
                   console.log(`[${parsed.room}] ${parsed.user}: "${parsed.contents}"`)
@@ -666,16 +733,6 @@ async function run() {
                           sysMessage('Database backup has been made.', parsed.room)
                         }
                       }
-    
-                      if (cmd === "BLOCK") { 
-                        dat.collections.users[args.user].blocked.push(args.user);
-                        sysMessage(`Blocked @${args.user}.`, parsed.room)
-                      }
-  
-                      if (cmd === "UNBLOCK") { 
-                        dat.collections.users[args.user].blocked.filter(e => e !== args.user);
-                        sysMessage(`Unblocked @${args.user}.`, parsed.room)
-                      }
       
                     } catch(err) {
                       sysMessage(`Command failed: ${err.stack}.`, parsed.room)
@@ -693,7 +750,7 @@ async function run() {
           }
       
           if (parsed.type === 'joinroom') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               if (! dat.collections.rooms[parsed.room].members.includes(parsed.user)) {
                 if (dat.collections.rooms[parsed.room]['password'] === parsed['roomkey']) {
                   if ((dat.collections.rooms[parsed.room].members.length < dat.collections.rooms[parsed.room].maxmembers) | (dat.collections.rooms[parsed.room].maxmembers === "inf")) {
@@ -716,7 +773,7 @@ async function run() {
           }
       
           if (parsed.type === 'leaveroom') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               if (parsed.room == "Main room") {
                 return "cannotleave"
               } else {
@@ -732,7 +789,7 @@ async function run() {
           }
       
           if (parsed.type === 'removefriend') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               let dm = [parsed.user, parsed.targ].sort();
               delete dat.collections.rooms[`${dm[0]}/${dm[1]}`];
               console.log(`User ${parsed.user} unfriended ${parsed.targ}`)
@@ -743,7 +800,7 @@ async function run() {
           }
       
           if (parsed.type === 'cr_room') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               if (parsed['rname'].length < 21) {
                 if (parsed['rname'].length > 3) {
                   if (checkChars(parsed['rname'])) {
@@ -782,17 +839,17 @@ async function run() {
           }
       
           if (parsed.type === 'delaccount') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (passAuthenticate(parsed.user, parsed.pass)) {
               wipeMessage(parsed.user);
               delete dat.collections.users[parsed.user];
               return true;
             } else {
-              return "noauth";
+              return "NOAUTH";
             }
           }
       
           if (parsed.type === 'delmsg') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (passAuthenticate(parsed.user, parsed.pass)) {
               wipeMessage(parsed.user);
               return true;
             } else {
@@ -801,7 +858,7 @@ async function run() {
           }
 
           if (parsed.type === 'remove-message') {
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               let roles = dat.collections.users[parsed.user].roles;
 
               console.log(dat.collections.rooms[parsed.room].messages[parsed.messId], parsed.messId)
@@ -824,7 +881,7 @@ async function run() {
             if (parsed.user === parsed.recipient) {
               return 'SELFREQUEST'
             } else {
-              if (authenticate(parsed.user, parsed.pass)) {
+              if (authenticate(parsed.user, parsed.sessID)) {
                 if (parsed.recipient in dat.collections.users) {
                   if (getFriends(parsed.user).includes(parsed.recipient)) {
                     return "ALREADYADDED"
@@ -859,7 +916,7 @@ async function run() {
                 dat.collections.users[parsed.user].requests.indexOf(parsed.recipient), 1)
             }
       
-            if (authenticate(parsed.user, parsed.pass)) {
+            if (authenticate(parsed.user, parsed.sessID)) {
               if (dat.collections.users[parsed.user].requests.includes(parsed.recipient)) {
                 if (parsed.mode === "accept") {
                   if (getFriends(parsed.user).includes(parsed.recipient)) {

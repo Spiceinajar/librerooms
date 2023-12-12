@@ -2,64 +2,75 @@ function setMenu(x) {
   if (x === 'login') {
     document.getElementById('login-bg').innerHTML = `
     <div class="login-sub-bg">
-      <h1 class="login-header">Log in</h1>
-      <br>
+      <form id="loginForm">
+        <h1 class="login-header">Log in</h1>
+        <br>
 
-      <h1 class="login-label">Username:</h1>
-      <br>
-      <textarea id="user_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" class="login-textarea"></textarea>
-      <br>
+        <h1 class="login-label">Username:</h1>
+        <br>
+        <input class="textinput" type="text" id="username" name="username" required autocomplete="username">
+        <br>
 
-      <h1 class="login-label">Password:</h1>
-      <br>
-      <textarea id="pass_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" class="login-textarea" style="font-family: Block;"></textarea>
+        <h1 class="login-label">Password:</h1>
+        <br>
+        <input class="textinput" type="password" id="password" name="password" required autocomplete="current-password">
 
-      <br>
+        <br>
 
-      <button id="logbtn" class="login-btn">Log in</button>
+        <button type="submit" id="logbtn" class="login-btn">Log in</button>
 
-      <br>
+        <br>
 
-      <button id="cr" class="login-btn login-button-small">Create account</button>
+        <button id="cr" class="login-btn login-button-small">Create account</button>
+      </form>
     </div>
     `
 
-    document.getElementById('logbtn').onclick = function () { login(document.getElementById('user_input').value, document.getElementById('pass_input').value); };
-    document.getElementById('cr').onclick = function () { setMenu('signup') };
+    //document.getElementById('loginForm').onsubmit = function (e) {e.preventDefault(); login(document.getElementById('username').value, document.getElementById('password').value); };
 
-    document.getElementById('user_input').value = decrypt(getCookie('user'));
-    document.getElementById('pass_input').value = decrypt(getCookie('key'));
+    document.getElementById("loginForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      login(document.getElementById('username').value, document.getElementById('password').value)
+    });
+    document.getElementById('cr').onclick = function () { setMenu('signup') };
   } else {
     document.getElementById('login-bg').innerHTML = `
     <div class="login-sub-bg">
-      <h1 class="login-header">Sign up</h1>
-      <br>
+      <form id="crForm" autocomplete="off">
+        <h1 class="login-header">Sign up</h1>
+        <br>
 
-      <h1 class="login-label">Username:</h1>
-      <br>
-      <textarea id="user_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" class="login-textarea"></textarea>
-      <br>
+        <h1 class="login-label">Username:</h1>
+        <br>
+        <input class="textinput" type="text" id="signup-username" name="username" required autocomplete="off">
+        <br>
 
-      <h1 class="login-label">Password:</h1>
-      <br>
-      <textarea id="pass_input" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" class="login-textarea" style="font-family: Block;"></textarea>
+        <h1 class="login-label">Password:</h1>
+        <br>
+        <input class="textinput" style="font-family: Block" id="signup-password" name="password" required autocomplete="off">
 
-      <div style="padding:1vh">
-        <input type="checkbox" id="agreement">
-        <label class="agreement-label" for="agreement">I agree to the <a href="../policies/terms.html" target="_blank" rel="noopener noreferrer" class="claim-link">Terms of Service</a>, <br> <a href="../policies/cookies.html" target="_blank" rel="noopener noreferrer" class="claim-link">Cookie Policy</a> and <a href="../policies/privacy.html" target="_blank" rel="noopener noreferrer" class="claim-link">Privacy Policy</a>.</label>
-      </div>
+        <div style="padding:1vh">
+          <label class="standardText"><input id="agreement" type="checkbox" name="terms" required> I agree to the <a href="../policies/terms.html" target="_blank" rel="noopener noreferrer" class="claim-link">Terms of Service</a> <br> and <a href="../policies/privacy.html" target="_blank" rel="noopener noreferrer" class="claim-link">Privacy Policy</a>.</label>
+        </div>
 
-      <br>
+        <br>
 
-      <button id="crbtn" class="login-btn" style="margin-top:0">Create account</button>
+        <button style="margin-top: 0" type="submit" id="crbtn" class="login-btn">Create account</button>
 
-      <br>
+        <br>
 
-      <button id="backbtn" class="login-btn login-button-small">back</button>
+        <button id="backbtn" class="login-btn login-button-small">Back</button>
+      </form>
     </div>
   `
 
-  document.getElementById('crbtn').onclick = function () { cr_account(document.getElementById('user_input').value, document.getElementById('pass_input').value); };
+  document.getElementById("crForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    cr_account(document.getElementById('signup-username').value, document.getElementById('signup-password').value)
+  });
+
   document.getElementById('backbtn').onclick = function () { setMenu('login') };
   }
 }
@@ -70,15 +81,14 @@ setMenu('login')
 async function login(user, key) {
   document.getElementById('logbtn').textContent = '...';
 
-  var result = await DB({type:'chkusr', user:user, pass:key})
+  var result = await DB({type:'requestSession', user:user, key:key});
+  var sett = await DB({'type':'getsettings', 'user':user, 'sessID':result});
 
-  if (result) {
-    const expirationDate = new Date();
-    expirationDate.setMonth(expirationDate.getMonth() + 1);
-    
-    sessionStorage.setItem('LRUserLogin', encrypt(`{"user":"${user}", "key":"${key}"}`), sameSite='lax');
-    document.cookie = `user=${encrypt(user)}; samesite=strict; expires=${expirationDate.toUTCString()}; Secure`;
-    document.cookie = `key=${encrypt(key)}; samesite=strict; expires=${expirationDate.toUTCString()}; Secure`;
+  if (! (result === 'denied')) {
+    sessionStorage.clear();
+    sessionStorage.setItem('LRSessionID', result, sameSite='lax');
+    sessionStorage.setItem('LRSettings', JSON.stringify(sett), sameSite='lax');
+    sessionStorage.setItem('LRUser', user, sameSite='lax');
 
     location.href = '../app';
   } else {
@@ -92,7 +102,7 @@ async function login(user, key) {
 async function cr_account(user, key) {
   if (document.getElementById('agreement').checked) {
     document.getElementById('crbtn').textContent = '...';
-    var result = await DB({type:'cr_user', user:user, pass:key})
+    var result = await DB({type:'cr_user', user:user, key:key})
     result = result.status;
   
     if (result === true) {

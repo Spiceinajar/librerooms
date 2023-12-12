@@ -4,7 +4,7 @@ html {
 }
 
 .highlighted {
-    background-color: rgb(120, 100, 215);
+    background-color: rgb(130, 90, 240);
 }
 
 @font-face {
@@ -44,11 +44,28 @@ html {
     text-align: center;
 }
 
+.hpHeader {
+    font-family: Header; 
+    font-size: 30px;
+}
+
+.hpSubHeader {
+    font-family: Standard; 
+    font-size: 25px;
+}
+
+.hpText {
+    font-family: Standard; 
+    font-size: 20px;
+    font-weight: 100;
+}
+
 .room-button {
-    width:calc(100% - 10px); 
+    width:100%; 
     height:60px; 
-    font-size: 20px; 
-    margin: 5px;
+    font-size: 20px;
+    border-radius: 0;
+    border-bottom: rgb(40, 40, 40) 1px solid;
 }
 
 .agreement-label {
@@ -108,7 +125,12 @@ body {
 #room-display {
     overflow-y: auto; 
     overflow-x: hidden; 
-    height: calc(100% - 124px);
+    width: calc(100% - 10px); 
+    height: calc(100% - 130px);
+    margin:5px; 
+    margin-bottom: 0;
+    background-color: rgb(30, 30, 30); 
+    border-radius: 10px
 }
 
 #room_name_display {
@@ -197,6 +219,12 @@ body {
     margin:5px;
 }
 
+.header-button-icon {
+    display: inline;
+    vertical-align: middle;
+    height: 25px;
+}
+
 #menu-bg {
     border-radius: 10px; 
     background-color: rgb(25, 25, 25); 
@@ -231,7 +259,7 @@ body {
     display: flex;
 }
 
-h1 {
+h1, .standardText {
     color:white;
     font-family: "Standard";
     font-size: 18px;
@@ -251,7 +279,7 @@ button:hover{
     background-color: rgb(35, 35, 35);
 }
 
-textarea {
+textarea, .textinput {
     resize: none;
     background-color: rgb(30, 30, 30);
     color:white;
@@ -260,6 +288,15 @@ textarea {
     height: 25px;
     font-size: 20px;
     outline: none;
+}
+
+.textinput {
+    width: 40vh; 
+    max-width:100%; 
+    height: 3.5vh; 
+    border-radius: 1vh; 
+    font-size: 3vh;
+    overflow: hidden;
 }
 
 
@@ -468,7 +505,8 @@ textarea {
     height: 10px; 
     border-radius: 5px; 
     position: relative; 
-    display: inline-block
+    display: inline-block;
+    margin: 5px;
 }
 
 
@@ -543,6 +581,11 @@ text-decoration: underline;
     font-size: 30px;
 }
 
+.document-disclaimer {
+    font-weight: 100;
+    color: rgb(200, 200, 200);
+}
+
 
 
 
@@ -560,15 +603,6 @@ text-decoration: underline;
 .login-sub-bg {
     padding:6vh; 
     max-width:100%;
-}
-
-.login-textarea {
-    width: 40vh; 
-    max-width:100%; 
-    height: 3.5vh; 
-    border-radius: 1vh; 
-    font-size: 3vh;
-    overflow: hidden;
 }
 
 .login-btn {

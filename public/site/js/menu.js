@@ -91,7 +91,7 @@ async function openMenu(m_id, args={}) {
       userDesc.readOnly = false;
 
       userDesc.addEventListener("blur", async function() {
-        await DB({'type':'changebio', 'contents':userDesc.value, 'user':username, 'pass':userkey});
+        await DB({'type':'changebio', 'contents':userDesc.value, 'user':username, sessID:sessID});
         addNotif('Revision saved.');
       });
     }
@@ -135,7 +135,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.2.3</h1>
+      <h1 style="font-size:10px;">Version: 1.2.4</h1>
     </div>
     `);
 
@@ -180,7 +180,7 @@ async function openMenu(m_id, args={}) {
         if (result === true) {
           location.href = '../login';
         } else {
-          if (result === "noauth") {
+          if (result === "NOAUTH") {
             addNotif("Password is incorrect")
           } else {
             addNotif("Operation failed")
@@ -223,10 +223,7 @@ async function openMenu(m_id, args={}) {
     document.getElementById('logbtn').onclick = function () {location.href = '../login'};
 
     document.getElementById('xbtn').onclick = async function() {
-      const expirationDate = new Date();
-      expirationDate.setFullYear(9999);
-
-      document.cookie = `LRSettings=${JSON.stringify(Settings)}; samesite=lax; expires=${expirationDate.toUTCString()};`;
+      await DB({'type':'updsettings', 'user':username, 'sessID':sessID, 'value':Settings})
 
       addNotif("Settings updated."); 
       closeMenu();
@@ -240,7 +237,7 @@ async function openMenu(m_id, args={}) {
     document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
     <h1 style="font-size:20px; display: inline; vertical-align: top;">Room Browser</h1>
 
-    <textarea name="" id="room_search" style="width: 100px; height:30px; padding:0; display: inline; vertical-align: top; border-radius: 5px; border-top-right-radius:0; border-bottom-right-radius:0; margin-right: -5px; background-color: rgb(40, 40, 40); margin-left: 20px"></textarea>
+    <textarea name="" placeholder="Search..." id="room_search" style="width: 100px; height:30px; padding:0; display: inline; vertical-align: top; border-radius: 5px; border-top-right-radius:0; border-bottom-right-radius:0; margin-right: -5px; background-color: rgb(40, 40, 40); margin-left: 20px"></textarea>
     <button id="room-search-button" style="height:30px; width:30px; border-radius: 5px; border-top-left-radius:0; border-bottom-left-radius:0; background-color: rgb(100, 100, 215);">🔎︎</button>
 
     <hr class="softhr">
@@ -337,7 +334,7 @@ async function openMenu(m_id, args={}) {
     `);
 
     document.getElementById("crbtn").onclick = async function() {
-      let res = await DB({'type':'cr_room', 'rname':document.getElementById("room_name_input").value, 'roomkey':document.getElementById("room_pass_input").value, 'user':username, 'pass':userkey});
+      let res = await DB({'type':'cr_room', 'rname':document.getElementById("room_name_input").value, 'roomkey':document.getElementById("room_pass_input").value, 'user':username, sessID:sessID});
 
       if (res === true) {
         addNotif("Room created");
@@ -366,7 +363,7 @@ async function openMenu(m_id, args={}) {
     </div>
     `);
 
-    let result = await DB({'type':'getnotifs', 'user':username, 'pass':userkey, 'noprofanity':Settings.Safety["Profanity Filter"]})
+    let result = await DB({'type':'getnotifs', 'user':username, sessID:sessID, 'noprofanity':Settings.Safety["Profanity Filter"]})
 
     for (var n in result) {
       let notif = result[n];
@@ -593,7 +590,7 @@ async function openMenu(m_id, args={}) {
     }
 
     document.getElementById('xbtn').onclick = async function() {
-      await DB({'type':'updateavatar', 'obj':avObj, 'user':username, 'pass':userkey});
+      await DB({'type':'updateavatar', 'obj':avObj, 'user':username, sessID:sessID});
       //delete cachedAvs[username];
       addNotif("Avatar updated."); 
       closeMenu();
@@ -684,32 +681,33 @@ async function Warn(header, content, closeterm="Ok", onclose=null) {
 
 
 async function closeFriendMenu() {
-  document.getElementById('addbtn').textContent = '+ Add friend';
-  document.getElementById('addbtn').onclick = addFriendMenu;
-  document.getElementById('room-display').style.height = 'calc(100% - 124px)';
-  document.getElementById('addfrmenu').remove();
+  let menu = document.getElementById('addfrmenu');
+
+  if (menu) {
+    sidebarLowerButton.textContent = '+ Add friend';
+    sidebarLowerButton.onclick = addFriendMenu;
+    document.getElementById('room-display').style.height = 'calc(100% - 130px)';
+    menu.remove();
+  }
 }
 
 async function addFriendMenu() {
-  document.getElementById('addbtn').textContent = 'Cancel';
-  document.getElementById('addbtn').onclick = closeFriendMenu;
-  document.getElementById('room-display').style.height = 'calc(100% - 230px)';
+  sidebarLowerButton.textContent = 'Cancel';
+  sidebarLowerButton.onclick = closeFriendMenu;
+  document.getElementById('room-display').style.height = 'calc(100% - 185px)';
   document.getElementById('room-display').insertAdjacentHTML('afterend', `
   
-  <div id="addfrmenu" style="height:100px; text-align:center;">
-  <hr class="softhr">
-  <h1 style="font-weight:100">Recipient username: (case sensitive)</h1>
-  
-  <span>
-  <textarea name="" id="requser" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 70%; height: 25px; border-radius: 1vh; font-size: 20px; vertical-align: top;"></textarea>
-  <button id="reqbtn" style="width:20%; height:29px; background-color: rgb(100, 100, 215); border-radius: 5; vertical-align: top;">Send</button>
-  </span>
+  <div id="addfrmenu" style="text-align:center; background-color: rgb(30, 30, 30); margin: 5px; margin-bottom: 0; border-radius: 10px">
+    <div style="padding: 10px">
+    <textarea placeholder="Username (case sensitive)" name="" id="requser" cols="30" rows="1" onkeydown="if(event.keyCode === 13) event.preventDefault()" style="width: 70%; height: 25px; border-radius: 1vh; font-size: 20px; vertical-align: top; background-color: rgb(45, 45, 45)"></textarea>
+    <button id="reqbtn" style="width:20%; height:29px; background-color: rgb(100, 100, 215); border-radius: 5; vertical-align: top;">Send</button>
+    </div>
   </div>
   
   `)
 
   document.getElementById('reqbtn').onclick = async function() {
-    let res = await DB({'type':'friend-request', 'recipient':document.getElementById('requser').value, 'user':username, 'pass':userkey});
+    let res = await DB({'type':'friend-request', 'recipient':document.getElementById('requser').value, 'user':username, sessID:sessID});
 
     if (res === true) {
       addNotif("Request sent");

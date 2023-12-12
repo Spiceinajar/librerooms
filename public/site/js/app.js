@@ -1,30 +1,65 @@
 var username = '';
-var userkey = '';
-var personalpfp = '../site/assets/icons/missing.png'
-var active_room = ''
+var sessID = '';
+var Settings;
+var personalpfp = '../site/assets/icons/missing.png';
+var active_room = '';
 
-const board = document.getElementById("msgs");
-var prevheight = board.scrollHeight;
 
-const delay = ms => new Promise(res => setTimeout(res, ms));
+var username = '';
+var sessID = '';
+var Settings;
 
 try {
-  let ss = JSON.parse(decrypt(sessionStorage.getItem('LRUserLogin')));
-  username = ss['user']
-  userkey = ss['key']
+  username = sessionStorage.getItem('LRUser');
+  sessID = sessionStorage.getItem('LRSessionID');
+  Settings = sessionStorage.getItem('LRSettings');
+
+  if (['"NOAUTH"', '"DEFAULT"'].includes(Settings)) {
+    Settings = {
+      "Safety":{
+        "Profanity Filter":false,
+        "Embed Files":false,
+        "Clickable links":true,
+        "Room Banners":true,
+      },
+    
+      "General":{
+        "Notification Sounds":true,
+        "Removed Annotations":false,
+      },
+    
+      "Accessibility":{
+        "Fancy Graphics":true,
+        "Load Avatars":true,
+      }
+    }
+  } else {
+    Settings = JSON.parse(Settings);
+  }
+
+  console.log(Settings)
 } catch {
   location.href = '../login';
 }
 
+const board = document.getElementById("msgs");
+var prevheight = board.scrollHeight;
+
+const sidebarLowerButton = document.getElementById('addbtn');
+
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
+window.onbeforeunload = function(){
+  DB({type:'endSession', user:username, sessID:sessID})
+};
 
 (async () => {
-  let consent = await DB({'type':'getconsent', 'user':username, 'pass':userkey});
+  let consent = await DB({'type':'getconsent', 'user':username, sessID:sessID});
 
   let pendingConsent = "";
   let docs = [
     {name:'Privacy Policy', link:'../policies/privacy.html'}, 
-    {name:'Terms of Service', link:'../policies/terms.html'}, 
-    {name:'Cookie Policy', link:'../policies/cookies.html'}
+    {name:'Terms of Service', link:'../policies/terms.html'}
   ];
 
   for (i in consent.userConsent) {
@@ -39,7 +74,7 @@ try {
     ${pendingConsent} <br>
 
     <small>By clicking "Accept", you have read and accepted the changes made to the above documents.</small>
-    `, "Accept", function() {DB({'type':'updateconsent', 'user':username, 'pass':userkey})})
+    `, "Accept", function() {DB({'type':'updateconsent', 'user':username, sessID:sessID})})
   }
 })();
 
@@ -378,7 +413,7 @@ document.getElementById('personal-profile-btn').onclick = function () { openMenu
 
 
 async function leaveroom() { 
-  let status = await DB({'type':'leaveroom', 'room':active_room, 'user':username, 'pass':userkey});
+  let status = await DB({'type':'leaveroom', 'room':active_room, 'user':username, sessID:sessID});
 
   if (status === true) {
     addNotif(`Left "${active_room}"`)
@@ -403,7 +438,7 @@ async function unfriend() {
     user = dm[0]
   }
 
-  let res = await DB({'type':'removefriend', 'targ':user, 'user':username, 'pass':userkey});
+  let res = await DB({'type':'removefriend', 'targ':user, 'user':username, sessID:sessID});
 
   if (res === "NOAUTH") {
     addNotif("Authentication error")
@@ -524,7 +559,7 @@ async function messageContextMenu(e, id, sender) {
     delbtn.display = 'inline-block';
   
     delbtn.onclick = async function () {
-      await DB({'type':'remove-message', 'user':username, 'pass':userkey, 'room':active_room, 'messId':id});
+      await DB({'type':'remove-message', 'user':username, sessID:sessID, 'room':active_room, 'messId':id});
       document.getElementById(`msg-inner-${id}`).innerHTML = '[removed]';
     };
   } else {
@@ -546,7 +581,7 @@ async function messageContextMenu(e, id, sender) {
 
 
   document.getElementById('msgblockbtn').onclick = async function () {
-    let res = await DB({'type':'blockusr', 'user':username, 'pass':userkey, 'targuser':sender}); 
+    let res = await DB({'type':'blockusr', 'user':username, sessID:sessID, 'targuser':sender}); 
 
     if (res === 'NOAUTH') {
       addNotif('Authentication failed')
@@ -554,13 +589,15 @@ async function messageContextMenu(e, id, sender) {
       addNotif('You have already blocked this user')
     } else if (res === 'SELFBLOCK') {
       addNotif('You cannot block yourself')
+    } else if (res === 'STAFFBLOCK') {
+      addNotif('You cannot block a staff member')
     } else if (res === true) {
       addNotif(`Blocked @${sender}`)
     }
   };
 
   document.getElementById('msgunblockbtn').onclick = async function () {
-    let res = await DB({'type':'unblockusr', 'user':username, 'pass':userkey, 'targuser':sender}); 
+    let res = await DB({'type':'unblockusr', 'user':username, sessID:sessID, 'targuser':sender}); 
 
     if (res === 'NOAUTH') {
       addNotif('Authentication failed')
@@ -586,8 +623,8 @@ board.addEventListener('scroll', function() {document.getElementById('msgctxmenu
 async function updateMessageBoard() {
   if (document.hasFocus()) {
     let requestedRoom = active_room;
-    let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, 'pass':userkey, 'latestID':latestMsgId, 'noprofanity':Settings.Safety["Profanity Filter"]});
 
+    let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, sessID:sessID, 'latestID':latestMsgId, 'noprofanity':Settings.Safety["Profanity Filter"]});
     let boardcontent = ``;
   
     if (document.getElementById('msgs').children.length < 1) {
@@ -640,7 +677,7 @@ async function updateMessageBoard() {
             }
           }
     
-          contents = msg.text.replace(/<[^>]*>/g, '<script type="text/plain">' + "$&" + '</script>');
+          contents = msg.text.replace(/</g, '').replace(/>/g, '');
           
           if (Settings.Safety["Clickable links"]) {
             contents = contents.replace(/(\bhttps?:\/\/\S+)/gi, (match) => {
@@ -780,14 +817,12 @@ async function updateMessageBoard() {
       while (board.childElementCount > 50) {
         board.removeChild(board.children[0]);
         addthing = true
-        console.log(board.childElementCount)
       }
-      console.log(board.childElementCount)
 
       if (addthing) {
         board.insertAdjacentHTML('afterbegin', `
         <div style="text-align:center; width:100%">
-          <h1>The above messages are hidden so your device doesn't lag... you're welcome. :)</h1>
+          <h1>The above messages have been hidden for device performance.</h1>
         </div>
         `)
       }
@@ -831,7 +866,7 @@ async function updateMessageBoard() {
 
 async function joinRoom(r, public) {
   async function attempt(key) {
-    let status = await DB({'type':'joinroom', 'room':r, 'user':username, 'pass':userkey, 'roomkey':key});
+    let status = await DB({'type':'joinroom', 'room':r, 'user':username, sessID:sessID, 'roomkey':key});
     console.log(status)
 
     if (status === true) {
@@ -906,7 +941,7 @@ function switch_room(room, displayname, mode, created=false) {
 switch_room("Main room", "Main room", "r")
 
 const respondRequest = async function(mode, recipient) {
-  await DB({type:'respond-request', mode: mode, user:username, pass:userkey, recipient:recipient})
+  await DB({type:'respond-request', mode: mode, user:username, sessID:sessID, recipient:recipient})
   await populateSidebar("f");
 }
 
@@ -937,29 +972,29 @@ async function populateSidebar(mode) {
   if (mode === 'r') {
     document.getElementById('rbtn').disabled = true;
 
-    let result = await DB({'type':'getrooms', 'user':username, 'pass':userkey});
+    let result = await DB({'type':'getrooms', 'user':username, sessID:sessID});
 
     let rooms = result['list'];
 
     for (var room in rooms) {
       document.getElementById('room-display').innerHTML += `
-      <button id="room-button-${rooms[room].name}" onclick='switch_room("${rooms[room].name}", "${rooms[room].name}", "r", ${rooms[room].created});' class="room-button"><span class="unread-ind" id="unread-ind-${rooms[room].name}"></span> ${rooms[room].name}</button>
+      <button id="room-button-${rooms[room].name}" onclick='switch_room("${rooms[room].name}", "${rooms[room].name}", "r", ${rooms[room].created});' class="room-button"><span class="unread-ind" id="unread-ind-${rooms[room].name}"></span>${rooms[room].name}</button>
       `;
 
-      document.getElementById('addbtn').textContent = '+ Add room';
-      document.getElementById('addbtn').onclick = function() {openMenu("room-browser")};
+      sidebarLowerButton.textContent = '+ Add room';
+      sidebarLowerButton.onclick = function() {openMenu("room-browser")};
       document.getElementById('rbtn').style.backgroundColor = 'rgb(50, 50, 50)';
       document.getElementById('fbtn').style.backgroundColor = 'rgb(40, 40, 40)';
     }
 
     document.getElementById('rbtn').disabled = false;
-  } else {
+  } else if (mode === 'f') {
     document.getElementById('fbtn').disabled = true;
 
-    let result = await DB({'type':'getfriends', 'user':username, 'pass':userkey});
+    let result = await DB({'type':'getfriends', 'user':username, sessID:sessID});
 
-    document.getElementById('addbtn').textContent = '+ Add friend';
-    document.getElementById('addbtn').onclick = function() {addFriendMenu()};
+    sidebarLowerButton.textContent = '+ Add friend';
+    sidebarLowerButton.onclick = function() {addFriendMenu()};
     document.getElementById('fbtn').style.backgroundColor = 'rgb(50, 50, 50)';
     document.getElementById('rbtn').style.backgroundColor = 'rgb(40, 40, 40)';
 
@@ -971,7 +1006,7 @@ async function populateSidebar(mode) {
       c = `${c[0]}/${c[1]}`;
 
       document.getElementById('room-display').innerHTML += `
-      <button id="room-button-${c}" onclick='switch_room("${c}", "@${friends[friend]}", "f");' class="room-button" style="height:30px">@${friends[friend]}</button>
+      <button id="room-button-${c}" onclick='switch_room("${c}", "@${friends[friend]}", "f");' class="room-button" style="height:30px"><span class="unread-ind" id="unread-ind-${c}"></span>@${friends[friend]}</button>
       `;
     }
 
@@ -1025,7 +1060,7 @@ async function sendMessage() {
   let val = document.getElementById('msgtxt').value.replace(/\n/g,'');
   document.getElementById('msgtxt').value = '';
   if (val.length > 0) {
-    let res = await DB({type:'addmsg', room:active_room, contents: val, user:username, pass:userkey})
+    let res = await DB({type:'addmsg', room:active_room, contents: val, user:username, sessID:sessID})
 
     if (res === 'NOAUTH') {
       addNotif('Authentication error')
@@ -1069,32 +1104,28 @@ function toggleSidebar() {
 
 
 async function reportWindowSize() {
-  if (! (document.getElementById('requser') === document.activeElement)) {
-    if (mobileLayout) {
-      sidebarBool = false;
-  
-      document.getElementById('personal-username-display').style.display = "none";
-  
-      document.getElementById('buttonmenu-btn').style.display = 'inline';
-      document.getElementById('settingsbtn').style.display = 'none';
-      document.getElementById('reportbtn').style.display = 'none';
-      document.getElementById('mailbtn').style.display = 'none';
-    } else {
-      sidebarBool = true;
-  
-      document.getElementById('personal-username-display').style.display = "inline-block";
-  
-      document.getElementById('buttonmenu-btn').style.display = 'none';
-      document.getElementById('settingsbtn').style.display = 'inline';
-      document.getElementById('reportbtn').style.display = 'inline';
-      document.getElementById('mailbtn').style.display = 'inline';
-    }
-  
-    toggleSidebar()
+  sidebarBool = (! sidebarBool);
+
+  if (mobileLayout) {
+    document.getElementById('personal-username-display').style.display = "none";
+
+    document.getElementById('buttonmenu-btn').style.display = 'inline';
+    document.getElementById('settingsbtn').style.display = 'none';
+    document.getElementById('reportbtn').style.display = 'none';
+    document.getElementById('mailbtn').style.display = 'none';
+  } else {
+    document.getElementById('personal-username-display').style.display = "inline-block";
+
+    document.getElementById('buttonmenu-btn').style.display = 'none';
+    document.getElementById('settingsbtn').style.display = 'inline';
+    document.getElementById('reportbtn').style.display = 'inline';
+    document.getElementById('mailbtn').style.display = 'inline';
   }
+
+  toggleSidebar()
 }
 
-
+sidebarBool = false;
 reportWindowSize();
 window.addEventListener("resize", reportWindowSize);
 
