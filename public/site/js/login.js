@@ -28,7 +28,7 @@ function setMenu(x) {
 
     //document.getElementById('loginForm').onsubmit = function (e) {e.preventDefault(); login(document.getElementById('username').value, document.getElementById('password').value); };
 
-    document.getElementById("loginForm").addEventListener("submit", function(event) {
+    document.getElementById("loginForm").addEventListener("submit", function (event) {
       event.preventDefault();
 
       login(document.getElementById('username').value, document.getElementById('password').value)
@@ -65,34 +65,41 @@ function setMenu(x) {
     </div>
   `
 
-  document.getElementById("crForm").addEventListener("submit", function(event) {
-    event.preventDefault();
+    document.getElementById("crForm").addEventListener("submit", function (event) {
+      event.preventDefault();
 
-    cr_account(document.getElementById('signup-username').value, document.getElementById('signup-password').value)
-  });
+      cr_account(document.getElementById('signup-username').value, document.getElementById('signup-password').value)
+    });
 
-  document.getElementById('backbtn').onclick = function () { setMenu('login') };
+    document.getElementById('backbtn').onclick = function () { setMenu('login') };
   }
 }
 
-setMenu('login')
+setMenu('login');
+
+let sess = getSession();
+if (sess) {
+  location.href = '../app';
+}
 
 //================================
 async function login(user, key) {
   document.getElementById('logbtn').textContent = '...';
 
-  var result = await DB({type:'requestSession', user:user, key:key});
-  var sett = await DB({'type':'getsettings', 'user':user, 'sessID':result});
+  var result = getSession();
+  if (! result) {
+    await newSession(user, key);
+    result = getSession();
+  }
 
-  if (! (result === 'denied')) {
-    sessionStorage.clear();
-    sessionStorage.setItem('LRSessionID', result, sameSite='lax');
-    sessionStorage.setItem('LRSettings', JSON.stringify(sett), sameSite='lax');
-    sessionStorage.setItem('LRUser', user, sameSite='lax');
+  var sett = await DB({ 'type': 'getsettings', 'user': user, 'sessID': result });
+
+  if (result.ID === 'NOAUTH') {
+    addNotif("Login failed");
+  } else {
+    localStorage.setItem('LRSettings', JSON.stringify(sett), sameSite = 'lax');
 
     location.href = '../app';
-  } else {
-    addNotif("Login failed");
   }
 
   document.getElementById('logbtn').textContent = 'Log in';
@@ -102,9 +109,8 @@ async function login(user, key) {
 async function cr_account(user, key) {
   if (document.getElementById('agreement').checked) {
     document.getElementById('crbtn').textContent = '...';
-    var result = await DB({type:'cr_user', user:user, key:key})
-    result = result.status;
-  
+    var result = await DB({ type: 'cr_user', name: user, key: key })
+
     if (result === true) {
       setMenu('login');
       addNotif('Account created')
@@ -125,7 +131,7 @@ async function cr_account(user, key) {
         }
       }
     }
-  
+
     document.getElementById('crbtn').textContent = 'Create account';
   } else {
     addNotif('You must agree to the listed terms and policies')

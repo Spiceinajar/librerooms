@@ -2,14 +2,13 @@ async function closeMenu() {
   async function fadeout() {
     var m = document.getElementById('menu');
     var i = 10;
-    var iterator = setInterval(function(){ 
-        if (i < 0)
-        {
-            clearInterval(iterator);
-            document.getElementById("menu").remove();
-        }
-        i--;
-        m.style.opacity = i/10;
+    var iterator = setInterval(function () {
+      if (i < 0) {
+        clearInterval(iterator);
+        document.getElementById("menu").remove();
+      }
+      i--;
+      m.style.opacity = i / 10;
     }, 10);
   }
 
@@ -20,7 +19,7 @@ async function closeMenu() {
   }
 }
 
-async function openMenu(m_id, args={}) {
+async function openMenu(m_id, args = {}) {
   if (document.getElementById("menu")) {
     document.getElementById("menu").remove();
     switched = true;
@@ -58,8 +57,8 @@ async function openMenu(m_id, args={}) {
     let xbtn = document.getElementById("xbtn");
     let bg = document.getElementById("center_div");
 
-    xbtn.style.bottom = `calc(50% - ${bg.clientHeight/2}px)`;
-    xbtn.style.right = `calc(50% + (${bg.clientWidth/2}px - ${xbtn.clientHeight}px))`;
+    xbtn.style.bottom = `calc(50% - ${bg.clientHeight / 2}px)`;
+    xbtn.style.right = `calc(50% + (${bg.clientWidth / 2}px - ${xbtn.clientHeight}px))`;
   }
 
   window.addEventListener("resize", updLayout);
@@ -81,17 +80,17 @@ async function openMenu(m_id, args={}) {
 
       <textarea id="profile-desc" class="userdescription" readonly>Loading...</textarea>
 
-      <h1 id="profile-joindate" style="font-size: 15px; font-weight: 200">Joined __/__/__</h1>
+      <h1 id="profile-joindate" style="font-size: 15px; font-weight: 200">Joined __/__/__ • _ Friends • _</h1>
     </div>
     `);
 
     if (args.user === username) {
       let userDesc = document.getElementById('profile-desc');
-      document.getElementById('pfp-button').onclick = function() {openMenu('avatar-editor')};
+      document.getElementById('pfp-button').onclick = function () { openMenu('avatar-editor') };
       userDesc.readOnly = false;
 
-      userDesc.addEventListener("blur", async function() {
-        await DB({'type':'changebio', 'contents':userDesc.value, 'user':username, sessID:sessID});
+      userDesc.addEventListener("blur", async function () {
+        await DB({ 'type': 'changebio', 'contents': userDesc.value, 'user': username });
         addNotif('Revision saved.');
       });
     }
@@ -100,19 +99,66 @@ async function openMenu(m_id, args={}) {
 
 
     (async () => { //for some reason this was stopping the above code from running until it was done despite this already being in an async function (and being below it) so i just put it in another async function. whatever works i guess
-      let roles = await getRoles(args.user);
-      let joinDate = await DB({'type':'getjoindate', 'targuser':args.user});
-  
-      let userDisplay = args.user;
-      for (var r in roles) {
-        let role = roles[r];
-        userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" alt="roleicon" title="${role}" style="padding-left: 1vh; height:100%;">`;
-      }
+      let profData = await DB({ 'type': 'getprofile', 'targuser': args.user });
 
-      document.getElementById('profile-avatar-display').src = await getAvatar(args.user);
-      document.getElementById('profile-desc').textContent = (await DB({'type':'getdesc', 'targuser':args.user, 'noprofanity':Settings.Safety["Profanity Filter"]})).contents;
-      document.getElementById('profile-username-display').innerHTML = userDisplay;
-      document.getElementById('profile-joindate').textContent = `Joined ${joinDate.day}/${joinDate.month+1}/${joinDate.year}`;
+      if (profData === 'NULL') {
+        document.getElementById('profile_bg').innerHTML = `
+        <h1 style="position:relative; top:50%; transform: translateY(-50%);">
+        (ノへ￣、)<br>
+        Sorry, this profile could not be loaded.
+        </h1>
+        `
+      } else {
+        let userDisplay = args.user;
+        for (var r in profData.roles) {
+          let role = profData.roles[r];
+          userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" alt="roleicon" title="${role}" style="padding-left: 1vh; height:100%;">`;
+        }
+
+        function timeAgo(dateObject) {
+          // Get the current date
+          const currentDate = new Date();
+        
+          // Create a Date object from the input properties
+          const inputDate = new Date(
+            dateObject.year,
+            dateObject.month - 1, // Months are 0-indexed in JavaScript
+            dateObject.date || 1,
+            dateObject.hour || 0,
+            dateObject.minute || 0
+          );
+        
+          // Calculate the time difference in milliseconds
+          const timeDifference = currentDate - inputDate;
+        
+          // Calculate years, months, days, hours, and minutes
+          const years = Math.floor(timeDifference / (365 * 24 * 60 * 60 * 1000));
+          const months = Math.floor(timeDifference / (30 * 24 * 60 * 60 * 1000));
+          const days = Math.floor(timeDifference / (24 * 60 * 60 * 1000));
+          const hours = Math.floor(timeDifference / (60 * 60 * 1000));
+          const minutes = Math.floor(timeDifference / (60 * 1000));
+        
+          // Return the result based on the time elapsed
+          if (years > 0) {
+            return years === 1 ? '1y' : `${years}y`;
+          } else if (months > 0) {
+            return months === 1 ? '1mo' : `${months}mo`;
+          } else if (days > 0) {
+            return days === 1 ? '1d' : `${days}d`;
+          } else if (hours > 0) {
+            return hours === 1 ? '1h' : `${hours}h`;
+          } else {
+            return minutes === 1 ? '1m' : `${minutes}m`;
+          }
+        }
+
+        document.getElementById('profile-avatar-display').src = await loadAvatar(profData.avatar);
+        document.getElementById('profile-desc').textContent = profData.description;
+        document.getElementById('profile-username-display').innerHTML = userDisplay;
+        document.getElementById('profile-joindate').textContent = `Joined ${profData.joindate} ago • ${profData.friendcount} Friends • Online ${profData.lastOnline} ago`;
+
+        console.log(timeAgo({year:2004, month: 1, day: 14, hour: 5, minute: 55}))
+      }
     })();
   }
 
@@ -135,7 +181,7 @@ async function openMenu(m_id, args={}) {
       <br>
       <button id="erbtn" class="bar-btn" style="background-color: rgb(255, 100, 100)">Erase All Messages</button>
 
-      <h1 style="font-size:10px;">Version: 1.2.4</h1>
+      <h1 style="font-size:10px;">Version: 1.2.5</h1>
     </div>
     `);
 
@@ -162,76 +208,81 @@ async function openMenu(m_id, args={}) {
 
         element.checked = Settings[category][option];
 
-        element.onclick = function() {
+        element.onclick = function () {
           let id = this.id.split('-');
 
           Settings[id[1]][id[2]] = this.checked;
-
-          console.log(Settings)
         }
       }
     }
 
-    document.getElementById('delbtn').onclick = function () {authMenu(
-      "This will permanently delete your account and its associated data. To confirm, please enter your password below:", 
-      async function(enteredkey){
+    document.getElementById('delbtn').onclick = function () {
+      authMenu(
+        "This will permanently delete your account and its associated data. To confirm, please enter your password below:",
+        async function (enteredkey) {
 
-        let result = await DB({'type':'delaccount', 'user':username, 'pass':enteredkey});
-        if (result === true) {
-          location.href = '../login';
-        } else {
+          let result = await DB({ 'type': 'delaccount', 'user': username, 'pass': enteredkey });
+          if (result === true) {
+            location.href = '../login';
+          } else {
+            if (result === "NOAUTH") {
+              addNotif("Password is incorrect")
+            } else {
+              addNotif("Operation failed")
+            }
+          }
+
+        })
+    }
+
+    document.getElementById('erbtn').onclick = function () {
+      authMenu(
+        "This will permanently delete all of your messages. To confirm, please enter your password below:",
+        async function (enteredkey) {
+          let result = await DB({ 'type': 'delmsg', 'user': username, 'pass': enteredkey });
+          if (result === true) {
+            addNotif("Messages erased")
+          } else {
+            if (result === "NOAUTH") {
+              addNotif("Password is incorrect")
+            } else {
+              addNotif("Operation failed")
+            }
+          }
+
+        })
+    }
+
+    document.getElementById('datbtn').onclick = function () {
+      authMenu(
+        "This will display all of your account data. To confirm, please enter your password below:",
+        async function (enteredkey) {
+          let result = await DB({ 'type': 'getdata', 'user': username, 'pass': enteredkey });
+
           if (result === "NOAUTH") {
             addNotif("Password is incorrect")
           } else {
-            addNotif("Operation failed")
+            openMenu('userdata', { "content": result })
           }
-        }
-      
-      })
+        })
     }
 
-    document.getElementById('erbtn').onclick = function () {authMenu(
-      "This will permanently delete all of your messages. To confirm, please enter your password below:", 
-      async function(enteredkey){
-        let result = await DB({'type':'delmsg', 'user':username, 'pass':enteredkey});
-        if (result === true) {
-          addNotif("Messages erased")
-        } else {
-          if (result === "NOAUTH") {
-            addNotif("Password is incorrect")
-          } else {
-            addNotif("Operation failed")
-          }
-        }
-      
-      })
-    }
+    document.getElementById('logbtn').onclick = async function () {
+      await DB({ type: 'endSession' });
+      localStorage.clear();
+      location.href = '../login'
+    };
 
-    document.getElementById('datbtn').onclick = function () {authMenu(
-      "This will display all of your account data. To confirm, please enter your password below:", 
-      async function(enteredkey){
-        let result = await DB({'type':'getdata', 'user':username, 'pass':enteredkey});
+    document.getElementById('xbtn').onclick = async function () {
+      await DB({ 'type': 'updsettings', 'value': Settings })
 
-        if (result === "NOAUTH") {
-          addNotif("Password is incorrect")
-        } else {
-          openMenu('userdata', {"content":result})
-        }
-      })
-    }
-
-    document.getElementById('logbtn').onclick = function () {location.href = '../login'};
-
-    document.getElementById('xbtn').onclick = async function() {
-      await DB({'type':'updsettings', 'user':username, 'sessID':sessID, 'value':Settings})
-
-      addNotif("Settings updated."); 
+      addNotif("Settings updated.");
       closeMenu();
     }
   }
 
   if (m_id === "room-browser") {
-    let result = await DB({'type':'findrooms', 'user':username});
+    let result = await DB({ 'type': 'findrooms', 'user': username });
     let rooms = result['list'].sort((a, b) => a.membercount - b.membercount).reverse();
 
     document.getElementById("menu-bg").insertAdjacentHTML('beforeend', `
@@ -264,28 +315,28 @@ async function openMenu(m_id, args={}) {
       for (var r in rooms) {
         let room = rooms[r];
 
-        if (! Settings.Safety["Room Banners"]) {
+        if (!Settings.Safety["Room Banners"]) {
           room.banner = "https://librerooms.org/site/assets/icons/room_default.svg"
         }
 
-        if (! room.public) {
+        if (!room.public) {
           if (filter.publicOnly) {
             continue
           }
         }
 
-        if (! room.name.toLowerCase().includes(filter.contains)) {
+        if (!room.name.toLowerCase().includes(filter.contains)) {
           continue
         }
-  
+
         let rbadge;
-  
+
         if (room.public === true) {
           rbadge = "globe";
         } else {
           rbadge = "lock";
         }
-  
+
         document.getElementById("rcontainer").insertAdjacentHTML('beforeend', `
         <button onclick='joinRoom("${room.name}", ${room.public});' class="roombrowser-card">
         <img src="${room.banner}" style="width:100%; border-radius:inherit; margin-top:5px; aspect-ratio:1200/640">
@@ -306,13 +357,13 @@ async function openMenu(m_id, args={}) {
       }
     }
 
-    populateMenu({contains:"", publicOnly:false})
+    populateMenu({ contains: "", publicOnly: false })
 
-    document.getElementById('room-search-button').onclick = function() {
+    document.getElementById('room-search-button').onclick = function () {
       let query = document.getElementById('room_search').value;
       //this.value = this.value.replace(/\n/g,'');
 
-      populateMenu({contains:query.toLowerCase(), publicOnly:false})
+      populateMenu({ contains: query.toLowerCase(), publicOnly: false })
     }
   }
 
@@ -333,8 +384,8 @@ async function openMenu(m_id, args={}) {
     <button id="crbtn" style="width: 350px; height: 60px; font-size: 30px; border-radius: 10px; margin-top:20px;">Create room</button>
     `);
 
-    document.getElementById("crbtn").onclick = async function() {
-      let res = await DB({'type':'cr_room', 'rname':document.getElementById("room_name_input").value, 'roomkey':document.getElementById("room_pass_input").value, 'user':username, sessID:sessID});
+    document.getElementById("crbtn").onclick = async function () {
+      let res = await DB({ 'type': 'cr_room', 'rname': document.getElementById("room_name_input").value, 'roomkey': document.getElementById("room_pass_input").value, 'user': username });
 
       if (res === true) {
         addNotif("Room created");
@@ -363,7 +414,7 @@ async function openMenu(m_id, args={}) {
     </div>
     `);
 
-    let result = await DB({'type':'getnotifs', 'user':username, sessID:sessID, 'noprofanity':Settings.Safety["Profanity Filter"]})
+    let result = await DB({ 'type': 'getnotifs', 'user': username, 'noprofanity': Settings.Safety["Profanity Filter"] })
 
     for (var n in result) {
       let notif = result[n];
@@ -410,7 +461,7 @@ async function openMenu(m_id, args={}) {
     <button id="sendreportbtn" style="width:200px; height:50px; background-color: rgb(100, 100, 215); margin:10px">Send</button>
     `);
 
-    document.getElementById('sendreportbtn').onclick = function() {DB({'type':'submit-report', 'contents':document.getElementById('reportentry').value}); closeMenu(); addNotif('Thank you for your feedback')}
+    document.getElementById('sendreportbtn').onclick = function () { DB({ 'type': 'submit-report', 'contents': document.getElementById('reportentry').value }); closeMenu(); addNotif('Thank you for your feedback') }
   }
 
   if (m_id === "buttonmenu") {
@@ -513,7 +564,7 @@ async function openMenu(m_id, args={}) {
         <div>
         `);
 
-        document.getElementById(`catalog-selector`).onclick = function() {
+        document.getElementById(`catalog-selector`).onclick = function () {
           let category = this.id.split('-')[1];
 
           if (category === '7') {
@@ -521,10 +572,10 @@ async function openMenu(m_id, args={}) {
           } else {
             avObj[category] = null;
           }
-          
+
           updateDisplay()
         }
-  
+
         document.getElementById(`catalog-selector`).id = `remove-${catId}`;
       }
 
@@ -537,7 +588,7 @@ async function openMenu(m_id, args={}) {
             <img class="catalog-item-img" id="catalog-item-thumb-${item}-${catName}" alt="item">
           <div>
           `);
-  
+
           //if (['1', '0', '9'].includes(catId)) {
           //  let col;
           //  if (catId === '1') {
@@ -552,11 +603,11 @@ async function openMenu(m_id, args={}) {
           //} else {
           //  document.getElementById(`catalog-item-thumb-${item}-${catName}`).src = `../site/assets/avatar/${catName}/${catalog[catName][item]}.png`
           //}
-  
-          document.getElementById(`catalog-selector`).onclick = function() {
+
+          document.getElementById(`catalog-selector`).onclick = function () {
             let category = this.id.split('-')[0];
             let itemid = this.id.split('-')[1];
-  
+
             if (category === '7') {
               if (avObj[category].includes(itemid)) {
                 avObj[category] = avObj[category].filter(item => item !== itemid);;
@@ -566,16 +617,16 @@ async function openMenu(m_id, args={}) {
             } else {
               avObj[category] = itemid;
             }
-            
+
             updateDisplay()
           }
-  
+
           document.getElementById(`catalog-selector`).id = `${catId}-${item}`;
 
 
           displayObj = [9, 0, 2, null, null, null, null, [], null, 0];
           displayObj[catId] = item;
-  
+
           if (catId === '1') {
             displayObj[5] = 1
           } else if (catId === '9') {
@@ -583,16 +634,16 @@ async function openMenu(m_id, args={}) {
           } else if (catId === '7') {
             displayObj[7] = [item]
           }
-  
+
           document.getElementById(`catalog-item-thumb-${item}-${catName}`).src = await loadAvatar(displayObj);
         }
       })();
     }
 
-    document.getElementById('xbtn').onclick = async function() {
-      await DB({'type':'updateavatar', 'obj':avObj, 'user':username, sessID:sessID});
+    document.getElementById('xbtn').onclick = async function () {
+      await DB({ 'type': 'updateavatar', 'obj': avObj, 'user': username });
       //delete cachedAvs[username];
-      addNotif("Avatar updated."); 
+      addNotif("Avatar updated.");
       closeMenu();
     }
   }
@@ -601,17 +652,16 @@ async function openMenu(m_id, args={}) {
 
   async function fadeIn() {
     var i = 0;
-    var iterator = setInterval(function(){ 
-        if (i > 10)
-        {
-            clearInterval(iterator);
-        }
-        i++;
-        m.style.opacity = i/10;
+    var iterator = setInterval(function () {
+      if (i > 10) {
+        clearInterval(iterator);
+      }
+      i++;
+      m.style.opacity = i / 10;
     }, 10);
   }
 
-  if (switched || (! Settings.Accessibility["Fancy Graphics"])) {
+  if (switched || (!Settings.Accessibility["Fancy Graphics"])) {
     m.style.opacity = 1
   } else {
     await fadeIn()
@@ -638,20 +688,20 @@ async function authMenu(query, ondone) {
   
   `);
 
-  document.getElementById('continuebtn').onclick = function() {
+  document.getElementById('continuebtn').onclick = function () {
     let val = document.getElementById('entry').value;
     document.getElementById('authmenu').remove();
     //await closeMenu();
     ondone(val);
   };
 
-  document.getElementById('cancelbtn').onclick = function() {
+  document.getElementById('cancelbtn').onclick = function () {
     document.getElementById('authmenu').remove();
   };
 }
 
 
-async function Warn(header, content, closeterm="Ok", onclose=null) {
+async function Warn(header, content, closeterm = "Ok", onclose = null) {
   document.body.insertAdjacentHTML("beforeend", `
   
   <div id="menu" style="position:fixed; z-index: 2; width:100%; height:100%; top:0; left:0; right:0; left:0; background-color: rgba(0, 0, 0, 0.5);">
@@ -669,7 +719,7 @@ async function Warn(header, content, closeterm="Ok", onclose=null) {
   
   `);
 
-  document.getElementById('continuebtn').onclick = function() {
+  document.getElementById('continuebtn').onclick = function () {
     if (onclose) {
       onclose()
     }
@@ -706,8 +756,8 @@ async function addFriendMenu() {
   
   `)
 
-  document.getElementById('reqbtn').onclick = async function() {
-    let res = await DB({'type':'friend-request', 'recipient':document.getElementById('requser').value, 'user':username, sessID:sessID});
+  document.getElementById('reqbtn').onclick = async function () {
+    let res = await DB({ 'type': 'friend-request', 'recipient': document.getElementById('requser').value, 'user': username });
 
     if (res === true) {
       addNotif("Request sent");
@@ -726,13 +776,14 @@ async function addFriendMenu() {
               addNotif("You already have this user added as a friend")
             } else {
               if (res === "SELFREQUEST") {
-              addNotif("You cannot add yourself as a friend")
-            }}
+                addNotif("You cannot add yourself as a friend")
+              }
+            }
           }
         }
       }
     }
-    
+
   };
 }
 
@@ -750,11 +801,11 @@ function updateNotifs() {
       <h1 style="margin-top:20px">${notifQueue[0]}</h1>
     </div>
     `);
-  
+
     notifQueue.shift();
-    
+
     let notif_element = document.querySelector(".notif");
-    
+
     notif_element.classList.add("notif_anim");
     notif_element.addEventListener("animationend", () => {
       document.getElementById("notif").remove("animate");

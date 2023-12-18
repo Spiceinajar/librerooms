@@ -14,7 +14,7 @@ function decrypt(input) {
 
 function getTime() {
   const dt = new Date();
-  return {day: dt.getUTCDay(), month: dt.getUTCMonth(), year: dt.getUTCFullYear(), hour: dt.getUTCHours(), minute: dt.getUTCMinutes()};
+  return { day: dt.getUTCDay(), month: dt.getUTCMonth(), year: dt.getUTCFullYear(), hour: dt.getUTCHours(), minute: dt.getUTCMinutes() };
 }
 
 function formatTime(time) {
@@ -26,9 +26,9 @@ function formatTime(time) {
     let minute = time.minute;
 
     let date = Date.UTC(year, month, day, hour, minute, 0);
-    let localDate = new Date(date).toLocaleDateString("en-us", {day: '2-digit', month:'2-digit', year:'2-digit'});
-    let localTime = new Date(date).toLocaleTimeString("en-us", {hour: '2-digit', minute:'2-digit'});
-  
+    let localDate = new Date(date).toLocaleDateString("en-us", { day: '2-digit', month: '2-digit', year: '2-digit' });
+    let localTime = new Date(date).toLocaleTimeString("en-us", { hour: '2-digit', minute: '2-digit' });
+
     //let twelveHourClock = true;
     //
     //let signature = "";
@@ -40,12 +40,29 @@ function formatTime(time) {
     //    signature = " AM "
     //  }
     //}
-  
-    return {"date":localDate, "time":localTime}//` • ${day}/${month}/${year} ${hour}:${minute} ${signature} UTC`
+
+    return { "date": localDate, "time": localTime }//` • ${day}/${month}/${year} ${hour}:${minute} ${signature} UTC`
   }
 }
 
 //========================================================================
+
+function getSession() {
+  let sess = localStorage.getItem('LRSession');
+  if (sess) {
+    return JSON.parse(localStorage.getItem('LRSession'))
+  } else {
+    if (window.location.pathname === '/app/') {
+      location.href = '../login';
+    }
+  }
+}
+
+async function newSession(user, key) {
+  let sess = await DB({ type: 'requestSession', user: user, pass: key });
+  localStorage.setItem('LRSession', JSON.stringify({ user: user, ID: sess }));
+  JSON.stringify()
+}
 
 function chkLayout() {
   if (window.innerWidth < 800) {
@@ -57,8 +74,16 @@ function chkLayout() {
 
 chkLayout();
 window.addEventListener("resize", chkLayout);
+let lockNewRequests = false;
 
 async function DB(data) {
+  if (! lockNewRequests) {
+    let session = getSession();
+    if (session) {
+      data.user = session.user;
+      data.sessID = session.ID;
+    }
+  
     var f = fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -72,13 +97,13 @@ async function DB(data) {
       })
       .catch(error => {
         console.error('Error:', error);
-        console.log(response)
         if (error.name === 'TypeError') {
           Warn('Connection lost', 'Please check your connection.');
+          lockNewRequests = true;
         }
       });
-
-    return f.then(function(r) {
+  
+    return f.then(function (r) {
       if (r.res === "") {
         r.res = null;
       } else {
@@ -86,35 +111,14 @@ async function DB(data) {
         if (r.res.locked) {
           location.href = `../locked/?reason=${r.res.reason}`;
         }
+  
+        if (r.res === "BADSESSION") {
+          localStorage.clear();
+          location.href = '../login'
+        }
       }
-
+  
       return r.res;
     });
-}
-
-
-
-
-
-function pushNotif(string) {
-  if (!("Notification" in window)) {
-    // Check if the browser supports notifications
-    alert("This browser does not support push notifications");
-  } else if (Notification.permission === "granted") {
-    // Check whether notification permissions have already been granted;
-    // if so, create a notification
-    new Notification(string);
-  } else if (Notification.permission !== "denied") {
-    // We need to ask the user for permission
-    Notification.requestPermission().then((permission) => {
-      // If the user accepts, let's create a notification
-      if (permission === "granted") {
-        new Notification(string);
-        // …
-      }
-    });
   }
-
-  // At last, if the user has denied notifications, and you
-  // want to be respectful there is no need to bother them anymore.
 }

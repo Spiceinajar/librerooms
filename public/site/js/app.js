@@ -1,46 +1,42 @@
-var username = '';
-var sessID = '';
 var Settings;
 var personalpfp = '../site/assets/icons/missing.png';
 var active_room = '';
 
-
 var username = '';
-var sessID = '';
-var Settings;
 
 try {
-  username = sessionStorage.getItem('LRUser');
-  sessID = sessionStorage.getItem('LRSessionID');
-  Settings = sessionStorage.getItem('LRSettings');
+  username = getSession().user;
+  Settings = localStorage.getItem('LRSettings');
 
   if (['"NOAUTH"', '"DEFAULT"'].includes(Settings)) {
     Settings = {
-      "Safety":{
-        "Profanity Filter":false,
-        "Embed Files":false,
-        "Clickable links":true,
-        "Room Banners":true,
+      "Safety": {
+        "Profanity Filter": false,
+        "Embed Files": false,
+        "Clickable links": true,
+        "Room Banners": true,
       },
-    
-      "General":{
-        "Notification Sounds":true,
-        "Removed Annotations":false,
+
+      "General": {
+        "Notification Sounds": true,
+        "Removed Annotations": false,
       },
-    
-      "Accessibility":{
-        "Fancy Graphics":true,
-        "Load Avatars":true,
+
+      "Accessibility": {
+        "Fancy Graphics": true,
+        "Load Avatars": true,
       }
     }
   } else {
     Settings = JSON.parse(Settings);
   }
-
-  console.log(Settings)
 } catch {
   location.href = '../login';
 }
+
+//window.onbeforeunload = async function(){
+//  await DB({type:'changestatus', value:'Offline'})
+//};
 
 const board = document.getElementById("msgs");
 var prevheight = board.scrollHeight;
@@ -49,17 +45,13 @@ const sidebarLowerButton = document.getElementById('addbtn');
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
-window.onbeforeunload = function(){
-  DB({type:'endSession', user:username, sessID:sessID})
-};
-
 (async () => {
-  let consent = await DB({'type':'getconsent', 'user':username, sessID:sessID});
+  let consent = await DB({ 'type': 'getconsent', 'user': username });
 
   let pendingConsent = "";
   let docs = [
-    {name:'Privacy Policy', link:'../policies/privacy.html'}, 
-    {name:'Terms of Service', link:'../policies/terms.html'}
+    { name: 'Privacy Policy', link: '../policies/privacy.html' },
+    { name: 'Terms of Service', link: '../policies/terms.html' }
   ];
 
   for (i in consent.userConsent) {
@@ -74,13 +66,13 @@ window.onbeforeunload = function(){
     ${pendingConsent} <br>
 
     <small>By clicking "Accept", you have read and accepted the changes made to the above documents.</small>
-    `, "Accept", function() {DB({'type':'updateconsent', 'user':username, sessID:sessID})})
+    `, "Accept", function () { DB({ 'type': 'updateconsent', 'user': username }) })
   }
 })();
 
 
 let catalog = {
-  "skintones":[
+  "skintones": [
     [248, 232, 212],
     [241, 209, 181],
     [233, 185, 151],
@@ -92,9 +84,10 @@ let catalog = {
     [94, 41, 17],
     [150, 150, 150],
     [21, 255, 0],
+    [255, 20, 20],
   ],
 
-  "haircolors":[
+  "haircolors": [
     [38, 16, 0],
     [240, 255, 166],
     [255, 136, 51],
@@ -109,7 +102,7 @@ let catalog = {
     [234, 100, 255],
   ],
 
-  "eyecolors":[
+  "eyecolors": [
     [5, 5, 5],
     [42, 50, 192],
     [46, 19, 0],
@@ -121,106 +114,107 @@ let catalog = {
     [50, 192, 100],
   ],
 
-  "backgrounds":[
-      "default",
-      "void",
-      "tunnel",
-      "white stripes",
-      "bricks 01",
-      "bricks 02",
-      "sun rays",
-      "colors",
-      "white void",
-      "snow",
+  "backgrounds": [
+    "default",
+    "void",
+    "tunnel",
+    "white stripes",
+    "bricks 01",
+    "bricks 02",
+    "sun rays",
+    "colors",
+    "white void",
+    "snow",
+    "fire",
   ],
 
-  "shirts":[
-      "black suit",
-      "white suit",
-      "blue suit",
-      "red suit",
-      "purple suit",
-      "black tee",
-      "white tee",
-      "yellow tee",
-      "pink tee",
-      "red tee",
-      "magenta tee",
-      "purple tee",
-      "blue tee",
-      "green tee",
-      "space suit",
-      "connor's jacket",
-      "black jacket",
-      "white jacket",
-      "red jacket",
-      "green jacket",
-      "blue jacket",
-      "pink jacket",
-      "yellow jacket",
-      "tank top",
-      "red dress",
-      "blue dress",
-      "black dress",
-      "white dress",
-      "strapless white dress",
-      "strapless black dress",
-      "fancy red robe",
-      "fancy yellow robe",
+  "shirts": [
+    "black suit",
+    "white suit",
+    "blue suit",
+    "red suit",
+    "purple suit",
+    "black tee",
+    "white tee",
+    "yellow tee",
+    "pink tee",
+    "red tee",
+    "magenta tee",
+    "purple tee",
+    "blue tee",
+    "green tee",
+    "space suit",
+    "connor's jacket",
+    "black jacket",
+    "white jacket",
+    "red jacket",
+    "green jacket",
+    "blue jacket",
+    "pink jacket",
+    "yellow jacket",
+    "tank top",
+    "red dress",
+    "blue dress",
+    "black dress",
+    "white dress",
+    "strapless white dress",
+    "strapless black dress",
+    "fancy red robe",
+    "fancy yellow robe",
   ],
 
-  "eyes":[
-      "happy",
-      "soulless",
-      "closed",
-      "eyebrows",
-      "wide",
-      "wide 2",
-      "small",
-      "vertical",
+  "eyes": [
+    "happy",
+    "soulless",
+    "closed",
+    "eyebrows",
+    "wide",
+    "wide 2",
+    "small",
+    "vertical",
   ],
 
-  "hair":[
-      "buzz cut",
-      "long",
-      "short fluffy",
-      "afro",
-      "squared afro",
-      "mohawk",
-      "receding",
-      "medium",
-      "bun",
-      "pig tails",
-      "side part",
-      "draped long hair",
+  "hair": [
+    "buzz cut",
+    "long",
+    "short fluffy",
+    "afro",
+    "squared afro",
+    "mohawk",
+    "receding",
+    "medium",
+    "bun",
+    "pig tails",
+    "side part",
+    "draped long hair",
   ],
 
-  "facialhair":[
-      "short beard",
-      "long beard",
-      "mustache",
-      "horseshoe mustache",
-      "goatee",
-      "thick goatee",
-      "pointy mustache",
-      "skinny long beard",
+  "facialhair": [
+    "short beard",
+    "long beard",
+    "mustache",
+    "horseshoe mustache",
+    "goatee",
+    "thick goatee",
+    "pointy mustache",
+    "skinny long beard",
   ],
 
-  "mouths":[
-      "expressionless",
-      "smile",
-      "frown",
-      "lips",
-      "open smile",
-      "open",
-      "shock",
-      "smirk",
-      "toothy",
-      "wide smile",
-      "drool",
+  "mouths": [
+    "expressionless",
+    "smile",
+    "frown",
+    "lips",
+    "open smile",
+    "open",
+    "shock",
+    "smirk",
+    "toothy",
+    "wide smile",
+    "drool",
   ],
 
-  "accessories":[
+  "accessories": [
     "shades",
     "headphones",
     "headphones white",
@@ -256,7 +250,12 @@ let catalog = {
     "black cap",
     "ushanka",
     "pumpkin",
-],
+    "quan's bear hat",
+    "backwards cap",
+    "backwards red cap",
+    "backwards blue cap",
+    "hyper's hoodie",
+  ],
 }
 
 let canvasID = 0;
@@ -265,12 +264,12 @@ async function loadAvatar(arr) {
   if (Settings.Accessibility['Load Avatars']) {
     try {
       // [skin color rgb [r, g, b], hair color hsv [h, s, v], background id, shirt id, eye id, hair id, mouth id]
-  
+
       let id = `avatarassembler-${canvasID}`
       document.body.insertAdjacentHTML('beforebegin', `<canvas style="display: none;" width="16" height="16" id="${id}"></canvas>`)
-  
+
       var assembler = document.getElementById(id);
-      var ctx = assembler.getContext("2d", {alpha: false, willReadFrequently: true});
+      var ctx = assembler.getContext("2d", { alpha: false, willReadFrequently: true });
 
       function replaceColor(canvas, oldColor, newColor) {
         // Get the 2D rendering context
@@ -282,68 +281,68 @@ async function loadAvatar(arr) {
 
         // Loop through the pixel data
         for (var i = 0; i < data.length; i += 4) {
-            // Check if the current pixel matches the oldColor
-            if (data[i] === oldColor[0] && data[i + 1] === oldColor[1] && data[i + 2] === oldColor[2]) {
-                // Replace the old color with the new color
-                data[i] = newColor[0];
-                data[i + 1] = newColor[1];
-                data[i + 2] = newColor[2];
-            }
+          // Check if the current pixel matches the oldColor
+          if (data[i] === oldColor[0] && data[i + 1] === oldColor[1] && data[i + 2] === oldColor[2]) {
+            // Replace the old color with the new color
+            data[i] = newColor[0];
+            data[i + 1] = newColor[1];
+            data[i + 2] = newColor[2];
+          }
         }
 
         // Put the modified image data back onto the canvas
         ctx.putImageData(imageData, 0, 0);
-    }
-  
+      }
+
       //assembler.style.backgroundColor = `rgb(${arr[0][0]}, ${arr[0][1]}, ${arr[0][2]})`;
-  
-      if (! (arr[0] === null)) {
+
+      if (!(arr[0] === null)) {
         let st = catalog.skintones[arr[0]]
         ctx.fillStyle = `rgb(${st[0]}, ${st[1]}, ${st[2]})`;
         ctx.fillRect(0, 0, 16, 16);
       }
-  
+
       function pasteImage(src, loc) {
         const img = new Image();
         const imgPromise = new Promise((resolve, reject) => {
           img.onload = resolve;
           img.onerror = reject;
         });
-  
+
         img.src = src;
-  
+
         imgPromise.then(() => {
           ctx.drawImage(img, loc.x, loc.y)
         })
-  
+
         return imgPromise;
       }
-  
-      await pasteImage(`../site/assets/avatar/backgrounds/${catalog.backgrounds[arr[2]]}.png`, {x:0, y:0})
-  
-      if (! (arr[3] === null)) {
-        await pasteImage(`../site/assets/avatar/shirts/${catalog.shirts[arr[3]]}.png`, {x:0, y:12})
+
+      await pasteImage(`../site/assets/avatar/backgrounds/${catalog.backgrounds[arr[2]]}.png`, { x: 0, y: 0 })
+
+      if (!(arr[3] === null)) {
+        await pasteImage(`../site/assets/avatar/shirts/${catalog.shirts[arr[3]]}.png`, { x: 0, y: 12 })
       }
-  
-      if (! (arr[4] === null)) {
-        await pasteImage(`../site/assets/avatar/eyes/${catalog.eyes[arr[4]]}.png`, {x:3, y:6})
+
+      if (!(arr[4] === null)) {
+        await pasteImage(`../site/assets/avatar/eyes/${catalog.eyes[arr[4]]}.png`, { x: 3, y: 6 })
       }
-  
-      if (! (arr[5] === null)) {
-        await pasteImage(`../site/assets/avatar/hair/${catalog.hair[arr[5]]}.png`, {x:0, y:0})
+
+      if (!(arr[5] === null)) {
+        await pasteImage(`../site/assets/avatar/hair/${catalog.hair[arr[5]]}.png`, { x: 0, y: 0 })
       }
-  
-      if (! (arr[6] === null)) {
-        await pasteImage(`../site/assets/avatar/mouths/${catalog.mouths[arr[6]]}.png`, {x:5, y:9})
+
+      if (!(arr[6] === null)) {
+        await pasteImage(`../site/assets/avatar/mouths/${catalog.mouths[arr[6]]}.png`, { x: 5, y: 9 })
       }
-  
-      if (! (arr[8] === null)) {
-        await pasteImage(`../site/assets/avatar/facialhair/${catalog.facialhair[arr[8]]}.png`, {x:3, y:6})
+
+      if (!(arr[8] === null)) {
+        await pasteImage(`../site/assets/avatar/facialhair/${catalog.facialhair[arr[8]]}.png`, { x: 3, y: 6 })
       }
-  
+
       if (arr[7].length > 0) {
         for (a of arr[7]) {
-          await pasteImage(`../site/assets/avatar/accessories/${catalog.accessories[a]}.png`, {x:0, y:0})
+          await pasteImage(`../site/assets/avatar/accessories/${catalog.accessories[a]}.png`, { x: 0, y: 0 })
         }
       }
 
@@ -355,9 +354,9 @@ async function loadAvatar(arr) {
 
       let bs4 = assembler.toDataURL('image/png');
       assembler.parentNode.removeChild(assembler);
-  
+
       return bs4;
-    } catch(err) {
+    } catch (err) {
       console.log(err, arr)
       return "../site/assets/icons/missing.png"
     }
@@ -368,13 +367,13 @@ async function loadAvatar(arr) {
 
 cachedAvs = {};
 let avatarQueue = [];
-async function getAvatar(us, preParse=true) {
+async function getAvatar(us, preParse = true) {
   var pic;
 
   if (us in cachedAvs) {
     pic = cachedAvs[us];
   } else {
-    let result = await DB({'type':'getavatar', 'targuser':us});
+    let result = await DB({ 'type': 'getavatar', 'targuser': us });
 
     pic = result['obj'];
     cachedAvs[us] = pic;
@@ -394,7 +393,7 @@ async function getRoles(us) {
   if (us in userRoles) {
     r = userRoles[us];
   } else {
-    let result = await DB({'type':'getroles', 'targuser':us});
+    let result = await DB({ 'type': 'getroles', 'targuser': us });
 
     r = result['list'];
     userRoles[us] = r;
@@ -409,11 +408,11 @@ async function getRoles(us) {
 })();
 
 document.getElementById('personal-username-display').textContent = '@' + username;
-document.getElementById('personal-profile-btn').onclick = function () { openMenu('profile', {user:username});};
+document.getElementById('personal-profile-btn').onclick = function () { openMenu('profile', { user: username }); };
 
 
-async function leaveroom() { 
-  let status = await DB({'type':'leaveroom', 'room':active_room, 'user':username, sessID:sessID});
+async function leaveroom() {
+  let status = await DB({ 'type': 'leaveroom', 'room': active_room, 'user': username });
 
   if (status === true) {
     addNotif(`Left "${active_room}"`)
@@ -438,7 +437,7 @@ async function unfriend() {
     user = dm[0]
   }
 
-  let res = await DB({'type':'removefriend', 'targ':user, 'user':username, sessID:sessID});
+  let res = await DB({ 'type': 'removefriend', 'targ': user, 'user': username });
 
   if (res === "NOAUTH") {
     addNotif("Authentication error")
@@ -459,9 +458,9 @@ if (Settings.Accessibility["Fancy Graphics"]) {
 
 
 let totalUnreads = 0;
-let lastUnread = {notifications:0, rooms:{}}
+let lastUnread = { notifications: 0, rooms: {} }
 async function updateUnreads() {
-  let result = await DB({'type':'getunreads', 'user':username});
+  let result = await DB({ 'type': 'getunreads', 'user': username });
 
   totalUnreads = 0;
 
@@ -485,32 +484,32 @@ async function updateUnreads() {
   for (i in result.rooms) {
     let watching = (active_room === i);
 
-    if (! document.hasFocus()) {
+    if (!document.hasFocus()) {
       watching = false
     }
 
-    if (! watching) {
+    if (!watching) {
       let button = document.getElementById("room-button-" + i);
-  
+
       if (button) {
         document.getElementById("unread-ind-" + i).style.backgroundColor = 'white';
       }
-  
+
       if (i.includes('/')) { //since DMs are the only kind of room that have the slash symbol (formatted as user1/user2), this plays the pop sound IF the new unread message is from a DM
-        if (! (i in lastUnread.rooms)) {
+        if (!(i in lastUnread.rooms)) {
           lastUnread.rooms[i] = 0
         }
-  
+
         if (lastUnread.rooms[i] < result.rooms[i]) {
           lastUnread.rooms[i] = result.rooms[i];
-      
+
           //pushNotif("You have new notifications");
           if (Settings.General['Notification Sounds']) {
             var audio = new Audio('../site/assets/audio/pop-notification.mp3');
             audio.play();
           }
         }
-  
+
         totalUnreads += result.rooms[i]
       }
     }
@@ -547,19 +546,19 @@ async function messageContextMenu(e, id, sender) {
 
 
   if (ctxmenu.getBoundingClientRect().bottom > window.innerHeight) {
-    ctxmenu.style.top = (mouse.y-150) + 'px';
+    ctxmenu.style.top = (mouse.y - 150) + 'px';
   }
 
   if (ctxmenu.getBoundingClientRect().right > board.clientWidth) {
-    ctxmenu.style.left = (mouse.x-100) + 'px';
+    ctxmenu.style.left = (mouse.x - 100) + 'px';
   }
 
   let delbtn = document.getElementById('msgdelbtn');
   if (roles.includes('Administrator') || roles.includes('Moderator') || personallySent) {
     delbtn.display = 'inline-block';
-  
+
     delbtn.onclick = async function () {
-      await DB({'type':'remove-message', 'user':username, sessID:sessID, 'room':active_room, 'messId':id});
+      await DB({ 'type': 'remove-message', 'user': username, 'room': active_room, 'messId': id });
       document.getElementById(`msg-inner-${id}`).innerHTML = '[removed]';
     };
   } else {
@@ -568,20 +567,21 @@ async function messageContextMenu(e, id, sender) {
 
 
   document.getElementById('msgrepbtn').onclick = async function () {
-    await DB({'type':'submit-report', 
-    'contents':`Report by: ${username}; 
+    await DB({
+      'type': 'submit-report',
+      'contents': `Report by: ${username}; 
     Reported message id: ${id}; 
     Room id: ${active_room}; 
     Message contents: ${document.getElementById(`msg-inner-${id}`).innerHTML}; 
     Message sender: @${sender};
-    `}); 
-    
+    `});
+
     addNotif('Your feedback has been recorded')
   };
 
 
   document.getElementById('msgblockbtn').onclick = async function () {
-    let res = await DB({'type':'blockusr', 'user':username, sessID:sessID, 'targuser':sender}); 
+    let res = await DB({ 'type': 'blockusr', 'user': username, 'targuser': sender });
 
     if (res === 'NOAUTH') {
       addNotif('Authentication failed')
@@ -597,7 +597,7 @@ async function messageContextMenu(e, id, sender) {
   };
 
   document.getElementById('msgunblockbtn').onclick = async function () {
-    let res = await DB({'type':'unblockusr', 'user':username, sessID:sessID, 'targuser':sender}); 
+    let res = await DB({ 'type': 'unblockusr', 'user': username, 'targuser': sender });
 
     if (res === 'NOAUTH') {
       addNotif('Authentication failed')
@@ -613,8 +613,8 @@ async function messageContextMenu(e, id, sender) {
   };
 }
 
-document.addEventListener('click', function() {document.getElementById('msgctxmenu').hidden = true});
-board.addEventListener('scroll', function() {document.getElementById('msgctxmenu').hidden = true});
+document.addEventListener('click', function () { document.getElementById('msgctxmenu').hidden = true });
+board.addEventListener('scroll', function () { document.getElementById('msgctxmenu').hidden = true });
 
 
 
@@ -624,23 +624,23 @@ async function updateMessageBoard() {
   if (document.hasFocus()) {
     let requestedRoom = active_room;
 
-    let result = await DB({'type':'getmsg', 'room':active_room, 'user':username, sessID:sessID, 'latestID':latestMsgId, 'noprofanity':Settings.Safety["Profanity Filter"]});
+    let result = await DB({ 'type': 'getmsg', 'room': active_room, 'user': username, 'latestID': latestMsgId, 'noprofanity': Settings.Safety["Profanity Filter"] });
     let boardcontent = ``;
-  
+
     if (document.getElementById('msgs').children.length < 1) {
       document.getElementById('loading-ind').style.display = 'inline';
     }
-  
-    if (requestedRoom === active_room) {  
+
+    if (requestedRoom === active_room) {
       let messages = result.contents;
-  
+
       var pfp;
       var roles;
       var userDisplay;
-  
+
       for (var msg of messages) {
         let display = true;
-        if ((! Settings.General["Removed Annotations"]) && ['[ deleted ]', '[ removed ]', '[ removed by moderator ]', '[ deleted ]', '[ blocked ]'].includes(msg.text)) {
+        if ((!Settings.General["Removed Annotations"]) && ['[ deleted ]', '[ removed ]', '[ removed by moderator ]', '[ deleted ]', '[ blocked ]'].includes(msg.text)) {
           display = false
         }
 
@@ -651,17 +651,17 @@ async function updateMessageBoard() {
 
           roles = await getRoles(msg.user);
           datetime = formatTime(msg.dt);
-    
+
           userDisplay = msg.user;
           for (var r in roles) {
             let role = roles[r];
             userDisplay += `<img src="../site/assets/icons/roles/${role}.svg" alt="roleicon" title="${role}" style="padding-left: 5px; height:15px;">`;
           }
-          
+
           if (datetime) {
             userDisplay += ` • ${datetime.time}`;
           }
-  
+
           if (lastdt && msg.dt) {
             if (lastdt.day < msg.dt.day) {
               boardcontent += `
@@ -676,16 +676,16 @@ async function updateMessageBoard() {
               lastauth = null;
             }
           }
-    
+
           contents = msg.text.replace(/</g, '').replace(/>/g, '');
-          
+
           if (Settings.Safety["Clickable links"]) {
             contents = contents.replace(/(\bhttps?:\/\/\S+)/gi, (match) => {
               if (Settings.Safety['Embed Files']) {
                 var filetype = match.slice(match.lastIndexOf("."));
-      
+
                 filetype = filetype.split("?")[0];
-        
+
                 if (filetype === ".mp4") {
                   return `
                   <br>
@@ -696,7 +696,7 @@ async function updateMessageBoard() {
                   </video>
         
                   `;
-        
+
                 } else if ([".mp3"].includes(filetype)) {
                   return `
                   <br>
@@ -705,10 +705,10 @@ async function updateMessageBoard() {
                   [ Your browser does not support the audio element. ]
                   </audio>
                   `;
-        
+
                 } else if ([".png", ".jpg", ".webp", ".gif", "svg"].includes(filetype)) {
                   return `<br><img class="msg-content" src="${match}"></img>`;
-        
+
                 } else {
                   return `<a target="_blank" rel="noopener noreferrer" href="${match}">${match}</a>`;
                 }
@@ -717,11 +717,11 @@ async function updateMessageBoard() {
               }
             });
           }
-  
+
           contents = contents.replace(/\B@\w+\b/g, (match) => {
             return `<div onclick="openMenu('profile', {user:'${match.substring(1)}'})" class='mention' title="User Mention">${match}</div>`
           });
-  
+
           //FORMATTING
           contents = contents.replace(/\*\*([^]*?)\*\*/g, (match) => {
             return `<b>${match.slice(2).slice(0, -2)}</b>`
@@ -729,12 +729,31 @@ async function updateMessageBoard() {
           contents = contents.replace(/__(.*?)__/g, (match) => {
             return `<u>${match.slice(2).slice(0, -2)}</u>`
           });
-  
+
           contents = contents.replace(/\*([^]*?)\*/g, (match) => {
             return `<i>${match.slice(1).slice(0, -1)}</i>`
           });
           //=======
-    
+
+          let emojiIndex = [
+            'smile',
+            'frown',
+            'blank',
+            'unamused',
+            'mad',
+            'angry',
+          ]
+
+          let emojiFormatted = "";
+          for (c of contents.split(":")) {
+            if (emojiIndex.includes(c)) {
+              emojiFormatted += `<img class="emoji" src="../site/assets/emoticons/${c}.svg">`
+            } else {
+              emojiFormatted += c
+            }
+          }
+          contents = emojiFormatted
+
           if (msg['user'] === 'System') {
             boardcontent += `
             <div id="msg-inner-${msgId}" class="message-container" style="background-color: rgba(100, 100, 215, 0.06); width:100%; text-align: center; color: white; font-family: Standard; padding: 5px;" oncontextmenu="messageContextMenu(event, ${msgId}, '${msg.user}')">
@@ -762,11 +781,11 @@ async function updateMessageBoard() {
           
                 `;
               }
-      
-      
+
+
             } else {
               if (msg['user'] === lastauth) {
-      
+
                 boardcontent += `
       
                 <div class="message-container" oncontextmenu="messageContextMenu(event, ${msgId}, '${msg.user}')">
@@ -776,7 +795,7 @@ async function updateMessageBoard() {
                 </div>
       
                 `;
-                
+
               } else {
                 boardcontent += `
       
@@ -804,9 +823,9 @@ async function updateMessageBoard() {
 
         latestMsgId = msgId;
       }
-  
+
       document.getElementById('msgs').insertAdjacentHTML('beforeend', boardcontent);
-      
+
       if (board.scrollHeight !== prevheight) {
         board.scrollBy(0, board.scrollHeight + prevheight);
       }
@@ -831,24 +850,24 @@ async function updateMessageBoard() {
 
 
 
-    
+
       let emptyIndicatior = String.raw`
       <h1 id="empty-indicator" style="text-align: center;">
       Looks like there's nothing here. <br>
       ¯\_(ツ)_/¯
       </h1>
       `
-  
+
       if (document.getElementById('msgs').innerHTML === '') {
         document.getElementById('msgs').innerHTML = emptyIndicatior;
       }
-  
+
       if (!(messages.length === 0)) {
         if (document.getElementById('empty-indicator')) {
           document.getElementById('empty-indicator').remove();
         }
       }
-  
+
       document.getElementById('loading-ind').style.display = 'none';
 
       //console.log(messages.length)
@@ -866,8 +885,7 @@ async function updateMessageBoard() {
 
 async function joinRoom(r, public) {
   async function attempt(key) {
-    let status = await DB({'type':'joinroom', 'room':r, 'user':username, sessID:sessID, 'roomkey':key});
-    console.log(status)
+    let status = await DB({ 'type': 'joinroom', 'room': r, 'user': username, 'roomkey': key });
 
     if (status === true) {
       switch_room(r, r, "r");
@@ -894,7 +912,7 @@ async function joinRoom(r, public) {
   }
 }
 
-function switch_room(room, displayname, mode, created=false) {
+function switch_room(room, displayname, mode, created = false) {
   //let trig = document.getElementById(`room-button-${room}`);
   //
   //if (trig) {
@@ -914,10 +932,10 @@ function switch_room(room, displayname, mode, created=false) {
     lastauth = null;
     lastdt = null;
     latestMsgId = null;
-  
+
     if (mode === "r") {
       if (created === true) {
-        document.getElementById('leavebtn').onclick = function() {openMenu("rconfig")};
+        document.getElementById('leavebtn').onclick = function () { openMenu("rconfig") };
         document.getElementById('leavebtn').src = "../site/assets/icons/wrench.svg";
         document.getElementById('leavebtn').title = "Configure Room";
       } else {
@@ -930,7 +948,7 @@ function switch_room(room, displayname, mode, created=false) {
       document.getElementById('leavebtn').src = "../site/assets/icons/unfriend.svg";
       document.getElementById('leavebtn').title = "Remove Friend";
     }
-  
+
     if (mobileLayout) {
       sidebarBool = false;
       toggleSidebar();
@@ -940,22 +958,22 @@ function switch_room(room, displayname, mode, created=false) {
 
 switch_room("Main room", "Main room", "r")
 
-const respondRequest = async function(mode, recipient) {
-  await DB({type:'respond-request', mode: mode, user:username, sessID:sessID, recipient:recipient})
+const respondRequest = async function (mode, recipient) {
+  await DB({ type: 'respond-request', mode: mode, recipient: recipient })
   await populateSidebar("f");
 }
 
 function messageInputUpdate(e) {
   if (e.key === 'Enter') {
     e.preventDefault();
-    if (! e.shiftKey) {
+    if (!e.shiftKey) {
       sendMessage()
     }
   }
 
   let element = document.getElementById('msgtxt');
   element.style.height = "1px";
-  element.style.height = (element.scrollHeight)+"px";
+  element.style.height = (element.scrollHeight) + "px";
 
   document.getElementById('msgs').style.maxHeight = `calc(100% - (60px + ${document.getElementById('bottom_bar').clientHeight}px))`;
   document.getElementById('msgs').style.bottom = document.getElementById('bottom_bar').clientHeight + 'px';
@@ -972,7 +990,7 @@ async function populateSidebar(mode) {
   if (mode === 'r') {
     document.getElementById('rbtn').disabled = true;
 
-    let result = await DB({'type':'getrooms', 'user':username, sessID:sessID});
+    let result = await DB({ 'type': 'getrooms', 'user': username });
 
     let rooms = result['list'];
 
@@ -982,7 +1000,7 @@ async function populateSidebar(mode) {
       `;
 
       sidebarLowerButton.textContent = '+ Add room';
-      sidebarLowerButton.onclick = function() {openMenu("room-browser")};
+      sidebarLowerButton.onclick = function () { openMenu("room-browser") };
       document.getElementById('rbtn').style.backgroundColor = 'rgb(50, 50, 50)';
       document.getElementById('fbtn').style.backgroundColor = 'rgb(40, 40, 40)';
     }
@@ -991,10 +1009,10 @@ async function populateSidebar(mode) {
   } else if (mode === 'f') {
     document.getElementById('fbtn').disabled = true;
 
-    let result = await DB({'type':'getfriends', 'user':username, sessID:sessID});
+    let result = await DB({ 'type': 'getfriends', 'user': username });
 
     sidebarLowerButton.textContent = '+ Add friend';
-    sidebarLowerButton.onclick = function() {addFriendMenu()};
+    sidebarLowerButton.onclick = function () { addFriendMenu() };
     document.getElementById('fbtn').style.backgroundColor = 'rgb(50, 50, 50)';
     document.getElementById('rbtn').style.backgroundColor = 'rgb(40, 40, 40)';
 
@@ -1049,18 +1067,18 @@ async function populateSidebar(mode) {
 }
 
 populateSidebar('r')
-document.getElementById('rbtn').onclick = function () { populateSidebar('r'); closeFriendMenu()};
-document.getElementById('fbtn').onclick = function () { populateSidebar('f'); closeFriendMenu()};
+document.getElementById('rbtn').onclick = function () { populateSidebar('r'); closeFriendMenu() };
+document.getElementById('fbtn').onclick = function () { populateSidebar('f'); closeFriendMenu() };
 
 //setInterval(updateMessageBoard, 3000);
 updateMessageBoard();
 
 
 async function sendMessage() {
-  let val = document.getElementById('msgtxt').value.replace(/\n/g,'');
+  let val = document.getElementById('msgtxt').value.replace(/\n/g, '');
   document.getElementById('msgtxt').value = '';
   if (val.length > 0) {
-    let res = await DB({type:'addmsg', room:active_room, contents: val, user:username, sessID:sessID})
+    let res = await DB({ type: 'addmsg', room: active_room, contents: val, user: username })
 
     if (res === 'NOAUTH') {
       addNotif('Authentication error')
@@ -1073,7 +1091,7 @@ async function sendMessage() {
 
 var sidebarBool = true;
 function toggleSidebar() {
-  sidebarBool = (! sidebarBool);
+  sidebarBool = (!sidebarBool);
 
   if (mobileLayout) {
     document.getElementById('sidebar').style.width = "100%";
@@ -1081,16 +1099,16 @@ function toggleSidebar() {
     document.getElementById('sidebartoggler').style.display = "inline";
   } else {
     document.getElementById('sidebar').style.width = "25%";
-    
+
     document.getElementById('sidebartoggler').style.display = "none";
   }
 
   if (sidebarBool) {
-    
+
     document.getElementById('sidebar').style.visibility = 'hidden';
 
     document.getElementById('msgs').style.width = '100%';
-    document.getElementById('header_bar').style.width = '100%'; 
+    document.getElementById('header_bar').style.width = '100%';
     document.getElementById('bottom_bar').style.width = '100%';
   } else {
 
@@ -1104,7 +1122,7 @@ function toggleSidebar() {
 
 
 async function reportWindowSize() {
-  sidebarBool = (! sidebarBool);
+  sidebarBool = (!sidebarBool);
 
   if (mobileLayout) {
     document.getElementById('personal-username-display').style.display = "none";
@@ -1130,9 +1148,9 @@ reportWindowSize();
 window.addEventListener("resize", reportWindowSize);
 
 
-var mouse = {x:0, y:0};
+var mouse = { x: 0, y: 0 };
 
-document.onmousemove = function(e) {
+document.onmousemove = function (e) {
   mouse.x = e.clientX;
   mouse.y = e.clientY
 }
@@ -1140,7 +1158,7 @@ document.onmousemove = function(e) {
 
 
 let msgtxt = document.getElementById('msgtxt');
-msgtxt.oninput = function() {
+msgtxt.oninput = function () {
   if (msgtxt.value.slice(-1) === "@") {
     mentionPopup()
   } else {
