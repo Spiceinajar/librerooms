@@ -1,3 +1,5 @@
+const TESTING_MODE = false;
+
 async function run() {
   try {
     const netCfg = require('./netconfig.json');
