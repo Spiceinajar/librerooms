@@ -207,7 +207,7 @@ async function run() {
 
 
     //for (let user in dat.collections.users) {
-    //  dat.collections.users[user].lastOnline = getMDY(true)
+    //  dat.collections.users[user].lastOnline = getMDY()
     //  dat.collections.users[user].joindate.hour = 12
     //  dat.collections.users[user].joindate.minute = 30
     //}
@@ -281,6 +281,12 @@ async function run() {
 
 
         if (!l) {
+          if (parsed.user) {
+            if (dat.collections.users[parsed.user]) {
+              dat.collections.users[parsed.user].lastOnline = getMDY()
+            }
+          }
+
           if (noAuthRequests.includes(parsed.type)) {
             if (parsed.type === 'cr_user') {
               if (parsed.name in dat.collections.users) {
